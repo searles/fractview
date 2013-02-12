@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">FractView</string>
+    <string name="menu_settings">Settings</string>
+    <string name="resize">Resize</string>
+    <string name="width">Width</string>
+    <string name="height">Height</string>
+    <string name="function">Function</string>
+    <string name="maxiter">Iterations</string>
+    <string name="bailout">Bailout</string>
+    <string name="lake">Lake</string>
+    <string name="scale">Scale</string>
+    <string name="share">Share</string>
+    <string name="save">Save</string>
+
+</resources>

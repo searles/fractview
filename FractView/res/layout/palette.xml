@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <HorizontalScrollView
+        android:id="@+id/horizontalScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:id="@+id/colorArrayLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal" >
+        </LinearLayout>
+    </HorizontalScrollView>
+
+   <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content" >
+
+       <Button
+           android:id="@+id/addButton"
+           style="?android:attr/buttonStyleSmall"
+           android:layout_weight="1"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:text="Add" />
+
+       <Button
+           android:id="@+id/removeButton"
+           style="?android:attr/buttonStyleSmall"
+           android:layout_weight="1"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:text="Remove" />
+   </LinearLayout>
+
+   <ImageView
+       android:id="@+id/palettePreviewImageView"
+       android:layout_width="match_parent"
+       android:layout_height="16dp"
+       android:scaleType="fitXY" />
+
+   <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content" >
+
+       <EditText
+           android:id="@+id/lengthEditor"
+           android:layout_weight="1"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:inputType="numberDecimal" />
+
+       <CheckBox
+           android:id="@+id/cyclicCheckBox"
+           android:layout_weight="1"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:text="Cyclic" />
+
+   </LinearLayout>
+
+</LinearLayout>
