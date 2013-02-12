@@ -1,0 +1,507 @@
+2013-01-17: Installed Android SDK. It comes with its own eclipse version, which is quite cool and has one major advantage: It works.
+
+Created a default project and launched it on my nexus. Neat!
+
+Can't wait to continue with the tutorial tomorrow :)
+
+2013-01-18: Okay, got a nice button and a text field. I like that the tutorial shows how to externalize resources and I also like the way the xml-file works. Now working on Intents...
+
+And I leaned that Ctrl+Shift+O checks all imports. That should come in handy...
+
+Created the second activity. Quite weird, first they want me to add all this stuff about the ActionBar, then we delete it...
+
+Okay, did the tutorial. Very nice actually, I think I like developing for Android. Now I will try to implement a mandelbrot set.
+
+Okay, so I want to draw a bitmap (I think), and the way to do it is to create a Canvas.
+
+Hm, looking at it, I better "create a custom View component and drawing with a Canvas in View.onDraw()." 
+
+I think I will start with the "create a custom view tutorial"
+
+Okay, that was a bit of overkill (making a PieChart is quite a lot) but I managed to draw a Bitmap.
+
+Next stop: Background thread to calculate a mandelbrot set, then I am done for the day. 
+StackOverflow suggests AsyncTask
+2013-01-21: Sick at home. Trying some android programming to recover. 
+
+Okay, I created an async task that draws a mandelbrot set, including a simple zoom-in-methon. Next, I try to invoke it in my main activity and use a click-method to zoom in.
+
+Okay, calling onTouchEvent in my View and it seems to work. But unfortunately the thingy with updating the image while it is drawn does not work, it gives some OpenGL-Error
+
+Hm, maybe it's because I try to paint a Bitmap instead of a Drawable???
+
+Okay, need to add resources to the constructor. Gonna read about that now...
+
+"ensure that the drawable has correctly set its target density"
+
+Sounds reasonable, doesn't it?
+
+Okay, now I draw a Drawable, so, let's see whether publishProgress still causes this OpenGL-mistake
+
+Does not, but now it does not draw anything :(:(
+
+Just read sth interesting on StackOverflow: Drawing bitmaps directly is faster, but you can't do moving/scaling and stuff. Since I want to do the latter ones at some point, I stick with Drawable. Still, this does not solve my problem of nothing being drawn. I will simply draw a square to see what is drawn actually.
+
+Okay, it seems I need to setBounds in my Drawable; but now I got the same problem I had before: OpenGL cannot generate texture from bitmap. 
+
+Wait, maybe this is caused by a concurrent access? I mean, I am painting directly into the picture and at the same time try to paint it? Gosh, that will be slow, having every pixel syncronized..? Well, I'll be damned, but that was it. I made a canvas and paint in that one.
+
+Okay, next stop, try some gestures: Moving + double click for zooming.
+
+That seems to be quite easy: manipulate onTouchEvent
+
+Then I will try to handle rotation of the device, and once that is done, pinch-to-zoom - here I come.
+
+Wait, I will directly try the multitouch. I will use this http://www.zdnet.com/blog/burnette/how-to-use-multi-touch-in-android-2-part-4-setting-up-for-image-transformation/1785 tutorial.
+
+2013-01-22
+
+Well, I'll be damned, there's already a class called imageview. I use this one. Need to put the touch-controlling into the activity. Scaling and moving the image now works really great. Rotation missing, but this will be next.
+
+Okay, rotation works too, so next stop after lunch.
+
+Finally, pinch to zoom works like I want it to work. Had some extremely annoying bugs in my math (matrices...).
+
+Next I will need a ton of testing, creating an appropriate initMatrix to get a fitCenter-policy, and clean up the really ugly Affine-class. Also modularize stuff in Main-Activity. And last but not least keep preview in bitmap. But I am extremely happy that it works now.
+
+Now I also got the preview in bitmap. So, what is missing for my total luck is that things are done correctly when rotating the device, i.e., that the activity keeps bitmap and everything.
+
+2013-01-23
+
+Okay, two todo's (let's make it 3): 
+Handle everything in a correct way when resizing
+Try to draw some rectangle when touch-mode is on to indicate where the actual image is.
+Add TileIterator
+and also add the feature that dx0/dy0 are the center of gravity of all touch points (which is consistent with the current behavior). Then, we only have to modify the 4x4-matrix-part.
+
+For activity, whenever we have a new activity, we drop the touch-object, but keep the bitmap (obviously), the running task and the current preferences-object (which is right now only Mandelbrot).
+
+Okay, the way to do it is via Fragments (this getLastNonConfigurationInstance is deprecated...)
+
+Okay, personal opinion: Fragments seem to be great for retaining UI-stuff, but how do I store and get back a bitmap from a fragment?
+
+For fragments, I definitely have to update the min API-level to 11. With fragments, I should update the touch-part because the View is part of the Activity. Same goes with the update. 
+
+Since I would like to test with some old android version, I keep getLastNon-blabla. Problem now is the progress-thing in AsyncTask that calls "invalidate" on the view on a regular basis. So, a better solution (proposed by StackOverflow): Create a handler and call invalidate. Done, works fine now.
+
+Next, I really want to add my TileIterator. Personally, I think that this is the coolest piece of code I have written ;) But I will remove the super-sampling-thing. 
+
+Okay, the tile-iterator adds some overhead (5.3 seconds for the old version, 6 seconds for the tile-iterator) but actually this is less than I expected. For 2 Threads I get a speed-up to 3.1 seconds, which is great, but the picture contains some artifacts... Soooo, where do these artifacts come from? Stupid me, I use the same paint in all threads...
+
+And horray for Nexus 7:  4 Threads give me a bigger speed up. I keep it with 4 threads (anyone disagree for now?). StackOverflow said that there might be some issues with some Count-CPU-Methods, so that they might not give reliable results, so I keep that number fixed and don't use 1 or 2 threads.
+
+Small comparison to Fractoid: 40 iterations, full screen (that's 1280x800, right?) = 6 seconds. Mine with 4 threads is 3100 ms. Multithreading definitely is a nice thing to have. But to be fair, two things must be pointed out: Fractoid updates the picture way more often, and I am using 4 threads.
+Runtime in ms	Iterations	Update ms
+4311	100	10
+3509		50
+3167		125
+4093	500	125
+7274	2500	125
+8192	2500	10
+
+
+Okay. Now for one test: Without drawing the canvas :) So, I remove canvas.drawPoint, and also the corresponding Paint. Won't see much by this, but I am interested in the time.
+
+Again, 2500 / 125: hm?? 11300 ms?! Well, screen was locked, so it might have slept a bit... Again, 6087 ms. Sounds reasonable. With drawing into the canvas, it's 7311 ms.
+
+Comparison with one single thread: 40/125: 8861 ms. With old method (calculating each line) 6351 ms (that's pretty much the same as Fractoid). Hm. But still I prefer the TileIterator (you sooner get results where you want them).
+Test with 2500 iterations: whoho, that's slow with one single thread... 24 sec vs 24 sec. So, I'd say, it's not really significantly slower ;) With 4 threads I got 7018 ms now. So, I think that's quite alright ;)
+
+That's it for today. I am very happy with the progress and I really like this project. I will also test it today on my HTC Evo 3d. I am very curious about the outcome.
+
+And how about that - I started 6 days ago and got a great application for android already. Cool. HTC Evo 3D works fine btw. It's most likely not a big surprise that it is slower, but it's quite alright. 12 seconds with 1000 Iterations. With 40 it's still like 9 seconds. Single-thread row-wise it takes 12 seconds.
+
+Also did some clean-up. I don't want to wait with starting a new task while the old is still running and waiting, therefore I separate things - all things that are connected to an old task are now inside task and passed as parameters. Advantage: I don't have to block the running app. Disadvantage: The other task might still be updating the view, and keeps the old bitmap (one good reason for creating a new one with each run), but these are things I can live with.
+
+One more bug: TileIterator is still shared with old calls, which is making things really ugly... That was a tough one to find...
+
+We are getting closer. But there is one strange thing that is bothering me - After some zooming in and zooming out, it's much slower than before :/ Can I reproduce this? Yeah, after some zooming, the slow-down is at least by a factor 2, even after rotating the Nexus. But there seem to be some nice Profiling and debugging-stuff available. Curious about DDMS.
+
+And I noticed that after running the app for some minutes in the background, I can't access it (does it crash or is it "terminated"??)
+
+Did also some beautification: Black background, remove title bar.
+
+2013 - 01 - 24
+
+I would love to add some settings: Width, Height, maxIter, but how can I show the settings-button in the lower panel? Ah, that's a menu (I think). So, I want to make a "change size"-menu now.
+
+http://developer.android.com/guide/topics/ui/menus.html
+
+There are already two menus - activity_main and activity_display_message. What do they do?
+
+Deleted activity_display_message. I think I created this one earlier while doing the first-steps-tutorial.
+
+Created now a menu, and it seems that an action bar is mandatory if you want to have a menu.
+Oh well...
+
+When closing my app, I now get the following warning:
+01-24 14:11:05.575: W/InputEventReceiver(14649): Attempted to finish an input event but the input event receiver has already been disposed.
+
+We will see what this means later.
+
+I think I will first try to implement the save-button. Saving images to the gallery seems to be actually quite easy...
+
+First I make a test-dialog-fragment. Hm. For this, I need API 11 - what a surprise. Okay, sorry folks, no Android 2.3.
+
+http://developer.android.com/guide/topics/ui/dialogs.html
+
+So, what now is a FragmentActivity? I think that's for backwards-compatibility. But how do I create a dialog now the Android 3+-way? 
+
+Okay, skip the fragment for now, let's do it step by step. First step is this: http://www.vogella.com/articles/AndroidDialogs/article.html
+
+Got a working dialog. But it disappears when I turn the Nexus. But I bookmarked this article: http://creeder.com/?&page=AsyncTask
+That should resolve the issue, and it will be a great read to get rid of the "deprecated"-warning.
+
+2013 - 01 - 25
+
+Okay, I did some major redesign: I had a task that started all the other tasks. That was kinda an overhead. Now what I do: I have a calculateInBackground in my preferences, and this one can do whatever it wants to do like running multiple background threads, so I don't need a thread checking it all. Saving a bit of resources. Although it did not save time. But the design is waaay cleaner this way...
+
+So, now let's look into the fragments:
+I will need one fragment to contain preferences + task + bitmap (+ configuration dialogs)
+And one Fragment for the View. The latter one can be destroyed while the other one can't.
+
+Test on my HTC Evo throws a weird exception - Method not found "isDestroyed"? Well, I don't need it, so I comment it out, but wtf??? It works but it is not very responsive - most likely too many updates...
+
+Added palettes + Lab-colors. I wanted this really badly (sick of these ugly, random, sine-super-green-palettes).
+
+Just read through this diary-thing and noticed that I completely forgot what intents are :D Wasn't it sth like listeners, for communication between components?
+
+And I want a nice icon. I am thinking of a julia-set of 3rd dimension. Naa, too complex. Use Mandelbrot-set with segments
+
+2013 - 01 - 26
+
+Okay, dude, Fragment + Matrix instead of center-fit, so that we better exploid our screen, and 3-finger-pinch (btw. it's not center of gravity, but center of circumcircle; 6 variables, 6 unknown, what are you waiting for?).
+
+Okay, did the math for the matrix and changed a lot. Now it works really nicely, also when lifting a finger and continuing somewhere else. And skew works simply amazing. Say what you want, but this is the most intuitive pinch-to-zoom.
+
+Hm, on closer thought, no, it's not. Most intuitive would be to create a chain of multitouch-objects where a new one is created always when there is an up/down-event. But then the main difficulty is again, we then should have a matrix for a multitouch event, yet we don't know the scale of the points (it varies depending on whether we want it for the bitmap or for the affine transformation).
+
+Solution: Do the matrix. Whenever there's a finger up/down, create the matrix, and multiply it.
+
+And then, math-whiz - find a way to convert the bitmap matrix into the affine-matrix.
+
+2013 - 01 - 28
+
+Okay, I want to finish the matrix-thing: I want to create an initial matrix so that we (based on a parameter) either fill the entire screen, or at least center and rotate to minimize the wasted space. That's it then for the day.
+
+Okay, pinch-to-zoom works simply amazing now. It has one minor drawback though: I can't easily determine a center that should be drawn first. But I will simply always start in the center. That's the best thing to do anyways... Btw. TileIterator does not work with x0/y0 out of brounds (actually that's not a surprise, but I didn't notice till now).
+
+I now would like to finish also the matrix mode. So, the view does not give me its full size in OnCreate, so where do I initialize the matrix? SO gave the answer :) OnSetGlobalSomething.
+
+Hm, when calculating bigger images, it takes quite some time, so maybe I should reduce TileSize to 4 and draw full squares with this tilesize? Check time, how much would be the slowdown? For my current image, calculation takes 9,5/9,1/8,7 seconds.
+
+With tilesize=4 its 10/9,3/9,2 seconds. So keep 4, and draw tiles with size of 4 (ok, now I pick 8, it's nicer this way). Filling the points does not change much, but now the previews are simply great. So I will keep it this way. This also was a good idea because there seems to be some race condition when calculating with multiple threads. The main reason why I didn't fill these points was actually that I did not want the mouse-wheel-action to cause flicker.
+
+Okay, what is the race condition? Hm, I think it is actually caused by the fact that some bigger tiles are calculated AFTER smaller tiles in them are calculated... Solution? I simply wait until all threads are done with a tileiterator.
+
+Another change: I now start the repainting after the update-time expires. Less flicker...
+
+So, now, create fragment, yes/no?
+
+No :) I want to have nice smooth coloring and all that. Added all my old escape-time stuff (with adaptions). That was a major change, so quickly gotta do some bug-fixing, testing, playing around with some formulas and colorizations, and compare the speed. It seems that the slow down is not as bad as I would have thought...
+
+2013 - 01 - 30
+I just implemented a nice parser + added my old backend for interpreting it. Improved the design so that future changes would be easier (removed some unnecessary classes). Now it works really great, especially the parser is quite cool. It can distinguish things like 2z sin z or z(z+1) and z(2) [the latter being an index]. Nice stuff, and the slow-down for drawing when interpreting a user-defined formula is in case of the mandelbrot-set less than a factor 2 (9000 vs 15000).
+
+Quick test whether the use of merging arguments is of any use... Hm, hardly 15000 vs 16000 (but then in mandelbrot there is only a reduction by one). Should I also compare runtimes with arrays and linked lists? Actually way slower (17250). What if we count down in pc? Interesting enough it is faster but still slower than the original. So I keep the lists.
+
+Comparison thread priorities on my Nexus 7 (with PhoenixMandel):
+
+MIN_PRIORITY (4) = 19000
+NORMAL_PRIORITY (4) = 16000
+MAX_PRIORITY (4) = 16000 [max-priority is a super-bad idea]
+
+HTC EVO 3D (that is quite unresponsive with normal priority):
+MIN_PRIORITY (4) = 41000 (okay, but that was after restarting, after the app was restarted)
+NORMAL_PRIORITY (4) = 43500
+
+Putting long into short: MIN_PRIORITY.
+
+But still there's the issue with the slow-down. I think that the main source for this is the amount of created Objects (and now after reducing the amount of objects created it seems to stay more responsive).
+
+2013-01-31
+
+Text for Google Play.
+
+2013-02-01
+
+Stepping forward with Fragments. Reading this http://stuff.mit.edu/afs/sipb/project/android/docs/resources/samples/ApiDemos/src/com/example/android/apis/app/FragmentRetainInstance.html
+was quite helpful. I moved bitmap and preferences into DataFragment (gonna rename this later), and manage the task there.
+
+Works fine, some minor bugs but it works fine. But I did not create an xml-file. Is this bad???
+
+And now a fragment for the ImageView? Hm, is this really necessary? Well - from a modular point of view, yeah... Gotta move all the touch-stuff there too...
+
+Hm, RunetimeException: Unable to start activity? In "inflater.inflate"... I think my XML-File for my fragments sucks... The internet proposes to use app.v4-imports? Na. Eclipse returns a com.android.layoutlib.bridge.MockView cannot be cast to android.view.ViewGroup
+So, I first remove the imageview. But in the Graphical Layout of the fragment I cannot add any components... So, I think I need to pick a layout, but which one is right for me?
+
+Okay, that's how I delt with it: I added a fragment to my main_activity, then replaced the fragment-tag by a linear-layout to which I added an imageView. Kinda works ;)
+
+And I also added Newton's method to find roots - yey; this is kindof like a "I feel lucky" for formulas, and altough it is a bad idea in general to simply add it there (it might not converge like for z0, or it might return plain stupid values like for log), I should use it in the dialog to get a good inital value for z0.
+
+Noticed a bug - my matrix for my image view is not working in landscape-mode... But thats weird... it's not my matrix, but the image view does not fill out the whole screen... (okay, I am stupid. match_content in xml-file).
+
+2013-02-03
+
+I-feel-lucky sometimes returns NaN/Infinity... Worked it out. In the long run it would be nice to have a genetic algorithm. Also finding more than one root would be useful (e.g. for functions like z^4+z).
+
+2013-02-04
+
+This might be interesting at some point for that.
+http://chentserver.uwaterloo.ca/aelkamel/che720/che725-adv-Numerical/sample_papers/05010916275221461.pdf
+http://www.karenkopecky.net/Teaching/eco613614/Notes_RootFindingMethods.pdf
+But for now, finding roots works quite good. But now, dialogs, dialogs dialogs.
+
+Need to make some DialogFragment it seems. One for each dialog?? As it seems, yes... But that should not be a big deal.
+http://stackoverflow.com/questions/12912181/simplest-yes-no-dialog-fragment 
+
+They now vanish when I rotate my nexus. Hm...
+
+http://creeder.com/?&page=AsyncTask suggested something. I suspect that I simply have to hack into OnCreateDialog or sth like that... Ay, way easier - onDestroyView, there's the thing. Now I got a dialog when I rotate the screen. That was easy...
+
+Now I'll add two dialogs: One for saving images and one to change the image size.
+http://android-developers.blogspot.co.at/2012/05/using-dialogfragments.html
+
+And I think before I actually implement a dialog, I should learn sth about layouts in android.
+
+Okay. LinearLayout and relativelayout, got it. For now I will use EditText for width and height (NumberPicker does not show up in eclipse?), created xml-file with layout and use AlertDialog with setView.
+See also AlertDialog here:
+http://developer.android.com/reference/android/app/DialogFragment.html
+
+Okay, works quite nice although I really don't like it that I store the editTexts in some final variables to access them in my listeners; but ey, what are you gonna do about it... Also: On rotation, the EditText lose their content... But resizing works fine, so I am quite happy about that. Only problem: How to tell the ImageView that the bitmap has changed? 
+
+Hm, should I use setTargetFragment? Well, it seems to work fine... But (TODO) are all fragments destroyed? 
+
+And I should introduce an upper limit to the image size: http://stackoverflow.com/questions/10271020/bitmap-too-large-to-be-uploaded-into-a-texture
+
+Just found a bug: When rotating after the calculation is finished, the view is not updated... (I think I ran into this on my HTC Evo sometimes...). Should I call it "bug by stupidity"?
+
+Now it really works fine. Also there is no slow down even after resizing, rotating and all that stuff...
+
+And now for some update on my theme: http://stackoverflow.com/questions/13381567/show-imageview-partly-behind-transparent-actionbar
+This I have to do in styles.xml.
+And done. Looks nice.
+
+Speed test: Nexus 7 (16000), Evo 3d (47250). Nexus wins :D 
+
+I will also switch to GIT now (should learn that anyways; SVN on Eclipse was usually quite painful...). The project has become too big. Will put it into google-code. Btw. I should also pick a license if I am doing that... (GPLv3?)
+
+Nice read: http://www.ezzylearning.com/tutorial.aspx?tid=1763429 (should use list instead of array)
+Also nice read: http://stackoverflow.com/questions/4540754/add-dynamically-elements-to-a-listview-android
+http://www.vogella.com/ is also always super-useful.
+And I will also need this: http://vikaskanani.wordpress.com/2011/07/27/android-focusable-edittext-inside-listview/
+
+Because, I need text-edits inside my listview that is expanded when I add new initial values (and also new parameters). Ain't that great... Btw I should put parameters together with initial values; otherwise it is too confusing [since also "generate inital values" might depend on parameters] (and an additional bonus: it is easier to implement).
+
+2013-02-05
+
+Ah :) That's how I find views by ids in fragments: http://stackoverflow.com/questions/6495898/findviewbyid-in-fragment-android
+
+If I want to use an ArrayAdapter with a custom view (that is not a TextView) I must override getView. Okay.
+
+Okay, got my list :) And it shows up similar to what I want. Though, every edittext keeps a cursor (fun fact: this only happens when I type return), and return does not confirm input (which I kindof need...). http://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext Furthermore, the dialog is not resized. Btw. IME = Input Method Editor. Did not know that.
+
+singleLine = true helps pretty much with everything :) Okay, so how do I handle input? (OnEditTExtActionListener). Pfuh, some coding to combine inits, parameters, and everything else... Now how to resize a listview when the adapter's size changed? When this is done, I am actually done with functions :):) (Stupid me, forgot to update the data-list)... Great!
+
+YEY, that was actually easier than I thought. Now I can edit functions. Parameters are not implemented yet, but hey, I can edit functions! One important TODO: Save old input data (i.e., retain Fragment, or store PackedFunction in Prefs or sth like that...
+
+2013-02-06
+
+Code-polishing: Did a lot of work on functions so that we can have some nice user-interaction.
+Okay, some bug does not let me enter some values, and changing the rotation clears the input (why's that?) but apart from that looking good. Oj, problem is that the position of the listitems is not constant... I will store the PackedExpr in the holder... Hm :/ Did I missunderstand sth in getView in ArrayAdapter? - Well, this is just great, Android - no text along with getView in the documentation...
+
+Ha, got deeper to the problem: When adding elements to my data set, it seems that I really can't trust the position-parameter... So, what happens: The first element that is added to the listview at runtime seems to always have position 0. While others do not store their values. What about the actionlisteners? Do I erase old elements? I think that they would reuse old handlers...
+
+Hm, this might help: http://stackoverflow.com/questions/8693296/how-to-get-view-for-an-item-in-listview-in-android
+
+Found the problem: I have to update the holder also when I am not recreating it, otherwise I just get tangled up. What I do now is that I set the position as the holder's editor's tag.
+
+Now editing function works really great. Sth I am not happy yet though: z(n-1) and z(i). This is so ugly... And also, I don't need z(0) or z(1). This is just unnecessary... And, I will use zn1, zn2 etc... as shortcuts for z(n-1). Added floor and tan/atan/tanh/atanh.
+
+Hm :/ But after using it, the slow-down is really significant. Now had 23sec vs. 80sec for the mandelbrot set after some editing...
+
+Okay, moved away some editors, and also turned of autocomplete (difference textNoSuggestions and textFilter?)
+
+Last thing: I often forget to hit the "Done"-button. And sometimes I simply flip to another line to quickly change sth. So, do not accept input when you just lose scale, but accept all input when someone hits ok. Is there sth easier than maintaining a list of all EditText? Or should I simply add a field "currentInput" to every PackedExpr, opposed to 'acceptedInput'? I like this last option. (I can't simply skip the Done-button because auto-update is counter-intuitive if you just navigate away for a minor change somewhere else). But how do I find out whether someone navigated away from an EditText? Should be focus-listener, right? [jep, onfocuschangelistener]
+
+Hm, now it does not show the keyboard, and also there seems to be a mistake with initCount...
+Why doesn't it show the keyboard? Is it because of the focus listener???
+
+Hm, that problem sounds similar: http://stackoverflow.com/questions/9615724/virtual-keyboard-does-not-open-when-dynamically-inserting-an-edittext-view-into
+
+But still, it worked before, why doesn't it work now??? Here's the funny thing: It works fine if there is another EditText in the dialog (outside the ListView). 
+
+Did not solve this problem, but I now added a TextWatcher so that changes on formulas work as expected. Very intuitive. Also did some minor bug-fixing.
+
+Hm, after start I got 45000 Objects (wow, really???). Now after using it for some time, I got some slow down and 95000 Objects. Where do they go? Zooming keeps the number of objects constant (during runtime, the number of object is increased by about 5000, but all of them are deleted by gc). 
+
+Started the editor for functions. Number of objects increaed by about 2000. After canceling a lot, I still got like 7000 more than before (only by cancelling). 
+
+Detailed: 
+Start: 43302
+OK: 44945
+OK: 45134
+OK: 45290
+OK + other function: 47157
+OK + mandelbrot: 48683
+cancel: 48811
+cancel: 48965
+OK: 49105
+zooming around: 49113
+resize cancel:  49108
+resize bigger image OK: 49142
+resize last size OK + cancel: 49145
+resize cancel: 49153
+resize cancel: 49163
+resize dialog open: 50067
+cancel: 49161
+function cancel: 49321
+
+It's safe to say I think that there is a memory leak... And it's also safe to say, I think, that it's caused by the dialog of my function...
+
+Quick google and first entry, first sentence sounds very familiar ;) http://stackoverflow.com/questions/7083441/android-alertdialog-causes-a-memory-leak
+
+Installing MAT (sounds like a cool thing...)
+
+So, the memory leak is caused by the viewers? What happens if I clear the adapter in onDestroy?
+
+Start: 44339
+rotate: 44380
+rotate: 44389
+rotate x 10 + move: 44409
+rotate x 2: 44408 (okay, that's good.)
+
+function cancel x 10 + move: 46297
+cancel x 5: 47033
+
+Clearing the adapter does not help...
+
+Now, I break functionality and remove all listeners (except for essential ones)
+
+(personally I suspect that the problem is that I add the holder as tag to the list items...)
+
+Start: 44311 (that's at least stable...)
+function cancel: 44899 (whoa!)
+cancel: 45096 (not much changed)
+cancel x a lot (15 or so...): 46473
+cancel: 46605
+
+Okay, it's not the listeners. 
+
+Now the holder: Only update when it is recreated.
+
+Start: 44312
+cancel: 44894 (looks familiar...)
+
+Now I switch everything back on
+
+karlsplace:Desktop searles$ cat delme 
+Listener only once per adapter. 
+
+Make all classes static.
+
+The way to do it: 
+
+44311
+44914
+45103
+
+Okay, now with the setonitemclick(null) - nope, that's not it. setAdapter(null)? Nope.
+Store the created dialog and call dismiss on it? Nope. 
+
+I created some finalize-methods to see whether Objects are destroyed...
+
+And now I set everything in the adapter to null. Hm, now the packedexpr are also finalized 
+(yeah, the main problem is that the adapter is not finalized, smartass...)
+
+checking the heap dump now (MAT + Android does not work...)
+
+Made the adapter large with a 4MB-junk-array.
+
+Hm, that does not really solve it...
+
+Test with textviews - no memory leak - at least the adapter is deleted. 
+What happens if I change them back into EditText?
+Hm, the adapter is destroyed, but still leak. I put the junk into the fragment.
+The fragment is also destroyed. 
+
+Ah :) Got OutOfMem now. I'll try again with textview.
+
+44784
+44821
+45733 after 5 more calls...
+
+Function is definitely destroyed... Also with EditText. Now I revoke some changes (use EditText
+as type in Adapter). Okay, still they are destroyed. Adding listeners.
+
+Hm, well, the Fragment is still destroyed but the adapter is kept.
+
+What if I only add the TextListener? Both are finalized. We learn - I should not
+use the adapter as listener. 
+
+Theoretically, with full functionality, the fragment should be destroyed while the adapter should 
+not.
+
+Yep. Okay, I'll move the listener into the holder. The holder anyways has a link to the data available. Might as well just pass the adapter to it so that I can call notify... Hm, that did only have the effect that now the adapter is not deleted even when I skip the OnAction-Listener...
+
+Okay, that was a lot of experiments, and I should do other things... :/ Maintaining a list of all holders and removing the link to the adapter helps actually...
+
+Great, now the adapter is removed. But still, there's a memory-leak.
+
+Actually, why exactly am I using ArrayAdapter??
+
+And ugly cyclic reference: View has holder as tag, and Holder contains the view. I think this
+one link wasn't that great after all... So, I create a listener instead of the holder.
+
+150 Objects are added and kept whenever I open the dialog...  The editor is deleted, so is the editorlistener. Which objects are created and kept? How do I find that out?
+
+2013 - 02 - 08
+
+Ah, when I don't click cancel or ok next to the dialog, it is destroyed but dialog.dismiss is not called. Overriding onDismiss. Hm, now there are two objects left that should not be left: Init and Fn. Hm, okay, the CharSequence with the input is linked to the edittext (which gives a circle). First try - create a string out of charsequence. Okay, I think that was a good idea, because now my listeners are not linked to the edittext in any way. So, is it this bug?  https://code.google.com/p/android/issues/detail?id=12334
+
+okay, strong link is:
+mMessages MessageQueue -> target, callback Message -> this$0 Editor$Blink -> mTextView Editor -> EditText.
+
+Ha, that explains a lot. Editor$Blink is a handler.
+http://grepcode.com/file/repository.grepcode.com/java/ext/com.google.android/android/4.1.1_r1/a
+ndroid/widget/Editor.java
+
+Reading the source code, two conditions must be met so that Blink would call itself: Cursor must be visible, and it actually should blink.
+if (!isCursorVisible() || !mTextView.isFocused()) return false;
+
+Let's try android:cursorVisible="false"
+
+EditText in histogram, anyone? Huhu? After some work still only with 44958 objects. So, memory leak identified. But how do I resolve it? Cursor invisible is not nice.
+
+Now that I identified the memory leak I will first take back some ugly changes I made before to resolve this issue. Btw. PathToGC in MAT, love it!
+
+Memory leak still resolved. So, Problem is, TextView is still focussed although the dialog is dismissed. That is why the Blink-Handler remains active. It is such a cool thing that I found this out ;)
+
+I will add a focus listener to figure out when my text-edits lose focus. Hm :/ Okay, conclusion: ListView + EditText sucks. Also the keyboard-thing... Will build my own thing since I usually might not have that many elements... Ugly: I create new views a ton of times, but apart from that, whoa, that works extremely well... Memory leaks are gone too... Only thing: I really should keep views and not inflate new ones all the time, and of course put it into a ScrollView. Btw, it keeps the Blink-elements like back when I had my memory leaks, but they are deleted when I inflate a new dialog. Should keep an eye on it. But it works really nice now.
+
+Still some slow down but at least no memory leak. 
+
+Btw. GIT sucks. Just completely broke everything...
+/FractView/gen already exists but is not a source folder.
+http://stackoverflow.com/questions/6185600/android-fbreaderj-gen-already-exists-but-is-not-a-source-folder-convert-to-a-s
+
+Stupid stupid Git! It moved everything to a different location. Paths, everything is completely screwed up!
+
+Well, got it working again...
+
+2013 - 02 - 10
+
+Okay. Color picker. I will simply go with a box and a textfield for entering the hex-code. To be honest, I think that is the easiest for everyone. So, that is linear layout with two elements and the rest should be similar to what I had before with the functions. But what's an appropriate component to color? I take togglebutton; where I use this toggled button as selection.
+
+No listview, because I want these colors to be edittext. Color-class in android holds a method parseColor.
+
+2013 - 02 - 11
+
+Got a first dialog for colors, but I am not really happy with the design. What I need: Fixed width of editText, gap inside layout. Okay, margin and wrap_content in connection with ems does the trick. I'll write my own Parser for color values. Google is not flexible enough.
+
+2013 - 02 - 12
+
+Initial check into svn. Got a working affine-editor and basic layout files for everything else.
+
+Added GPLv3-header to some files. Need some code review though + testing testing testing.
+In particular check for memory leaks.
