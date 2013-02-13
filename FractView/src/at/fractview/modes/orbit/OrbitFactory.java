@@ -25,19 +25,17 @@ import at.fractview.modes.ScaleablePrefs;
 
 public abstract class OrbitFactory extends ScaleablePrefs implements RasterTask.Rasterable {
 
-	private int maxLength;
+	private int maxIter;
 	
-	public OrbitFactory(Affine affine, int maxLength) {
+	public OrbitFactory(Affine affine, int maxIter) {
 		super(affine);
-		this.maxLength = maxLength;
+		this.maxIter = maxIter;
 	}
 
-	public void setMaxLength(int maxLength) {
-		this.maxLength = maxLength;
-	}
+	public abstract OrbitFactory newMaxIterInstance(int maxIter);
 	
-	public int maxLength() {
-		return maxLength;
+	public int maxIter() {
+		return maxIter;
 	}
 	
 	public RasterTask calculateInBackground(Bitmap bitmap) {
@@ -90,9 +88,9 @@ public abstract class OrbitFactory extends ScaleablePrefs implements RasterTask.
 		
 		public AbstractOrbit() {
 			this.length = 0;
-			this.orbit = new Cplx[maxLength];
+			this.orbit = new Cplx[maxIter];
 			
-			for(int i = 0; i < OrbitFactory.this.maxLength; i++) {
+			for(int i = 0; i < OrbitFactory.this.maxIter; i++) {
 				orbit[i] = new Cplx();
 			}
 			

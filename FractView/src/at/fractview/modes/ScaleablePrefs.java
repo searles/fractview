@@ -88,14 +88,14 @@ public abstract class ScaleablePrefs implements Preferences {
 		
 		affine.preConcat(this.affine);
 		
-		return scaledInstance(affine);
+		return newAffineInstance(affine);
 	}
 
 	/** Returns a copy of this preferences but with the scale set to the affine transformation given in the parameter
 	 * @param affine
 	 * @return
 	 */
-	public abstract ScaleablePrefs scaledInstance(Affine affine);
+	public abstract ScaleablePrefs newAffineInstance(Affine affine);
 
 	public Affine affine() {
 		return this.affine;

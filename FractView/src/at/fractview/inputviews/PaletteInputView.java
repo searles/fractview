@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with FractView.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.fractview;
+package at.fractview.inputviews;
 
 import java.util.ArrayList;
 
@@ -36,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import at.fractview.R;
 import at.fractview.math.colors.Colors;
 import at.fractview.math.colors.Palette;
 
@@ -45,7 +46,7 @@ import at.fractview.math.colors.Palette;
  * and dynamic adding and removing of colors.
  *
  */
-public class PaletteAdapter {
+public class PaletteInputView {
 	
 	private static final String TAG = "ColorArray";
 	
@@ -76,14 +77,7 @@ public class PaletteAdapter {
 	
 	private Palette palette;
 	
-	public static PaletteAdapter create(Activity activity, Palette palette) {
-		LayoutInflater inflater = activity.getLayoutInflater();
-		View v = inflater.inflate(R.layout.palette, null);
-		
-		return new PaletteAdapter(v, palette);
-	}
-	
-	private PaletteAdapter(View view, Palette palette) {
+	public PaletteInputView(View view, Palette palette) {
 		this.view = view;
 		
 		this.palette = palette;
@@ -105,7 +99,6 @@ public class PaletteAdapter {
 		this.cyclicCheckBox = (CheckBox) view.findViewById(R.id.cyclicCheckBox);
 
 		this.previewView = (ImageView) view.findViewById(R.id.palettePreviewImageView);
-				
 
 		// Create listeners for add and remove-Button
 		addButton.setOnClickListener(new OnClickListener() {
@@ -126,7 +119,7 @@ public class PaletteAdapter {
 
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				acceptInput();
+				// Not necessary to update anything here because it is normalized anyways
 				return true;
 			}
 		});
@@ -138,7 +131,8 @@ public class PaletteAdapter {
 		this.cyclicCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton button, boolean checked) {
-				acceptInput();
+				updatePalette();
+				updatePreview();
 			}
 		});
 		
@@ -168,7 +162,7 @@ public class PaletteAdapter {
 		this.previewView.invalidate();
 	}
 	
-	public void acceptInput() {
+	private void updatePalette() {
 		int[] colorArray = new int[colors.size()];
 		
 		for(int i = 0; i < colors.size(); i++) {
@@ -188,11 +182,10 @@ public class PaletteAdapter {
 		}
 		
 		this.palette = new Palette(colorArray, cyclic, length);
-		
-		updatePreview();		
 	}
 	
-	public Palette get() {
+	public Palette acceptAndReturn() {
+		updatePalette();
 		return palette;
 	}
 	
@@ -365,7 +358,8 @@ public class PaletteAdapter {
 				int color = Colors.parseColorString(colorString);
 				colors.set(index, color);
 				updateColorItemView(index);
-				acceptInput();
+				updatePalette();
+				updatePreview();
 			} catch(NumberFormatException e) {
 				return false;
 			}

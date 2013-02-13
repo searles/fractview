@@ -36,6 +36,10 @@ public abstract class Expr implements Comparable<Expr> {
 	}
 	
 	static Expr create(Parser p, String id, Expr...args) {
+		for(Expr arg : args) {
+			if(arg == null) return null;
+		}
+		
 		if(args.length == 0) {
 			return create(id);
 		}
@@ -71,7 +75,11 @@ public abstract class Expr implements Comparable<Expr> {
 		if(id.equalsIgnoreCase("nova") && args.length == 3) {
 			Var z = new Var("z");
 			
-			Expr fract = Op.DIV.app(args[0], args[0].diffZ());
+			Expr da = args[0].diffZ();
+
+			if(da == null) return null;
+
+			Expr fract = Op.DIV.app(args[0], da);
 			
 			Expr RFract = Op.MUL.app(args[1], fract);
 			Expr newton = Op.SUB.app(z, RFract);
@@ -82,7 +90,11 @@ public abstract class Expr implements Comparable<Expr> {
 		if(id.equalsIgnoreCase("newton") && args.length == 1) {
 			Var z = new Var("z");
 
-			Expr fract = Op.DIV.app(args[0], args[0].diffZ());
+			Expr da = args[0].diffZ();
+			
+			if(da == null) return null;
+			
+			Expr fract = Op.DIV.app(args[0], da);
 			
 			return Op.SUB.app(z, fract);
 		}

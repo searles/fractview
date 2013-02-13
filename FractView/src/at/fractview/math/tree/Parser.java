@@ -18,7 +18,6 @@ package at.fractview.math.tree;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +73,29 @@ public class Parser {
 	
 	public List<ErrorMsg> errors() {
 		return errors;
+	}
+	
+	public boolean hasErrors() {
+		return !errors.isEmpty();
+	}
+	
+	public String getErrorMessage() {
+		StringBuilder sb = new StringBuilder();
+		
+		int count = 0;
+		
+		for(ErrorMsg msg : errors) {
+			if(count > 0) sb.append("\n");
+			sb.append(msg);
+			count++;
+			if(count > 3) break;
+		}
+		
+		if(count < errors.size()) {
+			sb.append("\nFurther warnings, in total " + errors.size());
+		}
+		
+		return sb.toString();
 	}
 	
 	void reportError(String msg) {
@@ -390,34 +412,6 @@ public class Parser {
 		
 		public String toString() {
 			return msg + ": " + s.subSequence(0, pos) + "_" + s.subSequence(pos, s.length());
-		}
-	}
-
-	public static void main(String...args) {
-		Scanner sc = new Scanner(System.in);
-		
-		while(sc.hasNextLine()) {
-			String s = sc.nextLine();
-			
-			Parser parser = Parser.parse(s);
-
-			Expr expr = parser.get();
-
-			for(ErrorMsg e : parser.errors()) {
-				System.out.println("Warning: " + e);
-			}
-			
-			System.out.println("Expression is " + expr);
-			
-			//System.out.println("Compiled expression is " + Function.create(expr));
-			
-			//System.out.println("Found root: " + expr.findRoot(new Var("z"), new TreeMap<Var, Cplx>(), 1e-13, 100));
-		}
-	}
-	
-	public static class Log {
-		public static void v(String tag, String msg) {
-			System.out.println(tag + ": " + msg);
 		}
 	}
 }

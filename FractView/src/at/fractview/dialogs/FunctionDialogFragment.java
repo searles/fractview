@@ -15,81 +15,44 @@
  * along with FractView.  If not, see <http://www.gnu.org/licenses/>.
  */package at.fractview.dialogs;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
-import at.fractview.FunctionAdapter;
-import at.fractview.ImageViewFragment;
+import android.view.View;
 import at.fractview.EscapeTimeFragment;
+import at.fractview.ImageViewFragment;
+import at.fractview.inputviews.FunctionInputView;
+import at.fractview.modes.orbit.EscapeTime;
+import at.fractview.modes.orbit.functions.Specification;
 
-public class FunctionDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {
-	private static final String TAG = "FunctionDialogFragment";
-
-	private EscapeTimeFragment taskFragment;
-	private FunctionAdapter functionView;
+public class FunctionDialogFragment extends InputViewDialogFragment {
 	
-	public FunctionDialogFragment() {
-		setRetainInstance(true);
-	}
+	private EscapeTimeFragment taskFragment;
+	private FunctionInputView functionView;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreate, savedInstanceState = " + savedInstanceState);
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 		super.onCreate(savedInstanceState);	
 	}
-
-	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreateDialog, savedInstanceState = " + savedInstanceState);
-		
-		this.functionView = FunctionAdapter.create(getActivity(), taskFragment.function().spec());
-
-		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-		alertDialogBuilder.setTitle("Set function");
-
-		alertDialogBuilder.setView(this.functionView.view());		
-
-		alertDialogBuilder.setPositiveButton("OK", this);
-		alertDialogBuilder.setNegativeButton("Cancel", this);
-
-		return alertDialogBuilder.create();
-	}
-
-	@Override
-	public void onClick(DialogInterface dialog, int which) {
-		if(which == -1) {
-			functionView.acceptAllInput();
-			taskFragment.setFunction(functionView.spec().create());
-		}		
-		
-		dialog.dismiss();
-	}
 	
 	@Override
-	public void onDismiss(DialogInterface dialog) {
-		Log.v(TAG, "onDismiss");
-		super.onDismiss(dialog);
+	protected View createView() {
+		this.functionView = FunctionInputView.create(getActivity(), taskFragment.prefs().function().spec());
+		return functionView.view();
 	}
-	
-	@Override
-	public void onDestroyView() {
-		Log.v(TAG, "onDestroyView");
 
-		if (getDialog() != null && getRetainInstance()) {
-			Log.v(TAG, "setDismissMessage(null)");
-			getDialog().setDismissMessage(null);
+	protected boolean acceptInput() {
+		Specification spec = functionView.acceptAndReturn();
+		
+		if(spec != null) {
+			EscapeTime prefs = taskFragment.prefs().newFunctionInstance(spec.create());
+			taskFragment.setPrefs(prefs);
+			return true;
+		} else {
+			return false;
 		}
-		
-		super.onDestroyView();
 	}
-
-	@Override
-	public void onDestroy() {
-		Log.v(TAG, "onDestroy");
-		super.onDestroy();
+	
+	protected String title() {
+		return "Function";
 	}
 }

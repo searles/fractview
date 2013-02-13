@@ -5,13 +5,22 @@
     android:orientation="vertical" >
 
     <EditText
-        android:id="@+id/maxIterEditor"
+        android:id="@+id/filenameEditor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="number" >
+        android:singleLine="true"
+        android:hint="Filename" >
 
         <requestFocus />
     </EditText>
+
+    <EditText
+        android:id="@+id/descriptionEditor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textMultiLine"
+        android:hint="Description" />
 
 </LinearLayout>

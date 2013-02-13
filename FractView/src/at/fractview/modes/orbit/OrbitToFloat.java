@@ -16,33 +16,16 @@
  */
 package at.fractview.modes.orbit;
 
-import at.fractview.math.Cplx;
 import at.fractview.modes.orbit.OrbitFactory.AbstractOrbit;
 
 public interface OrbitToFloat {
 	
+	// TODO: Split into bailout and lake things and common things
+	
 	float value(OrbitFactory.AbstractOrbit orbit);
 
 	public static enum Predefined implements OrbitToFloat {
-		ExpSumCombined {
-			@Override
-			public float value(AbstractOrbit orbit) {
-				float degree = 0;
-	
-				for(int i = 1; i < orbit.length(); i++) {
-					degree += Math.exp(orbit.get(i).absSqr() - 0.5 / orbit.get(i - 1).distSqr(orbit.get(i)));
-				}
-	
-				return degree;
-			}
-		},
-		Length {
-			@Override
-			public float value(AbstractOrbit orbit) {
-				return (float) Math.log(orbit.length());
-			}
-		},
-		LengthInterpolated {
+		LengthSmooth {
 			@Override
 			public float value(AbstractOrbit orbit) {
 				// Log as transfer
@@ -53,7 +36,25 @@ public interface OrbitToFloat {
 				return (float) Math.log(d + 1); // Logarithmic transfer
 			}
 		},
-		SumDiff {		
+		Length {
+			@Override
+			public float value(AbstractOrbit orbit) {
+				return orbit.length();
+			}
+		},
+		SumExp {
+			@Override
+			public float value(AbstractOrbit orbit) {
+				double degree = 0;
+	
+				for(int i = 1; i < orbit.length(); i++) {
+					degree += Math.exp(-orbit.get(i).absSqr() - 0.5 / orbit.get(i - 1).distSqr(orbit.get(i)));
+				}
+	
+				return (float) Math.log(degree + 1);
+			}
+		},		
+		SumDelta {		
 			@Override
 			public float value(AbstractOrbit orbit) {
 				double sum = 0.;
@@ -71,6 +72,12 @@ public interface OrbitToFloat {
 				return (float) orbit.get(orbit.length() - 1).arc();
 			}
 		},
+		Zero {
+			@Override
+			public float value(AbstractOrbit orbit) {
+				return 0;
+			}
+		}/*
 		LastRad {
 			@Override
 			public float value(AbstractOrbit orbit) {
@@ -156,7 +163,7 @@ public interface OrbitToFloat {
 	
 				return sum + last * d;
 			}
-		}
+		}*/
 	}
 	;
 }

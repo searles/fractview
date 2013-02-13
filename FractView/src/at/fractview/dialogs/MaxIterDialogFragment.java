@@ -16,92 +16,63 @@
  */
 package at.fractview.dialogs;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.DialogInterface;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
-import at.fractview.EscapeTimeFragment;
-import at.fractview.R.id;
-import at.fractview.R.layout;
+import at.fractview.modes.orbit.EscapeTime;
 
-public class MaxIterDialogFragment extends DialogFragment {
+public class MaxIterDialogFragment extends InputViewDialogFragment {
 	
 	private static final String TAG = "MaxIter";
 
+	private EditText editor;
 	private EscapeTimeFragment taskFragment;
-	private EditText maxIterEditor;
 	
-	public MaxIterDialogFragment() {
-		setRetainInstance(true);
-	}
+	private int maxIter;
 	
 	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // TODO: use number picker
-		// Set custom view
-		LayoutInflater inflater = getActivity().getLayoutInflater();
-		View v = inflater.inflate(R.layout.resize, null);
-		
-		EscapeTimeFragment taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
-		
-        final EditText widthEditText = (EditText) v.findViewById(R.id.widthEditText);
-        final EditText heightEditText = (EditText) v.findViewById(R.id.heightEditText);
-        
-        widthEditText.setText(Integer.toString(20));
-        heightEditText.setText(Integer.toString(20));
-
-		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-		alertDialogBuilder.setTitle("Enter size of bitmap");
-
-        alertDialogBuilder.setView(v);		
-
-		alertDialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				EscapeTimeFragment taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
-				
-				int width = Integer.valueOf(widthEditText.getText().toString());
-				int height = Integer.valueOf(heightEditText.getText().toString());
-				
-				if(width > 2048) {
-					Log.v(TAG, "Maximum width is 2048. This is a hard limit of Android");
-					width = 2048;
-				}
-				
-				if(height > 2048) {
-					Log.v(TAG, "Maximum height is 2048. This is a hard limit of Android");
-					height = 2048;
-				}
-				
-				taskFragment.setSize(width, height);
-				
-				dialog.dismiss();
-			}
-		});
-		
-		alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				Log.v(TAG, "Cancel resize.");
-				dialog.dismiss();
-			}
-		});
-
-		return alertDialogBuilder.create();
+	protected String title() {
+		return "Maximum number of iterations";
 	}
-	
-	 @Override
-	 public void onDestroyView() {
-		 if (getDialog() != null && getRetainInstance())
-			 getDialog().setDismissMessage(null);
-		 super.onDestroyView();
-	 }
+
+	@Override
+	protected View createView() {		
+		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
+		
+		LayoutInflater inflater = getActivity().getLayoutInflater();
+		final View v = inflater.inflate(R.layout.maxiter, null);
+
+		editor = (EditText) v.findViewById(R.id.maxIterEditor);
+		
+		maxIter = taskFragment.prefs().maxIter();
+		
+		editor.setText(Integer.toString(maxIter));
+		
+		return v;
+	}
+
+	@Override
+	protected boolean acceptInput() {
+		try {
+			int maxIter = Integer.parseInt(editor.getText().toString());
+			
+			if(maxIter > 1000000) {
+				// TODO
+				Log.v(TAG, "Maximum number is 1000000. This is a hard limit");
+				return false;
+			}
+			
+			EscapeTime prefs = taskFragment.prefs().newMaxIterInstance(maxIter);
+			taskFragment.setPrefs(prefs);
+			
+			return true;
+		} catch(NumberFormatException e) {
+			Log.v(TAG, "Invalid number format");
+			return false;
+		}
+	}
 }

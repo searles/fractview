@@ -19,7 +19,6 @@ package at.fractview.modes.orbit.functions;
 import java.util.LinkedList;
 
 import at.fractview.math.Cplx;
-import at.fractview.math.tree.Executable;
 import at.fractview.math.tree.Expr;
 import at.fractview.math.tree.Op;
 import at.fractview.math.tree.Var;

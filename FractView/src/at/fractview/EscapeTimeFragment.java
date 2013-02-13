@@ -33,10 +33,8 @@ import at.fractview.math.tree.Expr;
 import at.fractview.math.tree.Parser;
 import at.fractview.math.tree.Var;
 import at.fractview.modes.Preferences;
-import at.fractview.modes.orbit.Colorization;
 import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.OrbitToFloat;
-import at.fractview.modes.orbit.functions.Function;
 import at.fractview.modes.orbit.functions.Specification;
 import at.fractview.tools.Labelled;
 
@@ -69,23 +67,6 @@ public class EscapeTimeFragment extends Fragment {
         setRetainInstance(true);
 	}
 
-	public void setData(Preferences prefs, Bitmap bitmap) {
-		if(this.task != null && this.task.isRunning()) {
-			task.cancel();
-			Log.v(TAG, "cancelling task.");
-		}
-		
-		this.prefs = (EscapeTime) prefs;
-		this.bitmap = bitmap;
-	}
-	
-	public Bitmap bitmap() {
-		return bitmap;
-	}
-	
-	public EscapeTime prefs() {
-		return prefs;
-	}
 	
 	// We don't have a view (yet), so I skip things here.
 
@@ -106,11 +87,12 @@ public class EscapeTimeFragment extends Fragment {
 				Log.v(TAG, "Cancelling task");
 				task.cancel();
 				if(getTargetFragment() != null) {
-					// Tell target that we start a calculation
+					// Tell target that we cancel a calculation
 					try {
 						((ImageViewFragment) getTargetFragment()).taskCancelled();
 					} catch(ClassCastException e) {
-						System.out.println(getTargetFragment());
+						// TODO
+						Log.w(TAG, getTargetFragment().toString());
 					}
 				}
 			}
@@ -176,19 +158,13 @@ public class EscapeTimeFragment extends Fragment {
 
         Colorization lakeColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LastRad, OrbitToFloat.Predefined.LastArc, paletteLake);
 */
-        Palette paletteBailout = new Palette(
+        Palette bailoutPalette = new Palette(
 				new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
 				true, 1);
 		
-		
-		
-		Colorization bailoutColorization = new Colorization.LinearDouble(OrbitToFloat.Predefined.LengthInterpolated, paletteBailout);
-		
-		Palette paletteLake = new Palette(
+		Palette lakePalette = new Palette(
 				new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}, 
 				true, (float) (2 * Math.PI));
-
-		Colorization lakeColorization = new Colorization.LinearDouble(OrbitToFloat.Predefined.LastX, paletteLake);
 
 		int maxLength = 1000;
 		double bailout = 64.;
@@ -225,8 +201,8 @@ public class EscapeTimeFragment extends Fragment {
 		
 		prefs = new EscapeTime(affine, maxLength, 
 				spec.create(),
-				bailout, bailoutColorization, 
-				epsilon, lakeColorization);
+				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
+				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
 	}
 	
 	public void setSize(int width, int height) {
@@ -237,30 +213,32 @@ public class EscapeTimeFragment extends Fragment {
 		
 		startTask();
 	}
+	
 
-	public void setFunction(Function function) {
-		Log.v(TAG, "New function: " + function);
-		cancelTask();
-
-		this.prefs.setFunction(function);
+	public void setData(Preferences prefs, Bitmap bitmap) {
+		if(this.task != null && this.task.isRunning()) {
+			task.cancel();
+			Log.v(TAG, "cancelling task.");
+		}
 		
-		startTask();
-	}
-
-	public Function function() {
-		return this.prefs.function();
+		this.prefs = (EscapeTime) prefs;
+		this.bitmap = bitmap;
 	}
 	
-	public void setAffine(Affine affine) {
-		Log.v(TAG, "New affine: " + affine);
+	public void setPrefs(Preferences prefs) {
 		cancelTask();
-
-		this.prefs = this.prefs.scaledInstance(affine);
+		
+		this.bitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
+		this.prefs = (EscapeTime) prefs;
 		
 		startTask();
 	}
 	
-	public Affine affine() {
-		return this.prefs.affine();
+	public Bitmap bitmap() {
+		return bitmap;
+	}
+	
+	public EscapeTime prefs() {
+		return prefs;
 	}
 }

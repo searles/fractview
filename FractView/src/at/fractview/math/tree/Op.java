@@ -410,7 +410,8 @@ public enum Op {
 		public int arity() {
 			return 2;
 		}
-	},	NEG {
+	},
+	NEG {
 		@Override
 		public Expr app(Expr...args) {
 			if(args[0].isApp(NEG)) {
@@ -914,7 +915,7 @@ public enum Op {
 
 		@Override
 		public int arity() {
-			return 0;
+			return 1;
 		}
 	}, 
 	ABS {
@@ -956,7 +957,6 @@ public enum Op {
 		@Override
 		public Expr diffZ(Expr...args) {
 			// No derivative
-			// TODO Really no derivative??
 			return null;
 		}
 

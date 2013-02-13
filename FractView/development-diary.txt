@@ -505,3 +505,9 @@ Initial check into svn. Got a working affine-editor and basic layout files for e
 
 Added GPLv3-header to some files. Need some code review though + testing testing testing.
 In particular check for memory leaks.
+
+2013 - 02 - 13
+
+Added a lot of things - Changed preferences so that it is immutable. Added (ugly) dialogs for
+bailout and lake. So far it works great. Two more points: Saving to gallery + error messages and
+put it out for release as beta version.

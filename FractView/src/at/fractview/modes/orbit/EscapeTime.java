@@ -19,6 +19,7 @@ package at.fractview.modes.orbit;
 import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
 import at.fractview.math.Spline;
+import at.fractview.math.colors.Palette;
 import at.fractview.modes.orbit.functions.Function;
 
 public class EscapeTime extends OrbitFactory {
@@ -32,33 +33,29 @@ public class EscapeTime extends OrbitFactory {
 	
 	private Function function;
 	
-	private Colorization bailoutColorization;
-	private Colorization lakeColorization;
+	private OrbitToFloat.Predefined bailoutDrawingMethod;
+	private OrbitToFloat.Predefined lakeDrawingMethod;
 	
-	public EscapeTime(Affine affine, int maxLength, Function function, 
-			double bailout, Colorization bailoutColorization,
-			double epsilon, Colorization lakeColorization) {
-		super(affine, maxLength);
+	private Palette bailoutPalette;
+	private Palette lakePalette;
+	
+	public EscapeTime(Affine affine, int maxIter, Function function, 
+			double bailout, OrbitToFloat.Predefined bailoutDrawingMethod, Palette bailoutPalette,
+			double epsilon, OrbitToFloat.Predefined lakeDrawingMethod, Palette lakePalette) {
+		super(affine, maxIter);
 		
 		this.function = function;
 		this.bailout = bailout;
 		this.epsilon = epsilon;
-		
-		this.bailoutColorization = bailoutColorization;
-		this.lakeColorization = lakeColorization;
-	}
-	
-	public EscapeTime(Affine affine, int maxLength, Function function, 
-			double bailout, Colorization bailoutColorization,
-			double epsilon, Colorization lakeColorization, Cplx juliaParameter) {
-		super(affine, maxLength);
-		
-		this.function = function;
+
 		this.bailout = bailout;
 		this.epsilon = epsilon;
 		
-		this.bailoutColorization = bailoutColorization;
-		this.lakeColorization = lakeColorization;
+		this.bailoutDrawingMethod = bailoutDrawingMethod;
+		this.lakeDrawingMethod = lakeDrawingMethod;
+		
+		this.bailoutPalette = bailoutPalette;
+		this.lakePalette = lakePalette;
 	}
 	
 	@Override
@@ -66,41 +63,66 @@ public class EscapeTime extends OrbitFactory {
 		return new Orbit();
 	}
 	
-	public void setFunction(Function function) {
-		this.function = function;
-	}
-	
 	public Function function() {
 		return function;
-	}
-
-	public void setBailoutColorization(Colorization colorization) {
-		this.bailoutColorization = colorization;
-	}
-	
-	public Colorization bailoutColorization() {
-		return bailoutColorization;
-	}
-	
-	public void setLakeColorization(Colorization colorization) {
-		this.lakeColorization = colorization;
-	}
-	
-	public Colorization lakeColorization() {
-		return lakeColorization;
 	}
 	
 	public double bailout() {
 		return bailout;
 	}
-	
+
+	public OrbitToFloat.Predefined bailoutDrawingMethod() {
+		return bailoutDrawingMethod;
+	}
+
+	public Palette bailoutPalette() {
+		return bailoutPalette;
+	}
+
+	public double epsilon() {
+		return epsilon;
+	}
+
+	public OrbitToFloat.Predefined lakeDrawingMethod() {
+		return lakeDrawingMethod;
+	}
+
+	public Palette lakePalette() {
+		return lakePalette;
+	}
+
 	@Override
-	public EscapeTime scaledInstance(Affine affine) {
-		return new EscapeTime(affine, this.maxLength(), this.function, 
-				this.bailout, this.bailoutColorization,
-				this.epsilon, this.lakeColorization);
+	public EscapeTime newAffineInstance(Affine affine) {
+		return new EscapeTime(affine, this.maxIter(), this.function, 
+				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
+				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
 	}
 	
+	@Override
+	public EscapeTime newMaxIterInstance(int maxIter) {
+		return new EscapeTime(this.affine(), maxIter, this.function, 
+				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
+				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+	}
+
+	public EscapeTime newFunctionInstance(Function function) {
+		return new EscapeTime(this.affine(), this.maxIter(), function, 
+				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
+				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+	}
+	
+	public EscapeTime newBailoutInstance(double bailout, OrbitToFloat.Predefined bailoutDrawingMethod, Palette bailoutPalette) {
+		return new EscapeTime(this.affine(), this.maxIter(), function, 
+				bailout, bailoutDrawingMethod, bailoutPalette,
+				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+	}
+
+	public EscapeTime newLakeInstance(double epsilon, OrbitToFloat.Predefined lakeDrawingMethod, Palette lakePalette) {
+		return new EscapeTime(this.affine(), this.maxIter(), function, 
+				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
+				epsilon, lakeDrawingMethod, lakePalette);
+	}
+
 	public class Orbit extends AbstractOrbit {
 		// For thread safety, one might think of making this class static
 		// and adding an orbit. Especially interesting if you think of functions
@@ -109,7 +131,7 @@ public class EscapeTime extends OrbitFactory {
 		protected void generate() {
 			type = Type.Lake;
 			
-			for(length = function.init(orbit, c); length < maxLength() - 1; length++) {
+			for(length = function.init(orbit, c); length < maxIter() - 1; length++) {
 				function.step(orbit, length - 1, c); // the parameter is the last calculated value
 
 				Cplx z = orbit[length];
@@ -134,19 +156,20 @@ public class EscapeTime extends OrbitFactory {
 		
 		public int color() {
 			if(type == Type.Bailout) {
-				return bailoutColorization.color(this);
+				return bailoutPalette.color(bailoutDrawingMethod.value(this));
 			} else {
-				return lakeColorization.color(this);
+				// Lake
+				return lakePalette.color(lakeDrawingMethod.value(this));
 			}
 		}
 		
 		public float smooth() {
-			double y = 2 * Math.log(bailout()); // times two because we use absSqr
-
-			double y0 = length() > 0 ? Math.log(get(length() - 1).absSqr()) : 0;
-			double y1 = Math.log(get(length()).absSqr());
-
-			if(y0 > 0 && y > 0 && y1 > 0) {
+			// Linear interpolation, smoothened by logarithm if possible
+			double y = bailout();
+			double y0 = length() > 0 ? get(length() - 1).abs() : 0;
+			double y1 = get(length()).abs();
+			
+			for(int i = 0; i < 2 && y0 > 1 && y > 1 && y1 > 1; i++) {
 				// Double transfer if all values permit it
 				y = Math.log(y);
 				y0 = Math.log(y0);

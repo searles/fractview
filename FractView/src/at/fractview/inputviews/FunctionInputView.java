@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with FractView.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.fractview;
+package at.fractview.inputviews;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +24,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -34,6 +35,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import at.fractview.R;
 import at.fractview.math.Cplx;
 import at.fractview.math.tree.Expr;
 import at.fractview.math.tree.ExprCompiler;
@@ -47,16 +49,15 @@ import at.fractview.tools.Labelled;
  * @author searles
  * TODO: Change so that it can hold also only parameter values (for predefined fractals).
  */
-public class FunctionAdapter {
+public class FunctionInputView {
 
 	private static final String TAG = "FunctionAdapter";
 	
-	public static FunctionAdapter create(Activity activity, Specification spec) {
-		// TODO
+	public static FunctionInputView create(Activity activity, Specification spec) {
 		LayoutInflater inflater = activity.getLayoutInflater();
 		View v = inflater.inflate(R.layout.function_parameters, null);
 		
-		return new FunctionAdapter(v, spec);
+		return new FunctionInputView(v, spec);
 	}
 	
 	// We repack data of specification and merge them with a label
@@ -78,14 +79,13 @@ public class FunctionAdapter {
 	private Set<Var> usedParameters;
 
 	private View view;
+	
 	private LinearLayout layout;
 	
 	private List<View> itemViews;
 	private int viewCountInLayout; // We store old itemViews, therefore this might be smaller than itemViews.size()
 	
-	// TODO: change to context and layout.
-	private FunctionAdapter(View view, Specification spec) {
-		
+	private FunctionInputView(View view, Specification spec) {
 		this.view = view;
 		this.layout = (LinearLayout) view.findViewById(R.id.functionLayout);;
 		
@@ -113,14 +113,56 @@ public class FunctionAdapter {
 			parameters.put(v,  new Parameter(v, spec.parameter(v)));
 		}
 		
-		updateView();
+		updateViews();
 	}
 	
+	public void showError(String title, String msg) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+		builder.setMessage(msg).setTitle(title);
+		AlertDialog dialog = builder.create();
+		dialog.show();
+	}
+
 	public View view() {
 		return view;
 	}
 	
-	private void updateView() {
+	/** Creates a Specification (out of which we can create a function) out
+	 * of the data inside this ArrayAdapter
+	 * @return
+	 */
+	public Specification acceptAndReturn() {
+		Log.v(TAG, "acceptAndReturn");
+
+		// First part: Accept input
+		if(!fn.acceptInput()) return null;
+		
+		for(int i = 0; i < initCount; i++) {
+			if(!inits.get(i).acceptInput()) return null;
+		}
+		
+		for(Var v : usedParameters) {
+			if(!parameters.get(v).acceptInput()) return null;
+		}
+
+		// Second part: Accept input.
+		Labelled<Expr> f = fn.expr;
+		ArrayList<Labelled<Expr>> is = new ArrayList<Labelled<Expr>>(inits.size());
+		Map<Var, Labelled<Cplx>> ps = new TreeMap<Var, Labelled<Cplx>>();
+
+		// add data
+		for(int i = 0; i < initCount; i++) {
+			is.add(inits.get(i).expr);
+		}
+
+		for(Var v : usedParameters) {
+			ps.put(v, parameters.get(v).value);
+		}
+
+		return new Specification(f, is, ps);
+	}	
+	
+	private void updateViews() {
 		Log.v(TAG, "updateView()");
 		
 		// add view for funtion
@@ -199,27 +241,6 @@ public class FunctionAdapter {
 		return itemView;
 	}
 	
-	/** Creates a Specification (out of which we can create a function) out
-	 * of the data inside this ArrayAdapter
-	 * @return
-	 */
-	public Specification spec() {
-		Labelled<Expr> f = fn.expr;
-		ArrayList<Labelled<Expr>> is = new ArrayList<Labelled<Expr>>(inits.size());
-		Map<Var, Labelled<Cplx>> ps = new TreeMap<Var, Labelled<Cplx>>();
-		
-		// add data
-		for(int i = 0; i < initCount; i++) {
-			is.add(inits.get(i).expr);
-		}
-		
-		for(Var v : usedParameters) {
-			ps.put(v, parameters.get(v).value);
-		}
-		
-		return new Specification(f, is, ps);
-	}
-	
 	/**
 	 * @return true if the number of inits or parameters changed
 	 */
@@ -276,20 +297,6 @@ public class FunctionAdapter {
 		}
 		
 		return parameterCountChanged;
-	}
-	
-	public void acceptAllInput() {
-		Log.v(TAG, "acceptAllInput");
-
-		fn.acceptInput();
-		
-		for(int i = 0; i < initCount; i++) {
-			inits.get(i).acceptInput();
-		}
-		
-		for(Var v : usedParameters) {
-			parameters.get(v).acceptInput();
-		}
 	}
 	
 	private class EditorListener implements TextWatcher, OnEditorActionListener  {
@@ -372,20 +379,28 @@ public class FunctionAdapter {
 			Parser parser = Parser.parse(input);
 			Expr e = parser.get();
 			
-			// TODO: What to do with errors?
-			// TODO: Test in particular diff of non-diff functions.
-			
 			if(e != null) {
-				Log.v(TAG, "Function was modified: " + input + " -> " + e);
-				
+
+				if(parser.hasErrors()) {
+					// Show warnings
+					showError("Parser warnings", parser.getErrorMessage());
+				}					
+
 				this.expr = new Labelled<Expr>(e, input);
 				
-				if(FunctionAdapter.this.updateInits()) FunctionAdapter.this.updateView();
+				if(FunctionInputView.this.updateInits()) FunctionInputView.this.updateViews();
 				
 				return true;
 			} else {
 				Log.w(TAG, "Function was NOT modified.");
-				// TODO: Error message!
+				
+				if(parser.hasErrors()) {
+					showError("Could not set z(n+1)", parser.getErrorMessage());
+				} else {
+					Log.e(TAG, "Could not set init-value but parser did not report an error");
+					showError("Could not set z(n+1)", "Unknown error - please file a bug");
+				}
+				
 				return false;
 			}
 		}
@@ -423,18 +438,30 @@ public class FunctionAdapter {
 			
 			if(e != null) {
 				if(e.maxIndexZ() - 1 > index) {
-					// TODO Alert
+					showError("Could not set z(" + index + ")", "Expression tries to access z(" + e.maxIndexZ() + ")");
 					Log.v(TAG, index + " init was NOT updated: " + e + " has too high z-count: " + e.maxIndexZ());
 					return false;
 				} else {
 					this.expr = new Labelled<Expr>(e, input);
 					Log.v(TAG, "Init was updated to " + e);
-	
-					if(FunctionAdapter.this.updateParameters()) FunctionAdapter.this.updateView();
+
+					if(parser.hasErrors()) {
+						// Show warnings
+						showError("Parser warnings", parser.getErrorMessage());
+					}					
+
+					if(FunctionInputView.this.updateParameters()) FunctionInputView.this.updateViews();
 	
 					return true;
 				}
 			} else {
+				if(parser.hasErrors()) {
+					showError("Could not set z(" + index + ")", parser.getErrorMessage());
+				} else {
+					Log.e(TAG, "Could not set init-value but parser did not report an error");
+					showError("Could not set z(" + index + ")", "Unknown error - please file a bug");
+				}
+				
 				return false;
 			}
 		}
@@ -464,17 +491,24 @@ public class FunctionAdapter {
 
 			Parser parser = Parser.parse(input);
 			Expr e = parser.get();
-
+			
 			if(e != null && e.isNum()) {
 				value = new Labelled<Cplx>(e.eval(null), input);
+				
 				Log.v(TAG, id + " parameter was updated: " + e);
+				
+				if(parser.hasErrors()) {
+					// Show warnings
+					showError("Parser warnings", parser.getErrorMessage());
+				}
 	
 				// no update since no new rows were added.				
 				return true;
 			}
 
-			// TODO: Error
-			Log.v(TAG, "Only numbers can be parameters: " + e);
+			showError("Invalid Parameter", "Parameter must be numeric value");
+			
+			Log.w(TAG, "Only numbers can be parameters: " + e);
 			
 			return false;
 		}

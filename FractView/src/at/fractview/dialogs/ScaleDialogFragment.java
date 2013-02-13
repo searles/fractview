@@ -16,23 +16,19 @@
  */
 package at.fractview.dialogs;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.DialogInterface;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
-import at.fractview.EscapeTimeFragment;
 import at.fractview.math.Affine;
+import at.fractview.modes.orbit.EscapeTime;
 
-public class ScaleDialogFragment extends DialogFragment {
+public class ScaleDialogFragment extends InputViewDialogFragment {
 	
 	private static final String TAG = "Scale";
 	
@@ -54,34 +50,20 @@ public class ScaleDialogFragment extends DialogFragment {
 	private EditText[] editors;
 	private double[] matrix;
 	
-	public ScaleDialogFragment() {
-		setRetainInstance(true);
-	}
-	
-	private void updateEditors() {
-        for(int i = 0; i < 6; i++) {
-        	editors[i].setText(Double.toString(matrix[i]));
-        }
-	}
-	
-	private void updateMatrix() {
-        for(int i = 0; i < 6; i++) {
-        	try {
-        		matrix[i] = Double.valueOf(editors[i].getText().toString());
-        	} catch(NumberFormatException e) {
-        		Log.w(TAG, i + "th editor does not contain a valid number");
-        	}
-        }
-	}
 	
 	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
+	protected String title() {
+		return "Affine Transformation";
+	}
+
+	@Override
+	protected View createView() {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
-		View v = inflater.inflate(R.layout.affine, null);
+		final View v = inflater.inflate(R.layout.affine, null);
 		
 		this.taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 		
-		Affine affine = taskFragment.affine();
+		Affine affine = taskFragment.prefs().affine();
         matrix = affine.get();
 		
 		editors = new EditText[6];
@@ -108,40 +90,31 @@ public class ScaleDialogFragment extends DialogFragment {
 				updateEditors();
 			}
         });
-        
-		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-		alertDialogBuilder.setTitle("Set scale");
-
-        alertDialogBuilder.setView(v);		
-
-		alertDialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// get values of matrix
-				updateMatrix();
-				
-				taskFragment.setAffine(Affine.create(matrix));
-				
-				dialog.dismiss();
-			}
-		});
 		
-		alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+		return v;
+	}
 
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				Log.v(TAG, "Cancel resize.");
-				dialog.dismiss();
-			}
-		});
-
-		return alertDialogBuilder.create();
+	@Override
+	protected boolean acceptInput() {
+		updateMatrix();
+		EscapeTime prefs = taskFragment.prefs().newAffineInstance(Affine.create(matrix));
+		taskFragment.setPrefs(prefs);
+		return true;
 	}
 	
-	 @Override
-	 public void onDestroyView() {
-		 if (getDialog() != null && getRetainInstance())
-			 getDialog().setDismissMessage(null);
-		 super.onDestroyView();
-	 }
+	private void updateEditors() {
+        for(int i = 0; i < 6; i++) {
+        	editors[i].setText(Double.toString(matrix[i]));
+        }
+	}
+	
+	private void updateMatrix() {
+        for(int i = 0; i < 6; i++) {
+        	try {
+        		matrix[i] = Double.valueOf(editors[i].getText().toString());
+        	} catch(NumberFormatException e) {
+        		Log.w(TAG, i + "th editor does not contain a valid number");
+        	}
+        }
+	}
 }
