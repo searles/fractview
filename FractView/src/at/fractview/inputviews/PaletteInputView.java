@@ -21,7 +21,17 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.graphics.BitmapShader;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
+import android.graphics.LinearGradient;
+import android.graphics.PorterDuff;
+import android.graphics.Shader;
+import android.graphics.Shader.TileMode;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.PaintDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RectShape;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -29,11 +39,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import at.fractview.R;
@@ -50,30 +59,31 @@ public class PaletteInputView {
 	
 	private static final String TAG = "ColorArray";
 	
-	private static final int PREVIEW_WIDTH = 64; 
-	
 	private View view;
 	
 	/**
 	 * Layout containing color items
 	 */
-	LinearLayout layout;
+	private LinearLayout layout;
 	
-	Button addButton;
-	Button removeButton;
+	private SeekBar hueSeekBar;
+	private SeekBar satSeekBar;
+	private SeekBar valSeekBar;
 	
-	EditText lengthEditor;
+	private Button leftButton;
+	private Button addButton;
+	private Button removeButton;
+	private Button rightButton;
 	
-	CheckBox cyclicCheckBox;
+	private EditText lengthEditor;
 	
-	private Bitmap preview;
-	ImageView previewView;
+	private CheckBox cyclicCheckBox;
 	
-	int selectedIndex;
-	int visibleViewCount;
-	ArrayList<View> itemViews;
+	private int selectedIndex;
+	private int visibleViewCount;
+	private ArrayList<View> itemViews;
 	
-	private ArrayList<Integer> colors;
+	private ArrayList<float[]> colors;
 	
 	private Palette palette;
 	
@@ -82,7 +92,7 @@ public class PaletteInputView {
 		
 		this.palette = palette;
 		
-		this.colors = new ArrayList<Integer>();
+		this.colors = new ArrayList<float[]>();
 		this.itemViews = new ArrayList<View>();
 		this.visibleViewCount = 0;
 
@@ -92,19 +102,32 @@ public class PaletteInputView {
 	private void init() {
 		this.layout = (LinearLayout) view.findViewById(R.id.colorArrayLayout);
 		
+		this.leftButton = (Button) view.findViewById(R.id.moveLeftButton);
 		this.addButton = (Button) view.findViewById(R.id.addButton);
 		this.removeButton = (Button) view.findViewById(R.id.removeButton);
+		this.rightButton = (Button) view.findViewById(R.id.moveRightButton);
+		
+		this.hueSeekBar = (SeekBar) view.findViewById(R.id.hueSeekBar);
+		this.satSeekBar = (SeekBar) view.findViewById(R.id.saturationSeekBar);
+		this.valSeekBar = (SeekBar) view.findViewById(R.id.valueSeekBar);
 
 		this.lengthEditor = (EditText) view.findViewById(R.id.lengthEditor);
 		this.cyclicCheckBox = (CheckBox) view.findViewById(R.id.cyclicCheckBox);
 
-		this.previewView = (ImageView) view.findViewById(R.id.palettePreviewImageView);
-
 		// Create listeners for add and remove-Button
+		leftButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				int next = (selectedIndex + visibleViewCount - 1) % visibleViewCount;
+				exchangeIndices(selectedIndex, next);
+				select(next);
+			}
+		});
+		
 		addButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				addSelect(Color.GREEN);
+				add(Color.BLACK);
 			}
 		});
 		
@@ -114,6 +137,81 @@ public class PaletteInputView {
 				remove();
 			}
 		});
+		
+		rightButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				int next = (selectedIndex + 1) % visibleViewCount;
+				exchangeIndices(selectedIndex, next);
+				select(next);
+			}
+		});
+		
+
+		hueSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				if(fromUser) {
+					float[] hsv = colors.get(selectedIndex);					
+					hsv[0] = progress * 360.f / 1000;
+					updateColorItemView(selectedIndex);
+				}
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+			}
+		});
+		
+		// Set shape of progress drawables
+		updateHueProgressDrawables();
+		updateSatProgressDrawables();
+		updateValueProgressDrawables();
+		
+		satSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				if(fromUser) {
+					float[] hsv = colors.get(selectedIndex);					
+					hsv[1] = progress / 1000.f;
+					
+					updateColorItemView(selectedIndex);
+				}
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+			}
+		});
+		
+		valSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				if(fromUser) {
+					float[] hsv = colors.get(selectedIndex);					
+					hsv[2] = progress / 1000.f;
+					
+					updateColorItemView(selectedIndex);
+				}
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+			}
+		});
+		
 		
 		this.lengthEditor.setOnEditorActionListener(new OnEditorActionListener() {
 
@@ -128,45 +226,87 @@ public class PaletteInputView {
 		
 		this.cyclicCheckBox.setChecked(palette.cyclic());
 		
-		this.cyclicCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton button, boolean checked) {
-				updatePalette();
-				updatePreview();
-			}
-		});
-		
-		this.preview = Bitmap.createBitmap(PREVIEW_WIDTH, 1, Config.ARGB_8888);
-		this.previewView.setImageBitmap(this.preview);
-		
 		// Add colors
+		visibleViewCount = 0;
+		selectedIndex = 0;
+		
 		for(int color : palette.colors()) {
 			add(color);
 		}
 		
-		// and update all color items
-		for(int i = 0; i < visibleViewCount; i++) {
-			updateColorItemView(i);
-		}
-		
-		updatePreview();
+		updateSeekBars();
 	}
 	
-	
-	private void updatePreview() {
-		for(int x = 0; x < PREVIEW_WIDTH; x++) {
-			int color = palette.color(x * palette.length() / (PREVIEW_WIDTH - 1));
-			this.preview.setPixel(x, 0, color);
-		}
+	private void updateHueProgressDrawables() {
+		// Set gradients for hue-seekbar
+		ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
+		    @Override
+		    public Shader resize(int width, int height) {
+		    	LinearGradient gradient = new LinearGradient(0.f, 0.f, width, 0.0f,  
+		    			new int[] { 0xffff0000, 0xffffff00, 0xff00ff00, 0xff00ffff, 0xff0000ff, 0xffff00ff, 0xffff0000}, 
+		    				      null, TileMode.CLAMP);
+		    	return gradient;
+		    }
+		};
 		
-		this.previewView.invalidate();
+		PaintDrawable p = new PaintDrawable();
+		p.setShape(new RectShape());
+		p.setShaderFactory(sf);
+		
+		this.hueSeekBar.setProgressDrawable((Drawable) p);
+	}
+	
+	private void updateSatProgressDrawables() {
+		ShapeDrawable.ShaderFactory setShader = new ShapeDrawable.ShaderFactory() {
+		    @Override
+		    public Shader resize(int width, int height) {
+		    	Bitmap bm = Bitmap.createBitmap(1, Math.max(1, height), Config.ARGB_8888);
+		    	
+		    	float[] hsv = new float[]{0.f, 1.f, 1.f};
+		    	
+		    	for(int i = 0; i < height; i++) {
+		    		hsv[0] = i * 360.f / height;
+		    		int color = Color.HSVToColor(hsv);
+		    		bm.setPixel(0, i, color);
+		    	}
+		    	
+		    	BitmapShader shader1 = new BitmapShader(bm, TileMode.CLAMP, TileMode.CLAMP);
+		    	
+		    	LinearGradient shader2 = new LinearGradient(0, 0, width, 0, 0x00ffffff, 0xffffffff, Shader.TileMode.CLAMP);
+
+		    	return new ComposeShader(shader1, shader2, PorterDuff.Mode.MULTIPLY);
+		    }
+		};
+
+		PaintDrawable p = new PaintDrawable();
+		p.setShape(new RectShape());
+		p.setShaderFactory(setShader);
+		
+		this.satSeekBar.setProgressDrawable((Drawable) p);
+	}
+	
+	private void updateValueProgressDrawables() {
+		ShapeDrawable.ShaderFactory valShader = new ShapeDrawable.ShaderFactory() {
+		    @Override
+		    public Shader resize(int width, int height) {
+		    	LinearGradient gradient = new LinearGradient(0.f, 0.f, width, 0.0f,  
+		    			new int[] { 0xff000000, 0xffffffff }, null, TileMode.CLAMP);
+		    	return gradient;
+		    }
+		};
+		
+		PaintDrawable p = new PaintDrawable();
+		p.setShape(new RectShape());
+		p.setShaderFactory(valShader);
+		
+		this.valSeekBar.setProgressDrawable((Drawable) p);
 	}
 	
 	private void updatePalette() {
 		int[] colorArray = new int[colors.size()];
 		
 		for(int i = 0; i < colors.size(); i++) {
-			colorArray[i] = colors.get(i);
+			colorArray[i] = Color.HSVToColor(colors.get(i));
 		}
 		
 		boolean cyclic = cyclicCheckBox.isChecked();
@@ -194,60 +334,48 @@ public class PaletteInputView {
 	}
 	
 	private void updateColorItemView(int index) {
-		Log.v(TAG, "Updating view of " + index);
-		// Updates the content of the view at position index.
-		View v = itemViews.get(index);
-		
-		// update listener
-		((Listener) v.getTag()).setIndex(index);
-		
-		// update content of view
-		EditText editor = (EditText) itemViews.get(index).findViewById(R.id.colorText);
 		Button button = (Button) itemViews.get(index).findViewById(R.id.colorButton);
 
 		// Update color
-		int color = colors.get(index);
+		int color = Color.HSVToColor(colors.get(index));
+		
 		button.setBackgroundColor(color);
 		
-		// Get brightness
-		// and set text white or black.
-		button.setTextColor(Colors.brightness(color) > 100.f ? 0xff000000 : 0xffffffff);
+		if(selectedIndex == index) {
+			// Get brightness and set text white or black.
+			button.setTextColor(Colors.brightness(color) > 100.f ? 0xff000000 : 0xffffffff);
+			button.setText(Colors.toColorString(color));
+		} else {
+			button.setText("");
+		}
+	}
+	
+	private void updateSeekBars() {
+		float[] hsv = colors.get(selectedIndex);
 		
-		editor.setText(Colors.toColorString(color));
-		
-		// Toggle selection
-		button.setText(index == selectedIndex ? "Selected" : "");
+		hueSeekBar.setProgress((int) (1000.f * hsv[0] / 360.f));
+		satSeekBar.setProgress((int) (1000.f * hsv[1]));
+		valSeekBar.setProgress((int) (1000.f * hsv[2]));		
 	}
 	
 	/**
 	 * Cancels any selection that was made previously
 	 */
 	public void select(int index) {
-		int oldSelectedIndex = selectedIndex;
+		int oldSelected = selectedIndex;
 		selectedIndex = index;
+
+		updateColorItemView(oldSelected);
+		updateColorItemView(selectedIndex);
 		
-		if(oldSelectedIndex >= 0) {
-			// Cancel selection
-			Button button = (Button) itemViews.get(oldSelectedIndex).findViewById(R.id.colorButton);
-			button.setText("");
-		}
-		
-		if(selectedIndex >= 0) {
-			Button button = (Button) itemViews.get(selectedIndex).findViewById(R.id.colorButton);
-			button.setText("Selected");
-		}
+		updateSeekBars();
 	}
 	
-	private int add(int color) {
-		int index;
+	public void add(int color) {
+		float[] hsv = new float[3];
+		Color.colorToHSV(color, hsv);
 		
-		if(selectedIndex < 0) {
-			index = colors.size() - 1;
-		} else {
-			index = selectedIndex;
-		}
-		
-		colors.add(index, color);
+		colors.add(selectedIndex, hsv);
 
 		Log.v(TAG, "itemViewSize = " + itemViews.size());
 		
@@ -262,29 +390,17 @@ public class PaletteInputView {
 		
 		layout.addView(itemViews.get(visibleViewCount), visibleViewCount);
 		visibleViewCount++;
-		
-		return index;
-	}
-	
-	/** Adds a color.
-	 * @param color
-	 */
-	public void addSelect(int color) {
-		// Set selection to new element
-		selectedIndex = add(color);
-		
+
 		// update views
 		for(int i = selectedIndex; i < visibleViewCount; i++) {
 			updateColorItemView(i);
 		}
-	}
-	
-	public boolean hasSelected() {
-		return selectedIndex != -1;
+		
+		updateSeekBars();
 	}
 	
 	public boolean canRemove() {
-		return selectedIndex >= 0 && colors.size() > 1;
+		return colors.size() > 1;
 	}
 	
 	public boolean remove() {
@@ -313,70 +429,38 @@ public class PaletteInputView {
 		return false;
 	}
 	
+	private void exchangeIndices(int i0, int i1) {
+		float[] color0 = colors.get(i0);
+		float[] color1 = colors.get(i1);
+		
+		colors.set(i0, color1);
+		colors.set(i1, color0);
+		
+		updateColorItemView(i0);
+		updateColorItemView(i1);
+		
+		updateSeekBars();
+	}
+	
 	private View createItemView() {
 		LayoutInflater inflater = ((Activity) view.getContext()).getLayoutInflater();
 		View v = inflater.inflate(R.layout.color_item, layout, false);
 		
-		// Create listener
-		EditText editor = (EditText) v.findViewById(R.id.colorText);
-		
-		Listener l = new Listener(editor);
-		l.setIndex(itemViews.size());
-		
-		editor.setOnEditorActionListener(l);
-		((Button) v.findViewById(R.id.colorButton)).setOnClickListener(l);
-		
-		// Set it as tag
-		v.setTag(l);
+		final int index = itemViews.size();
+
+		Button button = (Button) v.findViewById(R.id.colorButton);
+		button.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View buttonView) {
+				if(selectedIndex != index) {
+					select(index);
+				}
+			}
+		});
 		
 		// Add component to list
 		itemViews.add(v);
 		
 		return v;
-	}
-	
-	private class Listener implements OnEditorActionListener, OnClickListener {
-
-		int index;
-		EditText editor;
-		
-		Listener(EditText editor) {
-			this.editor = editor;
-		}
-		
-		void setIndex(int index) {
-			this.index = index;
-		}
-		
-		@Override
-		public boolean onEditorAction(TextView textView, int actionId, KeyEvent event) {
-			// Set color
-			String colorString = textView.getText().toString();
-			Log.v(TAG, "Editor Action: " + colorString);
-			
-			try {
-				int color = Colors.parseColorString(colorString);
-				colors.set(index, color);
-				updateColorItemView(index);
-				updatePalette();
-				updatePreview();
-			} catch(NumberFormatException e) {
-				return false;
-			}
-			
-			return true;
-		}
-
-		@Override
-		public void onClick(View buttonView) {
-			if(selectedIndex == index) {
-				// unselect
-				select(-1);
-			} else {
-				select(index);
-			}
-			
-			editor.requestFocus();
-		}
 	}
 }

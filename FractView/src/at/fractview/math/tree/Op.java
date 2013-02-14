@@ -31,7 +31,7 @@ public enum Op {
 			int cmp1 = args[1].compareTo(args[0]);
 			
 			if(cmp0 != -cmp1) {
-				System.out.println(args[0] + " <> " + args[1] + ": " + cmp0 + " vs " + cmp1);
+				System.err.println("BUG: " + args[0] + " <> " + args[1] + ": " + cmp0 + " vs " + cmp1);
 			}
 			
 			if(args[0].compareTo(args[1]) > 0) {
@@ -39,21 +39,16 @@ public enum Op {
 				return ADD.app(args[1], args[0]);
 			}
 			
+			if(args[0].isApp(ADD) && args[0].get(1).compareTo(args[1]) > 0) {
+				// (args[0].0 + args[0].1) + r -> (args[0].0 + r) + args[0].1 if r < args[0].1
+				return ADD.app(ADD.app(args[0].get(0), args[1]), args[0].get(1));
+			}
+
 			if(args[0].isApp(SUB)) {
-				// (args[0].0 - args[0].1) + r -> args[0].0 + r - args[0].1
+				// (args[0].0 - args[0].1) + args[1] -> (args[0].0 + args[1]) - args[0].1
 				return SUB.app(ADD.app(args[0].get(0), args[1]), args[0].get(1));
 			}
 
-			if(args[1].isApp(ADD) && args[0].compareTo(args[1].get(0)) > 0) {
-				// l + (args[1].0 + args[1].1) -> args[1].0 + (l + args[1].1) if args[1].0 < l
-				return ADD.app(args[1].get(0), ADD.app(args[0], args[1].get(1)));
-			}
-
-			if(args[1].isApp(SUB)) {
-				// l + (args[1].0 - args[1].1) -> (l + args[1].0) - args[1].1
-				return SUB.app(ADD.app(args[0], args[1].get(0)), args[1].get(1));
-			}
-			
 			if(args[0].isApp(Op.NEG)) {
 				// -l.0 + r -> r - args[0].0
 				return SUB.app(args[1], args[0].get(0));
@@ -167,7 +162,17 @@ public enum Op {
 				return MUL.app(args[1], args[0]);
 			}
 
+			if(args[0].isApp(MUL) && args[0].get(1).compareTo(args[1]) > 0) {
+				// (args[0].0 * args[0].1) * r -> (args[0].0 * r) * args[0].1 if r < args[0].1
+				return MUL.app(MUL.app(args[0].get(0), args[1]), args[0].get(1));
+			}
+
 			if(args[0].isApp(DIV)) {
+				// (args[0].0 / args[0].1) * args[1] -> (args[0].0 * args[1]) / args[0].1
+				return DIV.app(MUL.app(args[0].get(0), args[1]), args[0].get(1));
+			}
+			
+			/*if(args[0].isApp(DIV)) {
 				// (args[0].0 / args[0].1) * r -> args[0].0 * r / args[0].1
 				return DIV.app(MUL.app(args[0].get(0), args[1]), args[0].get(1));
 			}
@@ -180,7 +185,7 @@ public enum Op {
 			if(args[1].isApp(DIV)) {
 				// l * (args[1].0 / args[1].1) -> (l * args[1].0) / args[1].1
 				return DIV.app(MUL.app(args[0], args[1].get(0)), args[1].get(1));
-			}
+			}*/
 
 			if(args[0].isApp(Op.NEG)) {
 				// -l.0 * r -> -(args[0].0 * r)
@@ -1003,6 +1008,212 @@ public enum Op {
 		public int arity() {
 			return 1;
 		}
+	},
+	// Now for constants:
+	PI {
+		@Override
+		public int arity() {
+			return 0;
+		}
+
+		@Override
+		public Cplx eval(Cplx... args) {
+			return new Cplx(Math.PI, 0);
+		}
+
+		@Override
+		public Expr diffZ(Expr... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+	},
+	E {
+		@Override
+		public int arity() {
+			return 0;
+		}
+
+		@Override
+		public Cplx eval(Cplx... args) {
+			return new Cplx(Math.E, 0);
+		}
+
+		@Override
+		public Expr diffZ(Expr... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+	},
+	I {
+		@Override
+		public int arity() {
+			return 0;
+		}
+
+		@Override
+		public Cplx eval(Cplx... args) {
+			return new Cplx(0, 1);
+		}
+
+		@Override
+		public Expr diffZ(Expr... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+	},
+	// Now some special things:
+	DIFF {
+		@Override
+		public Expr app(Expr...args) {
+			return args[0].diffZ();
+		}
+
+		@Override
+		public Expr diffZ(Expr...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+		
+		public Cplx eval(Cplx...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}
+	},
+	NEWTON {
+		@Override
+		public Expr app(Expr...args) {
+			Var z = new Var("z");
+			Expr da = args[0].diffZ();
+			
+			if(da == null) return null;
+			
+			Expr fract = Op.DIV.app(args[0], da);			
+			return Op.SUB.app(z, fract);
+		}
+
+		@Override
+		public Expr diffZ(Expr...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+		
+		public Cplx eval(Cplx...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}
+	},
+	NOVA {
+		@Override
+		public Expr app(Expr...args) {
+			Var z = new Var("z");
+			
+			Expr da = args[0].diffZ();
+
+			if(da == null) return null;
+
+			Expr fract = Op.DIV.app(args[0], da);
+			
+			Expr RFract = Op.MUL.app(args[1], fract);
+			Expr newton = Op.SUB.app(z, RFract);
+			
+			return Op.ADD.app(newton, args[2]);
+		}
+
+		@Override
+		public Expr diffZ(Expr...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+		
+		public Cplx eval(Cplx...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public int arity() {
+			return 3;
+		}
+	},
+	HORNER {
+		@Override
+		public Expr app(Expr...args) {
+			Expr z = new Var("z");
+			
+			Expr result = new Num(1);
+
+			for(Expr arg : args) {
+				Expr pre = Op.MUL.app(result, z);
+				result = Op.ADD.app(pre, arg);
+			}
+			
+			return result;
+		}
+
+		@Override
+		public Expr diffZ(Expr...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+		
+		public Cplx eval(Cplx...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public int arity() {
+			// not preassigned
+			return -1;
+		}
+	},
+	POLY { // product[i](z-args[i])
+		@Override
+		public Expr app(Expr...args) {
+			Expr z = new Var("z");
+			Expr result = new Num(1);
+						
+			for(Expr arg : args) {
+				Expr delta = Op.SUB.app(z, arg);
+				result = Op.MUL.app(result, delta);
+			}
+			
+			return result;
+		}
+
+		@Override
+		public Expr diffZ(Expr...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+		
+		public Cplx eval(Cplx...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public int arity() {
+			// not preassigned
+			return -1;
+		}
+	},
+	MANDEL { // argument^2+c
+		@Override
+		public Expr app(Expr...args) {
+			return Op.ADD.app(Op.SQR.app(args[0]), new Var("c"));
+		}
+
+		@Override
+		public Expr diffZ(Expr...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+		
+		public Cplx eval(Cplx...args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}	
 	}
 	;
 	public abstract int arity();
@@ -1012,10 +1223,13 @@ public enum Op {
 
 	public Expr app(Expr...args) {
 		for(Expr arg : args) {
-			if(!arg.isNum()) return new App(this, args);
+			if(!arg.isNum()) {
+				return new App(this, args);
+			}
 		}
 		
 		Cplx[] cArgs = new Cplx[args.length];
+		
 		for(int i = 0; i < args.length; i++) {
 			cArgs[i] = args[i].eval(null);
 		}

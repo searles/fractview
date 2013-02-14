@@ -153,7 +153,7 @@ public class ExprCompiler {
 	private static InstructionTree parameter(Var v, List<Cplx> constants, List<String> parameters) {
 		if(v.is("c")) {
 			return new InstructionTree(Executable.ATOM_C, false, 0);
-		} else if(v.is("z")) {
+		} else if(v.is("z") || v.is("zn")) {
 			return new InstructionTree(Executable.ATOM_Z, false, 0);
 		} else if(v.is("cr")) {
 			return new InstructionTree(Executable.ATOM_CR, false, 0);

@@ -18,6 +18,7 @@ package at.fractview.math.tree;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -214,10 +215,10 @@ public class Parser {
 				incr(); // skip '-'
 			}
 			
-			// Two possibilities:
+			// Three possibilities:
 			e = enclosed(); // Expressions like '( blabla )'
 			if(e == null) e = app(); // or 'sin x' // in this case the recursion below is never called
-
+			if(e == null && neg) e = number(true); // If we had a -, we allow numbers; - -3,3 then is valid.
 			if(e == null) {
 				// No expression?
 				if(neg) {
@@ -248,7 +249,8 @@ public class Parser {
 		if(id == null) {
 			return null;
 		} else {
-			if(ch() == '[') {
+			// TODO: Allow parameters in [], like eg ranges for sums
+			/*if(ch() == '[') {
 				// z[index]
 				incr();
 				
@@ -265,28 +267,45 @@ public class Parser {
 				// sum[2..5]
 				// What is not possible: nested sums where you need to access the run-var inside.
 				return null;
-			} else if(ch() == '(') { // ( e1 ; e2 ; ... ; en )
-				// ; because explain to me, why should horner 2,3 be equal to horner((2,3)) but different from horner(2,3)?
-				
-				incr();
-				
-				List<Expr> l = args();
-				
-				if(ch() != ')') {
-					reportError("Missing )");
+			}*/
+			
+			// We have an id. Is it a function?
+			Op op = Expr.op(id);
+			
+			if(op != null) {
+				// Yes. Fetch arguments.
+				if(op.arity() != 0) {
+					if(ch() == '(') { // ( e1 ; e2 ; ... ; en )
+						// ; because explain to me, why should horner 2,3 be equal to horner((2,3)) but different from horner(2,3)?
+						incr();
+						
+						List<Expr> l = args();
+						
+						if(ch() != ')') {
+							reportError("Missing )");
+						} else {
+							incr();
+						}
+						
+						if(op.arity() < 0 || l.size() == op.arity()) {
+							return op.app(l.toArray(new Expr[l.size()]));
+						}
+					} else if(op.arity() < 0 || op.arity() == 1) {
+						Expr arg = term(true); // We allow sin -x.
+						
+						if(arg != null) {
+							return op.app(arg);
+						}
+					}
+					
+					reportError(op + " requires " + op.arity() + " arguments");
+					return null;
 				} else {
-					incr();
+					// Constants
+					return op.app();
 				}
-				
-				return Expr.create(this, id, l);
 			} else {
-				Expr arg = term(false); // is it an id followed by an argument? sin -x not allowed. sry.
-
-				if(arg == null) {
-					return Expr.create(id);
-				} else {
-					return Expr.create(this, id, arg);
-				}
+				return Expr.var(id);
 			}
 		}
 	}
@@ -412,6 +431,22 @@ public class Parser {
 		
 		public String toString() {
 			return msg + ": " + s.subSequence(0, pos) + "_" + s.subSequence(pos, s.length());
+		}
+	}
+	
+	public static void main(String...args) {
+		Scanner sc = new Scanner(System.in);
+		
+		while(sc.hasNext()) {
+			String line = sc.nextLine();
+			
+			Parser parser = new Parser(line);
+			
+			System.out.println(parser.get());
+			
+			if(parser.hasErrors()) {
+				System.out.println(parser.getErrorMessage());
+			}
 		}
 	}
 }

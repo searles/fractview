@@ -91,19 +91,16 @@ public class Var extends Expr {
 		return vars;
 	}
 
+	protected int typeIndex() {
+		return 2;
+	}
+
 	@Override
-	public int compareTo(Expr that) {
-		if(that instanceof Num) return 1;
-		
-		if(that instanceof Var) {
-			Var v = (Var) that;
+	protected int cmp(Expr that) {
+		Var v = (Var) that;
 			
-			if(this.is(v.id)) return 0;
-			else return id.compareTo(v.id); // They are not equal, so we dont care about case.
-		}
-		
-		// in all other cases var is smaller
-		return -1;
+		if(this.is(v.id)) return 0;
+		else return id.compareTo(v.id); // They are not equal, so we dont care about case.
 	}
 	
 	public int hashCode() {

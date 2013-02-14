@@ -112,8 +112,12 @@ public class Num extends Expr {
 		return 0;
 	}
 
+	protected int typeIndex() {
+		return 1;
+	}
+
 	@Override
-	public int compareTo(Expr that) {
+	protected int cmp(Expr that) {
 		// Number is the smallest
 		if(that instanceof Num) {
 			Num n = (Num)  that;
@@ -125,10 +129,9 @@ public class Num extends Expr {
 			}
 			
 			return r;
+		} else {
+			return -1;
 		}
-
-		// this < that
-		return -1;
 	}
 	
 	public String toString() {

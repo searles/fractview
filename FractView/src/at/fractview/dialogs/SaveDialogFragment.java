@@ -1,7 +1,15 @@
 package at.fractview.dialogs;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -11,6 +19,8 @@ import at.fractview.R;
 
 public class SaveDialogFragment extends InputViewDialogFragment {
 
+	private static final String TAG = "SaveDialogFragment";
+	
 	private EscapeTimeFragment taskFragment;
 	
 	private EditText filenameEditor;
@@ -43,26 +53,51 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 		
 		Bitmap bm = taskFragment.bitmap();
 
-		MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), bm, filename , description);
+		// MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), bm, filename , description);
 
 		// Get path for picture
-		/*File storageDir = new File(
-			    Environment.getExternalStoragePublicDirectory(
-			        Environment.DIRECTORY_PICTURES
-			    ), "FractView"); 
+		File directory = new File(
+				Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), 
+				"FractView"); 
 		
-		if(bm.compress(Bitmap.CompressFormat.PNG, 100, new FileOutputStream())) {
-			// Successfully written picture
+		Log.v(TAG, "Path is " + directory);
+
+		if(!directory.exists()) {
+			Log.v(TAG, "Creating directory");
+			directory.mkdir();
+		}
+
+		try {
+			File imageFile = File.createTempFile(filename, ".png", directory);
+
+			if(imageFile.exists()) {
+				// TODO If file exists, show dialog.
+				Log.v(TAG, "file exists!");
+			}
 			
-			// Add it to the gallery
-		    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-		    File f = new File(mCurrentPhotoPath);
-		    Uri contentUri = Uri.fromFile(f);
-		    mediaScanIntent.setData(contentUri);
-		    this.sendBroadcast(mediaScanIntent);			
-		} else {
+			FileOutputStream fos = new FileOutputStream(imageFile);
+			
+			if(bm.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
+				// Successfully written picture
+				fos.close();
+				Log.v(TAG, "Successfully wrote image file");
+
+				// Add it to the gallery
+				Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+				Uri contentUri = Uri.fromFile(imageFile);
+				mediaScanIntent.setData(contentUri);
+				getActivity().sendBroadcast(mediaScanIntent);			
+			} else {
+				// TODO: Error message
+				Log.d(getClass().toString(), "Could not write image file");
+				fos.close();
+				return false;
+			}
+		} catch(IOException e) {
 			// TODO: Error message
-		}*/
+			e.printStackTrace();
+			Log.e(getClass().toString(), e.getMessage());
+		}
 		
 		return true;
 	}

@@ -141,27 +141,26 @@ public class App extends Expr {
 		return vars;
 	}
 	
+	protected int typeIndex() {
+		return 0;
+	}
 
 	@Override
-	public int compareTo(Expr that) {
-		if(that instanceof App) {
-			App app = (App) that;
+	public int cmp(Expr that) {
+		App app = (App) that;
 			
-			// Use compare of enum
-			int cmp = op.compareTo(app.op);
+		// Use compare of enum
+		int cmp = op.compareTo(app.op);
 			
-			if(cmp == 0) {
-				for(int i = 0; i < op.arity(); i++) {
-					cmp = args[i].compareTo(app.args[i]);
-					// If we find a subtree that is not equal, bail out.
-					if(cmp != 0) return cmp;
-				}
+		if(cmp == 0) {
+			for(int i = 0; i < op.arity(); i++) {
+				cmp = args[i].compareTo(app.args[i]);
+				// If we find a subtree that is not equal, bail out.
+				if(cmp != 0) return cmp;
 			}
-			
-			return 0;
 		}
-		
-		return -that.compareTo(this);
+			
+		return 0;
 	}
 	
 	@Override

@@ -16,7 +16,6 @@
  */
 package at.fractview.math.tree;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -31,9 +30,11 @@ public abstract class Expr implements Comparable<Expr> {
 	
 	private static final String TAG = "Expr";
 	
-	static Expr create(Parser p, String id, List<Expr> args) {
+	/*static Expr create(Parser p, String id, List<Expr> args) {
 		return create(p, id, args.toArray(new Expr[args.size()]));
 	}
+	
+
 	
 	static Expr create(Parser p, String id, Expr...args) {
 		for(Expr arg : args) {
@@ -144,21 +145,18 @@ public abstract class Expr implements Comparable<Expr> {
 		p.reportError("Unknown symbol: " + id);
 		// Unknown symbol - return null
 		return null;
+	}*/
+	
+	static Op op(String id) {
+		try {
+			return Enum.valueOf(Op.class, id.toUpperCase(Locale.US));
+		} catch(IllegalArgumentException e) {
+			// Okay, not a known unary symbol.
+			return null;
+		}
 	}
 	
-	static Expr create(String id) {
-		if(id.equalsIgnoreCase("pi")) {
-			return new Num(Math.PI);
-		}
-
-		if(id.equalsIgnoreCase("e")) {
-			return new Num(Math.E);			
-		}
-
-		if(id.equalsIgnoreCase("i")) {
-			return new Num(new Cplx(0, 1));
-		}
-		
+	static Expr var(String id) {
 		if(id.length() > 2 && id.substring(0, 2).equalsIgnoreCase("zn")) {
 			// "zn2" corresponds to "z(n-2)".
 			
@@ -186,8 +184,6 @@ public abstract class Expr implements Comparable<Expr> {
 	
 	public abstract Cplx eval(Map<Var, Cplx> values);
 
-	public abstract int compareTo(Expr expr);
-	
 	public abstract Set<Var> parameters(Set<Var> vars);
 
 	/**************** Methods for symbolic computation, independent of interpreter ******************/
@@ -207,6 +203,21 @@ public abstract class Expr implements Comparable<Expr> {
 	public abstract int maxIndexZ();
 
 	public abstract int hashCode();
+	
+	protected abstract int typeIndex();
+	
+	protected abstract int cmp(Expr that);
+	
+	@Override
+	public final int compareTo(Expr that) {
+		int delta = this.typeIndex() - that.typeIndex();
+		
+		if(delta != 0) {
+			return delta;
+		} else {
+			return cmp(that);
+		}
+	}
 	
 	public boolean equals(Object that) {
 		if(this == that) {

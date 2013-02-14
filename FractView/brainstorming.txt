@@ -1,3 +1,5 @@
+Insert transfer + offset in palette.
+
 Specification as inner class of function (and Interface)
 spec() then creates a new Spec-object that can be modified.
 Function contains a static default-method returning a default-specification.

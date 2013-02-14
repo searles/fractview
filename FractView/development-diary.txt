@@ -511,3 +511,15 @@ In particular check for memory leaks.
 Added a lot of things - Changed preferences so that it is immutable. Added (ugly) dialogs for
 bailout and lake. So far it works great. Two more points: Saving to gallery + error messages and
 put it out for release as beta version.
+
+Todo: Save files as PNG: Yey, and done :) Google-tutorial on pictures, I thank thee.
+
+And I don't like the palette editor like it is now.
+
+2013 - 02 - 14
+
+So, I put the palette editor behind a button; opening a new editor. I try to use SeekBars to edit values. For 2dimensional 
+editing there's not enough space... Thanks btw http://stackoverflow.com/questions/4381033/multi-gradient-shapes
+Now my seekbars look really nice. I would like to have some sort of live-update though...
+
+No live update, but now I got a superb dialog. 

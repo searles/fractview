@@ -18,7 +18,6 @@ package at.fractview;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +26,7 @@ import at.fractview.dialogs.BailoutDialogFragment;
 import at.fractview.dialogs.FunctionDialogFragment;
 import at.fractview.dialogs.LakeDialogFragment;
 import at.fractview.dialogs.MaxIterDialogFragment;
+import at.fractview.dialogs.PaletteDialogFragment;
 import at.fractview.dialogs.ResizeDialogFragment;
 import at.fractview.dialogs.SaveDialogFragment;
 import at.fractview.dialogs.ScaleDialogFragment;

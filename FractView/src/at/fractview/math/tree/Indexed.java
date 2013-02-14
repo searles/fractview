@@ -89,15 +89,14 @@ public abstract class Indexed extends Expr {
 			return index() + 1;
 		}
 		
+		protected int typeIndex() {
+			return 3;
+		}
 
 		@Override
-		public int compareTo(Expr expr) {
-			if(expr instanceof ZN) {
-				ZN that = (ZN) expr;
-				return index() < that.index() ? -1 : index() == that.index() ? 0 : 1;
-			}
-			
-			return 1;
+		public int cmp(Expr expr) {
+			ZN that = (ZN) expr;
+			return index() < that.index() ? -1 : index() == that.index() ? 0 : 1;
 		}
 
 		@Override

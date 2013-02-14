@@ -64,7 +64,6 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 		
 		colorizationTypeSpinner = (Spinner) v.findViewById(R.id.colorizationTypeSpinner);
 		
-		// TODO: only items that are useful for bailout
 		colorizationAdapter = new ArrayAdapter<OrbitToFloat.Predefined>(
 				getActivity(), 
 				android.R.layout.simple_list_item_1, 
