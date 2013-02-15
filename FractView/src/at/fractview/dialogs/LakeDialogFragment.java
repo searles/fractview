@@ -38,7 +38,6 @@ public class LakeDialogFragment extends InputViewDialogFragment {
 	EditText epsilonEditor;
 	ArrayAdapter<OrbitToFloat.Predefined> colorizationAdapter;
 	Spinner colorizationTypeSpinner;
-	PaletteInputView paletteEditor;
 	
 	@Override
 	protected String title() {
@@ -74,20 +73,11 @@ public class LakeDialogFragment extends InputViewDialogFragment {
 
 		colorizationTypeSpinner.setSelection(colorizationAdapter.getPosition(method));
 		
-		paletteEditor = new PaletteInputView(v, palette);
-
 		return v;
 	}
 
 	@Override
 	protected boolean acceptInput() {
-		Palette palette = paletteEditor.acceptAndReturn();
-		
-		if(palette == null) {
-			Log.v(TAG, "Palette was null");
-			return false;
-		}
-		
 		double epsilonValue;
 		
 		try {
@@ -99,7 +89,7 @@ public class LakeDialogFragment extends InputViewDialogFragment {
 		
 		OrbitToFloat.Predefined method = (OrbitToFloat.Predefined) colorizationTypeSpinner.getSelectedItem();
 		
-		EscapeTime prefs = taskFragment.prefs().newLakeInstance(epsilonValue, method, palette);
+		EscapeTime prefs = taskFragment.prefs().newLakeInstance(epsilonValue, method);
 		taskFragment.setPrefs(prefs);
 		
 		return true;

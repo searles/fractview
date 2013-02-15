@@ -26,6 +26,7 @@ public interface Preferences {
 		 */
 		boolean isRunning();
 		void cancel();
+		void join() throws InterruptedException; // Wait until task has terminated (for whatever reason)
 		
 		// TODO: Things that are running 
 		//int progress();

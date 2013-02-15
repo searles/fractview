@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,11 +25,10 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 	private EscapeTimeFragment taskFragment;
 	
 	private EditText filenameEditor;
-	private EditText descriptionEditor;	
-
+	
 	@Override
 	protected String title() {
-		return "Save as file";
+		return "Save as PNG";
 	}
 
 	@Override
@@ -39,67 +39,100 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 		
 		filenameEditor = (EditText) v.findViewById(R.id.filenameEditor);
-		descriptionEditor = (EditText) v.findViewById(R.id.descriptionEditor);
 		
 		filenameEditor.setText("Fractal");
 
 		return v;
 	}
 
-	@Override
-	protected boolean acceptInput() {
+	private boolean saveFile() {
 		String filename = filenameEditor.getText().toString();
-		String description = descriptionEditor.getText().toString();
 		
 		Bitmap bm = taskFragment.bitmap();
-
-		// MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), bm, filename , description);
 
 		// Get path for picture
 		File directory = new File(
 				Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), 
 				"FractView"); 
 		
-		Log.v(TAG, "Path is " + directory);
+		Log.d(TAG, "Path is " + directory);
 
 		if(!directory.exists()) {
-			Log.v(TAG, "Creating directory");
+			Log.d(TAG, "Creating directory");
 			directory.mkdir();
 		}
 
+		File imageFile = new File(directory, filename + ".png");
+		
+		for(int i = 1; imageFile.exists(); i++) {
+			// We do not erase old files.
+			Log.d(TAG, "file exists! " + imageFile);
+			imageFile = new File(directory, filename + "(" + i + ").png");
+		}
+		
 		try {
-			File imageFile = File.createTempFile(filename, ".png", directory);
-
-			if(imageFile.exists()) {
-				// TODO If file exists, show dialog.
-				Log.v(TAG, "file exists!");
-			}
-			
 			FileOutputStream fos = new FileOutputStream(imageFile);
 			
 			if(bm.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
 				// Successfully written picture
 				fos.close();
-				Log.v(TAG, "Successfully wrote image file");
+				Log.d(TAG, "Successfully wrote image file");
 
 				// Add it to the gallery
 				Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
 				Uri contentUri = Uri.fromFile(imageFile);
 				mediaScanIntent.setData(contentUri);
-				getActivity().sendBroadcast(mediaScanIntent);			
+				getActivity().sendBroadcast(mediaScanIntent);
 			} else {
-				// TODO: Error message
-				Log.d(getClass().toString(), "Could not write image file");
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Unknown error calling 'compress' on bitmap").setTitle("Error saving file").create().show();
+				
+				Log.d(TAG, "Could not write image file");
 				fos.close();
 				return false;
 			}
 		} catch(IOException e) {
-			// TODO: Error message
-			e.printStackTrace();
-			Log.e(getClass().toString(), e.getMessage());
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+			builder.setMessage(e.getMessage()).setTitle("Error saving file").create().show();
+			Log.d(TAG, e.getMessage());
 		}
 		
 		return true;
+	}
+	
+	@Override
+	protected boolean acceptInput() {
+		if(taskFragment.isRunning()) {
+			// Show yes-no-dialog indicating that the task is still running...
+			DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+			    @Override
+			    public void onClick(DialogInterface dialog, int which) {
+			    	if(which == DialogInterface.BUTTON_POSITIVE) {
+			    		// save file 
+			    		if(saveFile()) {
+				    		// and close original dialog
+				    		SaveDialogFragment.this.dismiss();
+			    		}
+			    	} else {
+			    		// Dismiss save-dialog without saving.
+			    		SaveDialogFragment.this.dismiss();			    		
+			    	}
+			        
+			    	// Dismiss this dialog
+			        // Will be done anyways...
+			    	// dialog.dismiss();
+			    }
+			};
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+			builder.setMessage("Calculation is still running. Do you still want to save image?")
+				.setPositiveButton("Yes", dialogClickListener)
+			    .setNegativeButton("No", dialogClickListener).show();
+			
+			return false;
+		}
+		
+		return saveFile();
 	}
 
 }

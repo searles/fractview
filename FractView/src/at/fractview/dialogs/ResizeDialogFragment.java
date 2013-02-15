@@ -79,11 +79,11 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 			width = Integer.parseInt(widthEditor.getText().toString());
 
 			if(width > 2048) {
-				Log.v(TAG, "Maximum width is 2048. This is a hard limit of Android");
+				Log.d(TAG, "Maximum width is 2048. This is a hard limit of Android");
 				return false;
 			}
 		} catch(NumberFormatException e) {
-			Log.v(TAG, "Invalid number format");
+			Log.d(TAG, "Invalid number format");
 			return false;
 		}
 
@@ -93,11 +93,11 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 			height = Integer.parseInt(heightEditor.getText().toString());
 			
 			if(height > 2048) {
-				Log.v(TAG, "Maximum width is 2048. This is a hard limit of Android");
+				Log.d(TAG, "Maximum width is 2048. This is a hard limit of Android");
 				return false;
 			}			
 		} catch(NumberFormatException e) {
-			Log.v(TAG, "Invalid number format");
+			Log.d(TAG, "Invalid number format");
 			return false;
 		}
 		

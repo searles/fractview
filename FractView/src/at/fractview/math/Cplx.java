@@ -148,7 +148,7 @@ public class Cplx {
 			zi = 2 * t * zi;
 		}
 
-		if(inv) this.inv(this);
+		if(inv) this.rec(this);
 		
 		return this;
 	}
@@ -200,11 +200,21 @@ public class Cplx {
 		return this;
 	}
 	
-	public Cplx inv(double re, double im) {
+	public Cplx rec(double re, double im) {
 		double abs = re * re + im * im;
 
 		this.re = re / abs;
 		this.im = -im / abs;
+		
+		return this;
+	}
+	
+	public Cplx drec(double re, double im) {
+		// z - 1/z
+		double abs = re * re + im * im;
+
+		this.re = re - re / abs;
+		this.im = im + im / abs;
 		
 		return this;
 	}
@@ -215,6 +225,7 @@ public class Cplx {
 		double ea = Math.exp(re);
 		this.re = ea * Math.cos(im);
 		this.im = ea * Math.sin(im);
+
 		return this;
 	}
 	
@@ -243,29 +254,20 @@ public class Cplx {
 	}
 	
 	public Cplx tan(double re, double im) {
-		double sx = Math.sin(re);
-		double cx = Math.cos(re);
-		double shy = Math.sinh(im);
-		double chy = Math.cosh(im);
-		
-		double abs = cx * cx + shy * shy;
-		
-		this.re = sx * cx / abs;
-		this.im = shy * chy / abs;
-
+		this.exp(-2. * im, 2. * re); // this = e ^ 2zi.
+		this.div(this.im, -this.re + 1, this.re + 1, this.im);
 		return this;
 	}
 
 	public Cplx atan(double re, double im) {
-		// TODO 
-		/* http://mathforum.org/library/drmath/view/72732.html
-		 * 
-		 *  http://gcc.gnu.org/onlinedocs/gcc-4.6.3/libstdc++/api/a00813_source.html */
-		return null;
+		this.div(1 + im, -re, 1 - im, re); // 1-it / 1 + it
+		this.log(this.re, this.im); // log ...
+		this.set(-this.im / 2., this.re / 2.); // / 2i
+		
+		return this;
 	}
 
 	public Cplx sinh(double re, double im) {
-		// sinh x + iy = sinh x * cos y + i cosh x * sin y
 		this.re = Math.sinh(re) * Math.cos(im);
 		this.im = Math.cosh(re) * Math.sin(im);
 		
@@ -281,23 +283,17 @@ public class Cplx {
 	}
 	
 	public Cplx tanh(double re, double im) {
-		// TODO
-		double shx = Math.sinh(re);
-		double chx = Math.cosh(re);
-		double sy = Math.sin(im);
-		double cy = Math.cos(im);
-		
-		double abs = chx * chx + sy * sy;
-		
-		this.re = shx * chx / abs;
-		this.im = sy * cy / abs;
-
-		return null;
+		this.exp(2. * re, 2. * im); // this = e ^ 2z.
+		this.div(this.re - 1, this.im, this.re + 1, this.im);
+		return this;
 	}
 
 	public Cplx atanh(double re, double im) {
-		// TODO
-		return null;
+		this.div(1 + re, im, 1 - re, -im);
+		this.log(this.re, this.im);
+		this.set(this.re / 2., this.im / 2.);
+		
+		return this;
 	}
 
 	public Cplx conj(double re, double im) {
@@ -346,8 +342,12 @@ public class Cplx {
 		return this.sqr(arg.re, arg.im);
 	}
 
-	public Cplx inv(Cplx arg) {
-		return this.inv(arg.re, arg.im);
+	public Cplx rec(Cplx arg) {
+		return this.rec(arg.re, arg.im);
+	}
+
+	public Cplx drec(Cplx arg) {
+		return this.drec(arg.re, arg.im);
 	}
 
 	public Cplx exp(Cplx arg) {
@@ -373,7 +373,6 @@ public class Cplx {
 	public Cplx atan(Cplx arg) {
 		return this.atan(arg.re, arg.im);
 	}
-
 
 	public Cplx sinh(Cplx arg) {
 		return this.sinh(arg.re, arg.im);

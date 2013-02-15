@@ -197,12 +197,12 @@ public enum Op {
 				return Op.NEG.app(MUL.app(args[0], args[1].get(0)));
 			}
 
-			if(args[0].isApp(Op.INV)) {
+			if(args[0].isApp(Op.REC)) {
 				// inv(args[0].0) * r -> r / args[0].0
 				return DIV.app(args[1], args[0].get(0));
 			}
 
-			if(args[1].isApp(Op.INV)) {
+			if(args[1].isApp(Op.REC)) {
 				// l * inv(args[1].0) -> l / args[1].0
 				return DIV.app(args[0], args[1].get(0));
 			}
@@ -244,12 +244,12 @@ public enum Op {
 			
 			if(args[0].isNum(1, 0)) {
 				// 1 / r -> inv(args[1])
-				return Op.INV.app(args[1]);
+				return Op.REC.app(args[1]);
 			} // the case l / 1 (-> 1 * l) is already handled in MUL
 			
 			if(args[1].isNum() && !args[0].isNum()) {
 				// l / num -> inv(num) * l
-				return MUL.app(Op.INV.app(args[1]), args[0]);
+				return MUL.app(Op.REC.app(args[1]), args[0]);
 			}
 			
 			if(args[0].isApp(DIV)) {
@@ -272,12 +272,12 @@ public enum Op {
 				return Op.NEG.app(DIV.app(args[0], args[1].get(0)));
 			}
 
-			if(args[0].isApp(Op.INV)) {
+			if(args[0].isApp(Op.REC)) {
 				// inv(args[0].0) / r -> inv(args[0].0 * r)
-				return Op.INV.app(MUL.app(args[0].get(0), args[1]));
+				return Op.REC.app(MUL.app(args[0].get(0), args[1]));
 			}
 
-			if(args[1].isApp(Op.INV)) {
+			if(args[1].isApp(Op.REC)) {
 				// l / inv(args[1].0) -> l * args[1].0
 				return MUL.app(args[0], args[1].get(0));
 			}
@@ -327,7 +327,7 @@ public enum Op {
 			
 			if(args[1].isNum(-1, 0)) {
 				// l ^ -1 -> inv(args[0])
-				return Op.INV.app(args[0]);
+				return Op.REC.app(args[0]);
 			}
 
 			if(args[1].isNum(2, 0)) {
@@ -355,14 +355,14 @@ public enum Op {
 				return DIV.app(POW.app(args[0].get(0), args[1]), POW.app(args[0].get(1), args[1]));
 			}
 
-			if(args[0].isApp(Op.INV)) {
+			if(args[0].isApp(Op.REC)) {
 				// inv(args[0].0) ^ r -> inv(args[0].0 ^ r)
-				return Op.INV.app(POW.app(args[0].get(0), args[1]));
+				return Op.REC.app(POW.app(args[0].get(0), args[1]));
 			}
 			
 			if(args[1].isApp(Op.NEG)) {
 				// l ^ -r.0 -> inv(l ^ args[1].0)
-				return Op.INV.app(POW.app(args[0], args[1].get(0)));
+				return Op.REC.app(POW.app(args[0], args[1].get(0)));
 			}
 
 			if(args[0].isApp(Op.EXP)) {
@@ -454,15 +454,15 @@ public enum Op {
 		}
 
 	},
-	INV {
+	REC {
 		@Override
 		public Expr app(Expr...args) {
 			if(args[0].isApp(NEG)) {
 				// inv(-a.0) -> -inv(args[0].0)
-				return NEG.app(INV.app(args[0].get(0)));
+				return NEG.app(REC.app(args[0].get(0)));
 			}
 			
-			if(args[0].isApp(INV)) {
+			if(args[0].isApp(REC)) {
 				// inv(inv(args[0].0)) -> a.0
 				return args[0].get(0);
 			}
@@ -489,7 +489,31 @@ public enum Op {
 
 		@Override
 		public Cplx eval(Cplx...args) {
-			return new Cplx().inv(args[0]);
+			return new Cplx().rec(args[0]);
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}
+
+	},
+	DREC {
+		@Override
+		public Expr diffZ(Expr...args) {
+			Expr dt = args[0].diffZ();
+			
+			if(dt != null) {
+				// -dt / sqr(args[0])
+				return Op.MUL.app(Op.ADD.app(new Num(1), Op.SQR.app(args[0])));
+			}
+			
+			return null;
+		}
+
+		@Override
+		public Cplx eval(Cplx...args) {
+			return new Cplx().drec(args[0]);
 		}
 
 		@Override
@@ -506,9 +530,9 @@ public enum Op {
 				return SQR.app(args[0].get(0));
 			}
 			
-			if(args[0].isApp(INV)) {
+			if(args[0].isApp(REC)) {
 				// sqr(inv(args[0].0)) -> inv(sqr(args[0].0))
-				return INV.app(SQR.app(args[0].get(0)));
+				return REC.app(SQR.app(args[0].get(0)));
 			}
 
 			return super.app(args[0]);
@@ -538,9 +562,9 @@ public enum Op {
 	SQRT {
 		@Override
 		public Expr app(Expr...args) {
-			if(args[0].isApp(INV)) {
+			if(args[0].isApp(REC)) {
 				// sqrt(inv(args[0].0)) -> inv(sqrt(args[0].0))
-				return INV.app(SQRT.app(args[0].get(0)));
+				return REC.app(SQRT.app(args[0].get(0)));
 			}
 
 			return super.app(args[0]);
@@ -574,7 +598,7 @@ public enum Op {
 		public Expr app(Expr...args) {
 			if(args[0].isApp(NEG)) {
 				// exp(-a.0) -> inv(exp(args[0].0))
-				return INV.app(EXP.app(args[0].get(0)));
+				return REC.app(EXP.app(args[0].get(0)));
 			}
 
 			return super.app(args[0]);
@@ -606,7 +630,7 @@ public enum Op {
 	LOG {
 		@Override
 		public Expr app(Expr...args) {
-			if(args[0].isApp(INV)) {
+			if(args[0].isApp(REC)) {
 				// log(inv(args[0].0)) -> -log(args[0].0)
 				return NEG.app(LOG.app(args[0].get(0)));
 			}

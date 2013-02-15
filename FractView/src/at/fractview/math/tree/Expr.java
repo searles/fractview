@@ -243,7 +243,7 @@ public abstract class Expr implements Comparable<Expr> {
 	public Cplx findRoot(Var v, Map<Var, Cplx> values, double epsilon, int maxIter) {
 		// if the variable does not occur in expression
 		if(!this.containsZ()) {
-			Log.v(TAG, this + " does not contain " + v);
+			Log.d(TAG, this + " does not contain " + v);
 			return null;
 		}
 		
@@ -251,7 +251,7 @@ public abstract class Expr implements Comparable<Expr> {
 		Expr df = this.diffZ();
 		
 		if(df == null) {
-			Log.v(TAG, "we did not get a derivation");
+			Log.d(TAG, "we did not get a derivation");
 			return null;
 		}
 		
@@ -262,7 +262,7 @@ public abstract class Expr implements Comparable<Expr> {
 		
 		if(this.eval(map) == null) {
 			// If all variables are defined, the function returns a value (which might be Infinity or NaN).
-			Log.v(TAG, "Well, there are some variable values for which I don't have any information");
+			Log.d(TAG, "Well, there are some variable values for which I don't have any information");
 			return null;
 		}
 		
@@ -290,7 +290,7 @@ public abstract class Expr implements Comparable<Expr> {
 			}
 		}
 		
-		Log.v(TAG, "Maximal number of iterations reached without a result...");
+		Log.d(TAG, "Maximal number of iterations reached without a result...");
 		// We did not find a root in time...
 		return null;
 	}
@@ -309,7 +309,7 @@ public abstract class Expr implements Comparable<Expr> {
 				
 				if(fx0.isInfinite() || fx0.isNaN()) {
 					// Okay, that was a bad guess...
-					Log.v(TAG, x0 + " was a bad guess: f(x) returns Infinite or NaN");
+					Log.d(TAG, x0 + " was a bad guess: f(x) returns Infinite or NaN");
 					return null;
 				}
 
@@ -319,7 +319,7 @@ public abstract class Expr implements Comparable<Expr> {
 				Cplx nextX0 = new Cplx().sub(x0, new Cplx().div(fx0, dfx0));
 				
 				if(nextX0.isInfinite() || nextX0.isNaN()) {
-					Log.v(TAG, x0 + " was a bad guess: Next value would be Infinite or NaN.");
+					Log.d(TAG, x0 + " was a bad guess: Next value would be Infinite or NaN.");
 					return null;
 				}
 
@@ -331,7 +331,7 @@ public abstract class Expr implements Comparable<Expr> {
 			
 			if(fx0.absSqr() < epsilon * epsilon) {
 				// We found a solution.
-				Log.v(TAG, "Found a solution: f(" + x0 + ") = " + fx0);
+				Log.d(TAG, "Found a solution: f(" + x0 + ") = " + fx0);
 				return x0;
 			}
 		}

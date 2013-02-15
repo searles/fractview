@@ -523,3 +523,33 @@ editing there's not enough space... Thanks btw http://stackoverflow.com/question
 Now my seekbars look really nice. I would like to have some sort of live-update though...
 
 No live update, but now I got a superb dialog. 
+
+2013 - 02 - 14
+
+Will move palette into its own dialog, otherwise it's taking too much space. Also I now reuse old bitmaps. I don't need the
+preview image, and creating a new bitmap every time I change something is a lot of efford, also concerning memory
+consuption. Considering caching, both choices are good.
+
+What I do now is, I post a runnable to a handler that sets the new preferences. I hope that there are no race conditions, but
+setData should only be called from the main thread (otherwise I get an exception that I try to do sth with the ImageView outside
+the owning thread.) Had a dead-lock with await and tile-iterators (some workers were waiting while others were cancelled - this
+was a memory leak until now!). To avoid this, I now call interrupt in cancel.
+
+Also found a bug: sqr zr+zi + c crashes because (I think) zr/zi do not increase z-count. (resolved)
+
+Testing? "Invalid layout of java.lang.String at value" Now what... 
+
+Okay, works again. What an annoying thing (was it the update of before or was it because I switched from my phone to my tablet?)
+
+Two more things to do: Implement straighten and atanh and a dialog to be shown when someone wants to save a picture that is not finished
+yet. Also, remove the description of images and check why images have funny names.
+
+Woops, I use the original matrix in my scaleEditor. How did that happen...
+
+For the "Calculation is not finished yet", I am now interested in this: 
+http://stackoverflow.com/questions/4473940/android-best-practice-returning-values-from-a-dialog
+
+Uh, nice one: http://stackoverflow.com/questions/2620444/how-to-prevent-a-dialog-from-closing-when-a-button-is-clicked
+
+
+Check cubic spline. Check colors. Source file for old stuff...

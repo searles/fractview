@@ -78,7 +78,7 @@ public class Var extends Expr {
 	
 	@Override
 	public int maxIndexZ() {
-		return is("z") ? 1 : 0;
+		return containsZ() ? 1 : 0;
 	}
 	
 	public String id() {

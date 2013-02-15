@@ -111,16 +111,28 @@ public class EscapeTime extends OrbitFactory {
 				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
 	}
 	
-	public EscapeTime newBailoutInstance(double bailout, OrbitToFloat.Predefined bailoutDrawingMethod, Palette bailoutPalette) {
+	public EscapeTime newBailoutInstance(double bailout, OrbitToFloat.Predefined bailoutDrawingMethod) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
 				bailout, bailoutDrawingMethod, bailoutPalette,
 				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
 	}
 
-	public EscapeTime newLakeInstance(double epsilon, OrbitToFloat.Predefined lakeDrawingMethod, Palette lakePalette) {
+	public EscapeTime newLakeInstance(double epsilon, OrbitToFloat.Predefined lakeDrawingMethod) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
 				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
-				epsilon, lakeDrawingMethod, lakePalette);
+				epsilon, lakeDrawingMethod, this.lakePalette);
+	}
+	
+	public EscapeTime newBailoutPaletteInstance(Palette bailoutPalette) {
+		return new EscapeTime(this.affine(), this.maxIter(), function, 
+				this.bailout, this.bailoutDrawingMethod, bailoutPalette,
+				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+	}
+
+	public EscapeTime newLakePaletteInstance(Palette lakePalette) {
+		return new EscapeTime(this.affine(), this.maxIter(), function, 
+				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
+				this.epsilon, this.lakeDrawingMethod, lakePalette);		
 	}
 
 	public class Orbit extends AbstractOrbit {

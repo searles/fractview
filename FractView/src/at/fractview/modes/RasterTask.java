@@ -52,16 +52,18 @@ public class RasterTask implements Preferences.Task {
 	private Lock lock;
 	private Condition wc;
 	
+	private Thread[] threads;
+	
 	public RasterTask(Rasterable preferences) {
 		this.preferences = preferences;
 		this.runningThreadCount = new AtomicInteger(THREAD_COUNT);
-		
+		this.threads = new Thread[THREAD_COUNT];
 		this.lock = new ReentrantLock();
 		this.wc = this.lock.newCondition();
 	}
 
 	public void start(Bitmap bitmap) {
-		Log.v(TAG, "starting task...");
+		Log.d(TAG, "starting task...");
 		
 		startTime = System.currentTimeMillis();
 		
@@ -97,14 +99,13 @@ public class RasterTask implements Preferences.Task {
 			// Create new worker and run it [recycling old workers is not a 
 			// good idea because they might be still running]
 			
-			// TODO: Consider using an executor service here...
-			Thread thread = new Thread(new Worker(canvas));
+			threads[i] = new Thread(new Worker(canvas));
 			
 			// Set priority (low priority keeps device responsive.)
-			thread.start();
+			threads[i].start();
 		}
 		
-		Log.v(TAG, "background-threads have been started");
+		Log.d(TAG, "background-threads have been started");
 	}
 	
 	public boolean isCancelled() {
@@ -116,7 +117,19 @@ public class RasterTask implements Preferences.Task {
 	}
 	
 	public void cancel() {
+		Log.d(TAG, "cancel " + hashCode());
 		this.cancelled = true;
+		for(int i = 0; i < THREAD_COUNT; i++) {
+			threads[i].interrupt(); // maybe we are in a waiting position...
+		}
+	}
+
+	@Override
+	public void join() throws InterruptedException {
+		Log.d(TAG, "Joining calculating threads - "  + hashCode());
+		for(int i = 0; i < THREAD_COUNT; i++) {
+			threads[i].join();
+		}
 	}
 	
 	private class Tile {
@@ -126,7 +139,7 @@ public class RasterTask implements Preferences.Task {
 		int stepSize;
 		boolean skipFirstPix;
 		
-		void calc(Environment env, Canvas canvas, Paint paint) throws CancelException, InterruptedException {
+		void calc(Environment env, Canvas canvas, Paint paint) throws CancelException {
 			int w = canvas.getWidth();
 			int h = canvas.getHeight();
 			
@@ -139,8 +152,6 @@ public class RasterTask implements Preferences.Task {
 				for(int x = x0; x < x1; x += stepSize) {
 					if(isCancelled()) {
 						throw new CancelException();
-					} else if(Thread.currentThread().isInterrupted()) {
-						throw new InterruptedException();
 					}
 
 					if(!skipFirstPix) {
@@ -359,7 +370,8 @@ public class RasterTask implements Preferences.Task {
 			// We create one tile and reuse it.
 			Tile t = new Tile();
 			
-			Log.v(TAG, "Worker " + this + " started");
+			Log.d(TAG, "Worker " + hashCode() + " started");
+			
 			try {
 				for(TileIterator ti : tileIterators) {
 					while(ti.next(t) != null) {
@@ -367,7 +379,6 @@ public class RasterTask implements Preferences.Task {
 					}
 				
 					// Wait until all threads are done with this tileIterator
-					// TODO: Can this be done in a nicer way?
 					try {
 						lock.lock();
 						checkPointCount ++;
@@ -385,16 +396,16 @@ public class RasterTask implements Preferences.Task {
 					}
 				}
 			} catch(CancelException e) {
-				Log.v(TAG, "Worker was cancelled");
+				Log.d(TAG, "Worker was cancelled");
 			} catch(InterruptedException e) {
-				Log.v(TAG, "Worker was interrupted");
+				Log.d(TAG, "Worker was interrupted");
 			} finally {
 				int index = runningThreadCount.decrementAndGet();
-				Log.v(TAG, "Worker " + this + "(" + index + ") is done");
+				Log.d(TAG, "Worker " + "(" + hashCode() + ") is done");
 			
 				if(index == 0) {
-					Log.v(TAG, "Runtime of task was " + (System.currentTimeMillis() - startTime) + " ms");
-					Log.v(TAG, "This is the last running worker");
+					Log.d(TAG, "Runtime of task was " + (System.currentTimeMillis() - startTime) + " ms");
+					Log.d(TAG, "This is the last running worker");
 				}
 			}
 		}
@@ -420,5 +431,6 @@ public class RasterTask implements Preferences.Task {
 	 */
 	private class CancelException extends Exception {
 		private static final long serialVersionUID = 6296523206940181359L;
-	}	
+	}
+
 }

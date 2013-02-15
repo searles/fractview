@@ -377,16 +377,16 @@ public class PaletteInputView {
 		
 		colors.add(selectedIndex, hsv);
 
-		Log.v(TAG, "itemViewSize = " + itemViews.size());
+		Log.d(TAG, "itemViewSize = " + itemViews.size());
 		
 		// update layout: Add one element
 		if(itemViews.size() == visibleViewCount) {
 			// not enough views
-			Log.v(TAG, "Creating view with index " + visibleViewCount);
+			Log.d(TAG, "Creating view with index " + visibleViewCount);
 			createItemView();
 		}
 
-		Log.v(TAG, "Adding view with index " + visibleViewCount);
+		Log.d(TAG, "Adding view with index " + visibleViewCount);
 		
 		layout.addView(itemViews.get(visibleViewCount), visibleViewCount);
 		visibleViewCount++;
@@ -414,7 +414,7 @@ public class PaletteInputView {
 			
 			// Remove last element from layout
 			--visibleViewCount;
-			Log.v(TAG, "Removing view with index " + visibleViewCount);
+			Log.d(TAG, "Removing view with index " + visibleViewCount);
 
 			layout.removeViewAt(visibleViewCount);
 			

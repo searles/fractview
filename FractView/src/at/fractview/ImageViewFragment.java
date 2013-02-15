@@ -36,9 +36,10 @@ import at.fractview.modes.ScaleablePrefs;
 
 public class ImageViewFragment extends Fragment {
 	
-	private static final String TAG = "ViewFragment";
+	private static final String TAG = "ImageViewFragment";
 
 	public static final String TASK_TAG = "at.fractview.TASK_FRAGMENT_TAG";
+	
 	static final int TASK_FRAGMENT = 0;
 	
 	private static final int MILLISECONDS_TILL_UPDATE = 125; // 8 times per second
@@ -61,7 +62,7 @@ public class ImageViewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, 
         Bundle savedInstanceState) {        
 		
-		Log.v(TAG, "onCreateView");
+		Log.d(TAG, "onCreateView");
 
 		View v = inflater.inflate(R.layout.imageview, container, false);
 		
@@ -77,10 +78,9 @@ public class ImageViewFragment extends Fragment {
 
 		// And set matrices as soon as view is layouted
 		imageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-			// TODO: Would this be deleted on time?
 		    @Override
 		    public void onGlobalLayout() {
-		    	Log.v(TAG, "Global layout: updating image view matrices");
+		    	Log.d(TAG, "Global layout: updating image view matrices");
 		    	initImageMatrix();
 		    }
 		});
@@ -98,7 +98,7 @@ public class ImageViewFragment extends Fragment {
 				if(taskFragment.isRunning()) {
 					handler.postDelayed(this, MILLISECONDS_TILL_UPDATE);
 				} else {
-					Log.v(this.toString(), "No further updates because task is not running anymore");
+					Log.d(this.toString(), "No further updates because task is not running anymore");
 				}
 			}
 		};
@@ -107,16 +107,20 @@ public class ImageViewFragment extends Fragment {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(TASK_TAG);
 		
 		if(taskFragment == null) {
-			Log.v(TAG, "No saved instance --> creating new data fragment");
+			Log.d(TAG, "No saved instance --> creating new data fragment");
 			taskFragment = new EscapeTimeFragment();
-			getFragmentManager().beginTransaction().add(taskFragment, TASK_TAG).commit();
-
+			
+			// The handlers are started from the task fragment.
 			taskFragment.setTargetFragment(this, TASK_FRAGMENT);
 
+			getFragmentManager().beginTransaction().add(taskFragment, TASK_TAG).commit();
+
+
 			// Start task and also handler
-			taskFragment.startTask();
+			// taskFragment.startTask(); This is done inside onCreate of taskFragment
 			// via target this will call back to here.
 		} else {
+			Log.d(TAG, "Found old segment");
 			// set target
 			taskFragment.setTargetFragment(this, TASK_FRAGMENT);
 			
@@ -131,7 +135,7 @@ public class ImageViewFragment extends Fragment {
 	
 	@Override
 	public void onDestroy() {
-		Log.v(TAG, "onDestroy: Stopping handler");
+		Log.d(TAG, "onDestroy: Stopping handler");
 		this.handler.removeCallbacks(updateView);
 		super.onDestroy();
 	}
@@ -177,26 +181,27 @@ public class ImageViewFragment extends Fragment {
 	}
 
 	public void initializeTaskView() {
-		// TODO: A better name would be "initializeTaskView".
-		Log.v(TAG, "initializing view...");
+		Log.d(TAG, "initializing view...");
 
 		imageView.setImageBitmap(taskFragment.bitmap());
 		initImageMatrix(); // Bitmap might have been resized
 
+		// Make sure that it is only once in handler.
+		handler.removeCallbacks(updateView);
 		handler.post(updateView);
 	}
 	
 	public void taskCancelled() {
-		Log.v(TAG, "Got info that task was cancelled");
+		Log.d(TAG, "Got info that task was cancelled");
 		handler.removeCallbacks(updateView);
 	}
 	
 	private void applyTouch(Matrix bitmapMatrix, Matrix prefsMatrix) {
-		taskFragment.cancelTask(); // stop calculation
+		// taskFragment.cancelTask(); // stop calculation
 
 		// Get old data
 		ScaleablePrefs scaleable = (ScaleablePrefs) taskFragment.prefs();		
-		Bitmap bitmap = taskFragment.bitmap();
+		// Bitmap bitmap = taskFragment.bitmap();
 
 		// Update zoom
 		Matrix m = new Matrix();
@@ -207,16 +212,14 @@ public class ImageViewFragment extends Fragment {
 		
 		// Create new data
 		ScaleablePrefs prefs = scaleable.relativelyScaledInstance(matrix);
-		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
+		// Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
 		
 		// Create preview
-		Canvas c = new Canvas(newBitmap);
-		c.drawBitmap(bitmap, bitmapMatrix, null);
+		// Canvas c = new Canvas(newBitmap);
+		// c.drawBitmap(bitmap, bitmapMatrix, null);
 		
 		// And set new data
-		taskFragment.setData(prefs, newBitmap);
-
-		taskFragment.startTask(); // start calculation
+		taskFragment.setData(prefs, /* newBitmap */ null);
 	}
 	
 	private class TouchListener implements OnTouchListener {

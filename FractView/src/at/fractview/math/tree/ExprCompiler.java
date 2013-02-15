@@ -114,7 +114,8 @@ public class ExprCompiler {
 		case EXP: return new InstructionTree(Executable.UN_EXP, false, 0, args);
 		case FLOOR: return new InstructionTree(Executable.UN_FLOOR, false, 0, args);
 		case IM: return new InstructionTree(Executable.UN_IM, false, 0, args);
-		case INV: return new InstructionTree(Executable.UN_INV, false, 0, args);
+		case REC: return new InstructionTree(Executable.UN_REC, false, 0, args);
+		case DREC: return new InstructionTree(Executable.UN_DREC, false, 0, args);
 		case LOG: return new InstructionTree(Executable.UN_LOG, false, 0, args);
 		case NEG: return new InstructionTree(Executable.UN_NEG, false, 0, args);
 		case RE: return new InstructionTree(Executable.UN_RE, false, 0, args);

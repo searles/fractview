@@ -118,9 +118,7 @@ public class FunctionInputView {
 	
 	public void showError(String title, String msg) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-		builder.setMessage(msg).setTitle(title);
-		AlertDialog dialog = builder.create();
-		dialog.show();
+		builder.setMessage(msg).setTitle(title).create().show();
 	}
 
 	public View view() {
@@ -132,7 +130,7 @@ public class FunctionInputView {
 	 * @return
 	 */
 	public Specification acceptAndReturn() {
-		Log.v(TAG, "acceptAndReturn");
+		Log.d(TAG, "acceptAndReturn");
 
 		// First part: Accept input
 		if(!fn.acceptInput()) return null;
@@ -163,7 +161,7 @@ public class FunctionInputView {
 	}	
 	
 	private void updateViews() {
-		Log.v(TAG, "updateView()");
+		Log.d(TAG, "updateView()");
 		
 		// add view for funtion
 		// Inflate new view
@@ -199,7 +197,7 @@ public class FunctionInputView {
 		boolean isNewView = index == itemViews.size();
 		
 		if(isNewView) {
-			Log.v(TAG, "Creating new view at index " + index + " = " + expr);
+			Log.d(TAG, "Creating new view at index " + index + " = " + expr);
 			// Create new view
 			LayoutInflater inflater = ((Activity) view.getContext()).getLayoutInflater();
 			itemView = inflater.inflate(R.layout.function_parameter_item, layout, false);
@@ -245,7 +243,7 @@ public class FunctionInputView {
 	 * @return true if the number of inits or parameters changed
 	 */
 	private boolean updateInits() {
-		Log.v(TAG, "updateInits()");
+		Log.d(TAG, "updateInits()");
 
 		int initCount = fn.expr.get().maxIndexZ();
 
@@ -269,7 +267,7 @@ public class FunctionInputView {
 	private boolean updateParameters() { 
 		// Call this after changing init or function
 		// Fetch all parameters from main and init, and update parameters-map
-		Log.v(TAG, "updateParameters()");
+		Log.d(TAG, "updateParameters()");
 		
 		Set<Var> vars = fn.expr.get().parameters(new TreeSet<Var>());
 		
@@ -290,7 +288,7 @@ public class FunctionInputView {
 				
 				if(!parameters.containsKey(var)) {
 					// It is also not in the map yet.
-					Log.v(TAG, "adding parameter " + var);
+					Log.d(TAG, "adding parameter " + var);
 					parameters.put(var, new Parameter(var, new Labelled<Cplx>(new Cplx(), "0")));
 				}				
 			}
@@ -311,7 +309,7 @@ public class FunctionInputView {
 
 		@Override
 		public boolean onEditorAction(TextView view, int actionId, KeyEvent evt) {
-			Log.v(TAG, "onEditorAction " + view.getTag() + " == " + actionId);
+			Log.d(TAG, "onEditorAction " + view.getTag() + " == " + actionId);
 			// Done-button was clicked on an expression, so update it
 			return expr.acceptInput(); // accept input
 		}
@@ -372,7 +370,7 @@ public class FunctionInputView {
 		boolean acceptInput() {
 			// Check whether current input is equal to input in expr
 			if(input.equals(expr.label())) {
-				Log.v(TAG, "Already at last changes");
+				Log.d(TAG, "Already at last changes");
 				return true;
 			}
 
@@ -429,7 +427,7 @@ public class FunctionInputView {
 		
 		boolean acceptInput() {
 			if(input.equals(expr.label())) {
-				Log.v(TAG, "Already at last changes");
+				Log.d(TAG, "Already at last changes");
 				return true;
 			}
 
@@ -439,11 +437,11 @@ public class FunctionInputView {
 			if(e != null) {
 				if(e.maxIndexZ() - 1 > index) {
 					showError("Could not set z(" + index + ")", "Expression tries to access z(" + e.maxIndexZ() + ")");
-					Log.v(TAG, index + " init was NOT updated: " + e + " has too high z-count: " + e.maxIndexZ());
+					Log.d(TAG, index + " init was NOT updated: " + e + " has too high z-count: " + e.maxIndexZ());
 					return false;
 				} else {
 					this.expr = new Labelled<Expr>(e, input);
-					Log.v(TAG, "Init was updated to " + e);
+					Log.d(TAG, "Init was updated to " + e);
 
 					if(parser.hasErrors()) {
 						// Show warnings
@@ -485,7 +483,7 @@ public class FunctionInputView {
 
 		boolean acceptInput() {
 			if(input.equals(value.label())) {
-				Log.v(TAG, "Already at last changes");
+				Log.d(TAG, "Already at last changes");
 				return true;
 			}
 
@@ -495,7 +493,7 @@ public class FunctionInputView {
 			if(e != null && e.isNum()) {
 				value = new Labelled<Cplx>(e.eval(null), input);
 				
-				Log.v(TAG, id + " parameter was updated: " + e);
+				Log.d(TAG, id + " parameter was updated: " + e);
 				
 				if(parser.hasErrors()) {
 					// Show warnings

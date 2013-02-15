@@ -84,8 +84,18 @@ public class ScaleDialogFragment extends InputViewDialogFragment {
 			public void onClick(View buttonView) {
 				updateMatrix();
 				
-				// TODO
-				Log.v(TAG, "Feature not implemented yet");
+				// Get center
+				double cx = (matrix[0] + matrix[1]) / 2 + matrix[2];
+				double cy = (matrix[3] + matrix[4]) / 2 + matrix[5];
+				
+				// Get max scaling factor
+				double scale = Math.max(Math.abs(matrix[0] + matrix[1]), Math.abs(matrix[3] + matrix[4]));
+
+				matrix[0] = matrix[4] = scale;
+				matrix[1] = matrix[3] = 0.;
+				
+				matrix[2] = cx - scale / 2.;
+				matrix[5] = cy - scale / 2.;
 				
 				updateEditors();
 			}

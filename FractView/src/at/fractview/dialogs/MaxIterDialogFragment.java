@@ -62,7 +62,7 @@ public class MaxIterDialogFragment extends InputViewDialogFragment {
 			
 			if(maxIter > 1000000) {
 				// TODO
-				Log.v(TAG, "Maximum number is 1000000. This is a hard limit");
+				Log.d(TAG, "Maximum number is 1000000. This is a hard limit");
 				return false;
 			}
 			
@@ -71,7 +71,7 @@ public class MaxIterDialogFragment extends InputViewDialogFragment {
 			
 			return true;
 		} catch(NumberFormatException e) {
-			Log.v(TAG, "Invalid number format");
+			Log.d(TAG, "Invalid number format");
 			return false;
 		}
 	}

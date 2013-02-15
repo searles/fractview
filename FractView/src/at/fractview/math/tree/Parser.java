@@ -60,12 +60,7 @@ public class Parser {
 			expr = sum();
 
 			if(ch() != EOS) {
-				reportError("Parts of the string were not matched.");
-			}
-
-			if(expr == null) {
-				reportError("Expression was null, using 0");
-				expr = new Num(0);				
+				reportError("Parts of the string were ignored");
 			}
 		}
 		

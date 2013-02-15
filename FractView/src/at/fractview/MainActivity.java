@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.v(TAG, "onCreate");
+		Log.d(TAG, "onCreate");
 		
 		setContentView(R.layout.activity_main);
 		
@@ -67,8 +67,18 @@ public class MainActivity extends Activity {
 		case R.id.bailout:
 			new BailoutDialogFragment().show(getFragmentManager(), "dialog");
 			return true;
+		case R.id.bailoutcolors:
+			PaletteDialogFragment pdf = new PaletteDialogFragment();
+			pdf.setType(PaletteDialogFragment.Type.Bailout); // TODO Use setArguments
+			pdf.show(getFragmentManager(), "dialog");
+			return true;
 		case R.id.lake:
 			new LakeDialogFragment().show(getFragmentManager(), "dialog");
+			return true;
+		case R.id.lakecolors:
+			pdf = new PaletteDialogFragment();
+			pdf.setType(PaletteDialogFragment.Type.Lake); // TODO Use setArguments
+			pdf.show(getFragmentManager(), "dialog");
 			return true;
 		case R.id.maxiter:
 			new MaxIterDialogFragment().show(getFragmentManager(), "dialog");

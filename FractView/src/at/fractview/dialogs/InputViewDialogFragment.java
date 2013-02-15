@@ -8,8 +8,9 @@ import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 
-public abstract class InputViewDialogFragment extends DialogFragment implements OnClickListener {
+public abstract class InputViewDialogFragment extends DialogFragment {
 	
 	private static final String TAG = "AdapterDialogFragment";
 	
@@ -19,7 +20,7 @@ public abstract class InputViewDialogFragment extends DialogFragment implements 
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreate, savedInstanceState = " + savedInstanceState);
+		Log.d(TAG, "onCreate, savedInstanceState = " + savedInstanceState);
 		super.onCreate(savedInstanceState);	
 	}
 
@@ -29,7 +30,7 @@ public abstract class InputViewDialogFragment extends DialogFragment implements 
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreateDialog, savedInstanceState = " + savedInstanceState);
+		Log.d(TAG, "onCreateDialog, savedInstanceState = " + savedInstanceState);
 		
 		View v = createView();
 
@@ -38,40 +39,45 @@ public abstract class InputViewDialogFragment extends DialogFragment implements 
 
 		alertDialogBuilder.setView(v);		
 
-		alertDialogBuilder.setPositiveButton("OK", this);
-		alertDialogBuilder.setNegativeButton("Cancel", this);
+		alertDialogBuilder.setPositiveButton("OK", null); // We set ok-button later
+		alertDialogBuilder.setNegativeButton("Cancel", null);
+		
+		final AlertDialog dialog = alertDialogBuilder.create();
+		
+		dialog.setOnShowListener(new DialogInterface.OnShowListener() {
 
-		return alertDialogBuilder.create();
-	}
-	
-	@Override
-	public void onClick(DialogInterface dialog, int which) {
-		if(which == -1) {
-			if( acceptInput()) {
-				dialog.dismiss();
-			} else {
-				Log.v(TAG, "Not dismissing dialog because of errors");
-			}
-			// else the view itself is supposed to show
-			// an error dialog indicating what went wrong.
-		} else {
-			// cancel
-			dialog.dismiss();
-		}
+		    @Override
+		    public void onShow(DialogInterface d) {
+		    	// This is the listener for the ok-button
+		        Button b = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+		        b.setOnClickListener(new View.OnClickListener() {
+		            @Override
+		            public void onClick(View view) {
+		                if(acceptInput()) { 
+		                	dialog.dismiss();
+		                } else {
+		                	Log.d(TAG, "Not dismissing dialog");
+		                }
+		            }
+		        });
+		    }
+		});
+
+		return dialog;
 	}
 	
 	@Override
 	public void onDismiss(DialogInterface dialog) {
-		Log.v(TAG, "onDismiss");
+		Log.d(TAG, "onDismiss");
 		super.onDismiss(dialog);
 	}
 	
 	@Override
 	public void onDestroyView() {
-		Log.v(TAG, "onDestroyView");
+		Log.d(TAG, "onDestroyView");
 
 		if (getDialog() != null && getRetainInstance()) {
-			Log.v(TAG, "setDismissMessage(null)");
+			Log.d(TAG, "setDismissMessage(null)");
 			getDialog().setDismissMessage(null);
 		}
 		
@@ -80,7 +86,7 @@ public abstract class InputViewDialogFragment extends DialogFragment implements 
 
 	@Override
 	public void onDestroy() {
-		Log.v(TAG, "onDestroy");
+		Log.d(TAG, "onDestroy");
 		super.onDestroy();
 	}
 }

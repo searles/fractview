@@ -143,7 +143,7 @@ public class Predefined {
 			Var gamma = new Var("gamma");
 			Var delta = new Var("delta");
 			
-			Expr exp = Op.INV.app(Op.SUB.app(beta, delta));
+			Expr exp = Op.REC.app(Op.SUB.app(beta, delta));
 			Expr quot = Op.NEG.app(Op.DIV.app(Op.MUL.app(gamma, delta), Op.MUL.app(alpha, beta)));
 			
 			// (- gamma delta / alpha beta) ^ inv(beta - delta)

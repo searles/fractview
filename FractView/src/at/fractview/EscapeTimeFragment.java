@@ -20,11 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
@@ -50,7 +54,7 @@ public class EscapeTimeFragment extends Fragment {
 	private Preferences.Task task; // Task, created from preferences-set
 	
 	private Bitmap bitmap; // Bitmap that is shown in imageview
-	
+		
 	public EscapeTimeFragment() {
         initFractal();
         bitmap = Bitmap.createBitmap(900, 600, Config.ARGB_8888);
@@ -60,11 +64,13 @@ public class EscapeTimeFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.v(TAG, "onCreate finally called");
+		Log.d(TAG, "onCreate");
 		
 		// Retain this instance so it isn't destroyed when MainActivity and
         // MainFragment change configuration.
         setRetainInstance(true);
+        
+        startTask();
 	}
 
 	
@@ -72,7 +78,7 @@ public class EscapeTimeFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		Log.v(TAG, "onDestroy");
+		Log.d(TAG, "onDestroy");
 		if(task != null && task.isRunning()) task.cancel();
 		super.onDestroy();
 	}
@@ -81,26 +87,38 @@ public class EscapeTimeFragment extends Fragment {
 		return task != null && task.isRunning();
 	}
 	
-	public void cancelTask() {
-		if(task != null) {
-			if(task.isRunning()) {
-				Log.v(TAG, "Cancelling task");
-				task.cancel();
-				if(getTargetFragment() != null) {
-					// Tell target that we cancel a calculation
-					try {
-						((ImageViewFragment) getTargetFragment()).taskCancelled();
-					} catch(ClassCastException e) {
-						// TODO
-						Log.w(TAG, getTargetFragment().toString());
+	public void setData(final Preferences prefs, final Bitmap bitmap) {
+		new Handler().post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Log.d(TAG, "Terminating threads");
+
+					// We need to cancel the old running task and then put in data and then start it.
+					if(task.isRunning()) {
+						task.cancel();						
+						task.join();
 					}
+
+					task = null;
+
+					if(prefs != null) {
+						Log.d(TAG, "Setting new preferences.");
+						EscapeTimeFragment.this.prefs = (EscapeTime) prefs;
+					}
+
+					if(bitmap != null) {
+						Log.d(TAG, "Setting new preferences.");
+						EscapeTimeFragment.this.bitmap = bitmap;
+					}
+
+					startTask();						
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
 				}
 			}
-			
-			Log.v(TAG, "Deleting old task");
-			
-			task = null;
-		}
+		});
+
 	}
 	
 	/**
@@ -108,11 +126,11 @@ public class EscapeTimeFragment extends Fragment {
 	 * things attached to it (like starting a progress view or regularly updating a
 	 * preview).
 	 */
-	public void startTask() {
+	private void startTask() {
+		Log.v(TAG, "startTask()");
+		
 		if(task != null) {
-			Log.e(TAG, "Starting task, but current task is not null!");
-			
-			cancelTask();
+			Log.e(TAG, "BUG: Starting task, but old task is still running");
 		}
 		
 		if(getTargetFragment() != null) {
@@ -121,6 +139,25 @@ public class EscapeTimeFragment extends Fragment {
 		}
 		
 		task = prefs.calculateInBackground(bitmap);
+	}
+
+	
+	public void setSize(int width, int height) {
+		Log.d(TAG, "New size: " + width + "x" + height);
+		setData(this.prefs, Bitmap.createBitmap(width, height, Config.ARGB_8888));
+	}
+	
+	public void setPrefs(Preferences prefs) {
+		Log.d(TAG, "New preferences: " + prefs);
+		setData(prefs, null);
+	}
+	
+	public Bitmap bitmap() {
+		return bitmap;
+	}
+	
+	public EscapeTime prefs() {
+		return prefs;
 	}
 	
 	private void initFractal() {
@@ -182,7 +219,7 @@ public class EscapeTimeFragment extends Fragment {
 		// AbstractFunction fn = Function.create(Parser.parse("z log z + c").get(), Parser.parse("e^(-1)").get());
 
 		String sf = "c(alpha*z^beta + gamma*z^delta)";
-		String si0 = "(- gamma delta / alpha beta) ^ inv(beta - delta)";
+		String si0 = "(- gamma delta / alpha beta) ^ rec(beta - delta)";
 		
 		Labelled<Expr> fn = new Labelled<Expr>(Parser.parse(sf).get(), sf);
 		Labelled<Expr> i0 = new Labelled<Expr>(Parser.parse(si0).get(), si0);
@@ -203,42 +240,5 @@ public class EscapeTimeFragment extends Fragment {
 				spec.create(),
 				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
 				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
-	}
-	
-	public void setSize(int width, int height) {
-		Log.v(TAG, "New size: " + width + "x" + height);
-		cancelTask();
-
-		setData(this.prefs, Bitmap.createBitmap(width, height, Config.ARGB_8888));
-		
-		startTask();
-	}
-	
-
-	public void setData(Preferences prefs, Bitmap bitmap) {
-		if(this.task != null && this.task.isRunning()) {
-			task.cancel();
-			Log.v(TAG, "cancelling task.");
-		}
-		
-		this.prefs = (EscapeTime) prefs;
-		this.bitmap = bitmap;
-	}
-	
-	public void setPrefs(Preferences prefs) {
-		cancelTask();
-		
-		this.bitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
-		this.prefs = (EscapeTime) prefs;
-		
-		startTask();
-	}
-	
-	public Bitmap bitmap() {
-		return bitmap;
-	}
-	
-	public EscapeTime prefs() {
-		return prefs;
 	}
 }

@@ -33,12 +33,11 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 
 	private static final String TAG = "BailoutDialogFragment";
 	
-	EscapeTimeFragment taskFragment;
+	private EscapeTimeFragment taskFragment;
 	
-	EditText bailoutEditor;
-	ArrayAdapter<OrbitToFloat.Predefined> colorizationAdapter;
-	Spinner colorizationTypeSpinner;
-	PaletteInputView paletteEditor;
+	private EditText bailoutEditor;
+	private ArrayAdapter<OrbitToFloat.Predefined> colorizationAdapter;
+	private Spinner colorizationTypeSpinner;
 	
 	@Override
 	protected String title() {
@@ -73,20 +72,11 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 
 		colorizationTypeSpinner.setSelection(colorizationAdapter.getPosition(method));
 		
-		paletteEditor = new PaletteInputView(v, palette);
-
 		return v;
 	}
 
 	@Override
 	protected boolean acceptInput() {
-		Palette palette = paletteEditor.acceptAndReturn();
-		
-		if(palette == null) {
-			Log.v(TAG, "Palette was null");
-			return false;
-		}
-		
 		double bailoutValue;
 		
 		try {
@@ -98,7 +88,7 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 		
 		OrbitToFloat.Predefined method = (OrbitToFloat.Predefined) colorizationTypeSpinner.getSelectedItem();
 		
-		EscapeTime prefs = taskFragment.prefs().newBailoutInstance(bailoutValue, method, palette);
+		EscapeTime prefs = taskFragment.prefs().newBailoutInstance(bailoutValue, method);
 		taskFragment.setPrefs(prefs);
 		
 		return true;

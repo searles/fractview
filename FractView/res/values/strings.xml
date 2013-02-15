@@ -10,6 +10,8 @@
     <string name="maxiter">Iterations</string>
     <string name="bailout">Bailout</string>
     <string name="lake">Lake</string>
+    <string name="bailoutcolors">Bailout Palette</string>
+    <string name="lakecolors">Lake Palette</string>
     <string name="scale">Scale</string>
     <string name="share">Share</string>
     <string name="save">Save</string>
