@@ -230,8 +230,9 @@ public class PaletteInputView {
 		visibleViewCount = 0;
 		selectedIndex = 0;
 		
-		for(int color : palette.colors()) {
-			add(color);
+		for(int i = palette.colors().length - 1; i >= 0; i--) {
+			// Reverse because they are inserted ahead of selected
+			add(palette.colors()[i]);
 		}
 		
 		updateSeekBars();

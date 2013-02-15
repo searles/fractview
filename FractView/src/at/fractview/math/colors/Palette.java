@@ -16,8 +16,6 @@
  */
 package at.fractview.math.colors;
 
-import java.util.Iterator;
-
 import at.fractview.math.Spline;
 
 // Linear gradient lab palette
@@ -58,30 +56,8 @@ public class Palette {
 		}
 	}
 	
-	public Iterable<Integer> colors() {
-		return new Iterable<Integer>() {
-
-			@Override
-			public Iterator<Integer> iterator() {
-				return new Iterator<Integer>() {
-					int i = 0;
-					@Override
-					public boolean hasNext() {
-						return i < colors.length;
-					}
-
-					@Override
-					public Integer next() {
-						return colors[i++];
-					}
-
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
-				};
-			}
-		};
+	public int[] colors() {
+		return colors;
 	}
 	
 	// Default visibility so that other palettes can access these

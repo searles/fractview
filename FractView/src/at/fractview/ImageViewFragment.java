@@ -76,15 +76,6 @@ public class ImageViewFragment extends Fragment {
 
 		imageMatrix = new Matrix();
 
-		// And set matrices as soon as view is layouted
-		imageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-		    @Override
-		    public void onGlobalLayout() {
-		    	Log.d(TAG, "Global layout: updating image view matrices");
-		    	initImageMatrix();
-		    }
-		});
-		
 		// Create handler to get regular updates
 		this.handler = new Handler();
 		this.updateView = new Runnable() {
@@ -104,10 +95,11 @@ public class ImageViewFragment extends Fragment {
 		};
 
 		// Get (if there is) old DataFragment
+		Log.d(TAG, "Looking for old instances");
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(TASK_TAG);
 		
 		if(taskFragment == null) {
-			Log.d(TAG, "No saved instance --> creating new data fragment");
+			Log.d(TAG, "No saved instance found");
 			taskFragment = new EscapeTimeFragment();
 			
 			// The handlers are started from the task fragment.
@@ -128,6 +120,14 @@ public class ImageViewFragment extends Fragment {
 			initializeTaskView();
 		}
 
+		// And set matrices as soon as view is layouted
+		imageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+		    @Override
+		    public void onGlobalLayout() {
+		    	Log.d(TAG, "Global layout: updating image view matrices");
+		    	initImageMatrix();
+		    }
+		});
 		
         // Inflate the layout for this fragment
         return v;

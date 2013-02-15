@@ -395,8 +395,9 @@ public class FunctionInputView {
 				if(parser.hasErrors()) {
 					showError("Could not set z(n+1)", parser.getErrorMessage());
 				} else {
+					// This should not happen.
 					Log.e(TAG, "Could not set init-value but parser did not report an error");
-					showError("Could not set z(n+1)", "Unknown error - please file a bug");
+					showError("Could not set z(n+1)", "Unknown reason - please file a bug");
 				}
 				
 				return false;

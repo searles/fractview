@@ -56,7 +56,9 @@ public class Parser {
 	}
 	
 	public Expr get() {
-		if(expr == null) {
+		if(s.length() == 0) {
+			reportError("Expression is empty");
+		} else if(expr == null) {
 			expr = sum();
 
 			if(ch() != EOS) {
