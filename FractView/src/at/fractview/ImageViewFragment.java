@@ -29,6 +29,7 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.ImageView;
+import android.widget.Toast;
 import at.fractview.modes.ScaleablePrefs;
 
 public class ImageViewFragment extends Fragment {
@@ -87,10 +88,15 @@ public class ImageViewFragment extends Fragment {
 				// update view
 				imageView.invalidate();
 
-				if(taskFragment.isRunning()) {
+				if(taskFragment.taskIsRunning()) {
 					handler.postDelayed(this, MILLISECONDS_TILL_UPDATE);
 				} else {
 					Log.d(this.toString(), "No further updates because task is not running anymore");
+					
+					if(!taskFragment.taskIsCancelled()) {
+						// TODO: Show toast
+						Toast.makeText(getActivity(), "Calculation finished", Toast.LENGTH_SHORT).show();
+					}
 				}
 			}
 		};

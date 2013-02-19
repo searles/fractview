@@ -265,6 +265,7 @@ public class PaletteInputView {
 		    	
 		    	float[] hsv = new float[]{0.f, 1.f, 1.f};
 		    	
+		    	// Create rainbow
 		    	for(int i = 0; i < height; i++) {
 		    		hsv[0] = i * 360.f / height;
 		    		int color = Color.HSVToColor(hsv);
@@ -273,9 +274,9 @@ public class PaletteInputView {
 		    	
 		    	BitmapShader shader1 = new BitmapShader(bm, TileMode.CLAMP, TileMode.CLAMP);
 		    	
-		    	LinearGradient shader2 = new LinearGradient(0, 0, width, 0, 0x00ffffff, 0xffffffff, Shader.TileMode.CLAMP);
+		    	LinearGradient shader2 = new LinearGradient(0, 0, width, 0, 0xffffffff, 0x0, Shader.TileMode.CLAMP);
 
-		    	return new ComposeShader(shader1, shader2, PorterDuff.Mode.MULTIPLY);
+		    	return new ComposeShader(shader1, shader2, PorterDuff.Mode.SCREEN);
 		    }
 		};
 

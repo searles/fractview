@@ -117,6 +117,7 @@ public class ExprCompiler {
 		case SINH: return new InstructionTree(Executable.UN_SINH, false, 0, args);
 		case SQR: return new InstructionTree(Executable.UN_SQR, false, 0, args);
 		case SQRT: return new InstructionTree(Executable.UN_SQRT, false, 0, args);
+		case SREC: return new InstructionTree(Executable.UN_SREC, false, 0, args);
 		case TAN: return new InstructionTree(Executable.UN_TAN, false, 0, args);
 		case TANH: return new InstructionTree(Executable.UN_TANH, false, 0, args);
 		default: throw new IllegalArgumentException("Found function " + app.op() + 

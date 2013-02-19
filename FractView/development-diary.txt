@@ -565,7 +565,9 @@ http://stackoverflow.com/questions/4962426/best-method-for-saving-data-preferenc
 
 Adding onPause and onResume to ImageViewFragment (redrawing really isn't necessary when the app is paused {is it doing anything anyways?).
 
-Adding history. That's easy, it's just a stack.
+Adding history. That's easy, it's just a stack. Also added two toasts: Calculation finished (it's sometimes quite tough to tell) and
+"First element in history". And I found a bug: Editing a function and not confirming the input resets it if in some other field the input
+is confirmed (huh? Didn't I fix this bug some time ago??)
 
 Hm, if I implement bookmarks, I should have a default title that should somehow depend on the formula + zoom (center point should be enough).
 

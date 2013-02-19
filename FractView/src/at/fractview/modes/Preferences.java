@@ -25,6 +25,11 @@ public interface Preferences {
 		 * If isRunning returns false, the task is not running anymore for sure.
 		 */
 		boolean isRunning();
+		
+		/**
+		 * @return true, if cancel was called on this task
+		 */
+		boolean isCancelled();
 		void cancel();
 		void join() throws InterruptedException; // Wait until task has terminated (for whatever reason)
 		

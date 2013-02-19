@@ -102,7 +102,7 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 	
 	@Override
 	protected boolean acceptInput() {
-		if(taskFragment.isRunning()) {
+		if(taskFragment.taskIsRunning()) {
 			// Show yes-no-dialog indicating that the task is still running...
 			DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 			    @Override

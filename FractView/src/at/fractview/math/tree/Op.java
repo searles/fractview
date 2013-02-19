@@ -498,6 +498,29 @@ public enum Op {
 		}
 
 	},
+	SREC {
+		@Override
+		public Expr diffZ(Expr...args) {
+			Expr dt = args[0].diffZ();
+			
+			if(dt != null) {
+				return Op.MUL.app(Op.SUB.app(new Num(1), Op.SQR.app(args[0])));
+			}
+			
+			return null;
+		}
+
+		@Override
+		public Cplx eval(Cplx...args) {
+			return new Cplx().srec(args[0]);
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}
+
+	},
 	DREC {
 		@Override
 		public Expr diffZ(Expr...args) {

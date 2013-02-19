@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.Toast;
 import at.fractview.dialogs.BailoutDialogFragment;
 import at.fractview.dialogs.FunctionDialogFragment;
 import at.fractview.dialogs.LakeDialogFragment;
@@ -103,10 +104,14 @@ public class MainActivity extends Activity {
 		
 		EscapeTimeFragment taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 
-		if(!taskFragment.historyBack()) {
-			super.onBackPressed();
+		if(taskFragment.isHistoryEmpty()) {
+			super.onBackPressed();			
 		} else {
 			Log.d(TAG, "Back in history");
+			
+			if(!taskFragment.historyBack()) {
+				Toast.makeText(this, "First element in history", Toast.LENGTH_SHORT).show();
+			}
 		}
 	}
 }

@@ -67,34 +67,35 @@ public class Executable {
 	// Now the real stuff
 	public static final int UN_NEG = 0x00000001;
 	public static final int UN_REC = 0x00000002;
-	public static final int UN_DREC = 0x00000003;
-	public static final int UN_SQR = 0x00000004;
-	public static final int UN_SQRT = 0x00000005;
+	public static final int UN_SREC = 0x00000003;
+	public static final int UN_DREC = 0x00000004;
+	public static final int UN_SQR = 0x00000005;
+	public static final int UN_SQRT = 0x00000006;
 
 	// more real
-	public static final int UN_EXP = 0x00000006;
-	public static final int UN_LOG = 0x00000007;
+	public static final int UN_EXP = 0x00000007;
+	public static final int UN_LOG = 0x00000008;
 
 	// trigonometric
-	public static final int UN_SIN = 0x00000008;
-	public static final int UN_COS = 0x00000009;
-	public static final int UN_TAN = 0x0000000A;
-	public static final int UN_ATAN = 0x0000000B;
-	public static final int UN_SINH = 0x0000000C;
-	public static final int UN_COSH = 0x0000000D;
-	public static final int UN_TANH = 0x0000000E;
-	public static final int UN_ATANH = 0x0000000F;
+	public static final int UN_SIN = 0x00000009;
+	public static final int UN_COS = 0x0000000A;
+	public static final int UN_TAN = 0x0000000B;
+	public static final int UN_ATAN = 0x0000000C;
+	public static final int UN_SINH = 0x0000000D;
+	public static final int UN_COSH = 0x0000000E;
+	public static final int UN_TANH = 0x0000000F;
+	public static final int UN_ATANH = 0x00000010;
 
-	public static final int UN_RE = 0x00000010;
-	public static final int UN_IM = 0x00000011;
-	public static final int UN_CONJ = 0x00000012;
-	public static final int UN_ABS = 0x00000013;
-	public static final int UN_ARG = 0x00000014;
+	public static final int UN_RE = 0x00000011;
+	public static final int UN_IM = 0x00000012;
+	public static final int UN_CONJ = 0x00000013;
+	public static final int UN_ABS = 0x00000014;
+	public static final int UN_ARG = 0x00000015;
 
-	public static final int UN_FLOOR = 0x00000015;
+	public static final int UN_FLOOR = 0x00000016;
 
 	// Things that require n signed
-	public static final int UN_POW_INT = 0x00000016;
+	public static final int UN_POW_INT = 0x00000017;
 	
 	// Now binary functions
 	public static final int BINARY_FLAG = 0x00000080;
@@ -209,6 +210,9 @@ public class Executable {
 				break;
 			case UN_REC:
 				dest.rec(dest);
+				break;
+			case UN_SREC:
+				dest.srec(dest);
 				break;
 			case UN_DREC:
 				dest.drec(dest);

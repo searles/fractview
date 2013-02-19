@@ -16,6 +16,8 @@
  */
 package at.fractview.math;
 
+import java.util.Random;
+
 public class Cplx {
 
 	private double re;
@@ -209,6 +211,16 @@ public class Cplx {
 		return this;
 	}
 	
+	public Cplx srec(double re, double im) {
+		// z + 1/z
+		double abs = re * re + im * im;
+
+		this.re = re + re / abs;
+		this.im = im - im / abs;
+		
+		return this;
+	}
+
 	public Cplx drec(double re, double im) {
 		// z - 1/z
 		double abs = re * re + im * im;
@@ -238,17 +250,19 @@ public class Cplx {
 
 	// Trigonometric functions:
 	public Cplx sin(double re, double im) {
-		// sin x + iy = sin x * cosh y + i cos x * sinh y
-		this.re = Math.sin(re) * Math.cosh(im);
-		this.im = Math.cos(re) * Math.sinh(im);
+		this.exp(-im, re);
+		this.drec(this.re, this.im);
+		
+		this.set(this.im / 2., -this.re / 2.);
 		
 		return this;
 	}
 	
 	public Cplx cos(double re, double im) {
-		// cos x + iy = cos x * cosh y - i sin x * sinh y
-		this.re = Math.cos(re) * Math.cosh(im);
-		this.im = -Math.sin(re) * Math.sinh(im);
+		this.exp(-im, re);
+		this.srec(this.re, this.im);
+		
+		this.set(this.re / 2., this.im / 2.);
 		
 		return this;
 	}
@@ -268,16 +282,19 @@ public class Cplx {
 	}
 
 	public Cplx sinh(double re, double im) {
-		this.re = Math.sinh(re) * Math.cos(im);
-		this.im = Math.cosh(re) * Math.sin(im);
+		this.exp(re, im);
+		this.drec(this.re, this.im);
+		
+		this.set(this.re / 2., this.im / 2.);
 		
 		return this;
 	}
 
 	public Cplx cosh(double re, double im) {
-		// cosh x + iy = cosh x * cos y + i sinh x * sin y
-		this.re = Math.cosh(re) * Math.cos(im);
-		this.im = Math.sinh(re) * Math.sin(im);
+		this.exp(re, im);
+		this.srec(this.re, this.im);
+		
+		this.set(this.re / 2., this.im / 2.);
 		
 		return this;
 	}
@@ -346,6 +363,10 @@ public class Cplx {
 		return this.rec(arg.re, arg.im);
 	}
 
+	public Cplx srec(Cplx arg) {
+		return this.srec(arg.re, arg.im);
+	}
+
 	public Cplx drec(Cplx arg) {
 		return this.drec(arg.re, arg.im);
 	}
@@ -409,9 +430,5 @@ public class Cplx {
 	
 	public String toString() {
 		return "(" + re() + ", " + im() + ")";
-	}
-	
-	public static void main(String[] args) {
-		// Speed test
 	}
 }

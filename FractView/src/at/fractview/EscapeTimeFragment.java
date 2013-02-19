@@ -59,7 +59,7 @@ public class EscapeTimeFragment extends Fragment {
 		Log.d(TAG, "Constructor " + hashCode());
 
 		// initialize preferences
-        this.prefs = EscapeTimeFragment.initFractal();
+        this.prefs = EscapeTimeFragment.initFractal2();
         
         bitmap = Bitmap.createBitmap(900, 600, Config.ARGB_8888);
         
@@ -90,21 +90,30 @@ public class EscapeTimeFragment extends Fragment {
 		super.onDestroy();
 	}
 	
-	public boolean isRunning() {
+	public boolean taskIsRunning() {
 		return task != null && task.isRunning();
 	}
 	
-	public boolean historyBack() {
+	public boolean taskIsCancelled() {
+		return task != null && task.isCancelled();
+	}
+	
+	public boolean isHistoryEmpty() {
+		return history.isEmpty();
+	}
+	
+	/** One step back in history.
+	 * @return false, if after this call the history is empty. null indicates that the
+	 * @throws IllegalArgumentException If the history is empty before this call.
+	 */
+	public boolean historyBack() throws IllegalArgumentException {
 		Log.d(TAG, "History back");
+		if(history.isEmpty()) throw new IllegalArgumentException("History is empty");		
 		
-		if(!history.isEmpty()) {
-			Preferences prefs = history.pop();
-			setData(prefs, null, false);
+		Preferences prefs = history.pop();
+		setData(prefs, null, false);
 			
-			return true;
-		} else {
-			return false;
-		}
+		return !history.isEmpty();
 	}
 	
 	public void setData(final Preferences prefs, final Bitmap bitmap, final boolean addToHistory) {
@@ -259,6 +268,88 @@ public class EscapeTimeFragment extends Fragment {
 		ps.put(new Var("beta"), new Labelled<Cplx>(new Cplx(3, 0), "3"));
 		ps.put(new Var("gamma"), new Labelled<Cplx>(new Cplx(-1, 0), "-1"));
 		ps.put(new Var("delta"), new Labelled<Cplx>(new Cplx(-3, 0), "-3"));
+		
+		List<Labelled<Expr>> l = new ArrayList<Labelled<Expr>>();
+		l.add(i0);
+		
+		Specification spec = new Specification(fn, l, ps);
+		
+		return new EscapeTime(affine, maxLength, 
+				spec.create(),
+				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
+				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
+	}
+	
+	private static EscapeTime initFractal2() {
+		Affine affine = Affine.scalation(4, 4);
+		affine.preConcat(Affine.translation(-2, -2));
+		
+		/* Palette.TwoDim palette2DLake = new Palette.TwoDim(
+				new int[][]{
+						{0xff000000, 0xff112255, 0xffffffff, 0xff552211},
+						{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
+						{0xffaaff00, 0xff023130, 0xff070064, 0xff6b20cb, 0xffffedff}
+						}, 
+				true, true, 0, 0, 5, 2 * Math.PI);
+
+		Colorization lakeCol = new Colorization.TwoDimensional(OrbitToDouble.SumDiff, OrbitToDouble.LastArc, palette2DLake);*/
+
+		/*Palette2D paletteBailout = new Palette2D(
+				new int[][]{
+						{0xff000000, 0xffffffff},
+						{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
+						}, 
+				true, true, 0, 0, 1, 20);
+
+		Colorization bailoutColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LengthInterpolated, OrbitToFloat.Predefined.Curvature, paletteBailout);
+
+
+		
+        Palette2D paletteLake = new Palette2D(
+                new int[][]{
+                        {0xff000000, 0xff112255, 0xffffffff, 0xff552211},
+                        {0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
+                        {0xffaaff00, 0xff023130, 0xff070064, 0xff6b20cb, 0xffffedff}
+                        },
+                true, true, 0, 0, 1f, (float) (2 * Math.PI));
+
+        Colorization lakeColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LastRad, OrbitToFloat.Predefined.LastArc, paletteLake);
+*/
+        Palette bailoutPalette = new Palette(
+				new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
+				true, 1);
+		
+		Palette lakePalette = new Palette(
+				new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}, 
+				true, (float) (2 * Math.PI));
+
+		int maxLength = 1000;
+		double bailout = 64.;
+		double epsilon = 1e-9;
+		
+		// z^2 * (z + x) + y*z(n-1)
+		// sqr((z^3 + 3(c - 1)z + (c - 1)(c - 2)) / (3 * z^2 + 3(c - 2)z + (c - 1)(c - 2) + 1))
+		// horner(0, 0, [-1.4, -1.4], 0, c)
+		// Cczcpaczcp (no, not a typo): c(z^3 + 1/z^3), 1
+		
+		// Golden Ratio:
+		// z^3/3 - z^2/2 - z + c
+		
+		// Functions with two different points: x^3-x^2+c; either 2/3 or 0.
+		// AbstractFunction fn = Function.create(Parser.parse("z log z + c").get(), Parser.parse("e^(-1)").get());
+
+		String sf = "sqr z  + c";
+		String si0 = "0";
+		
+		Labelled<Expr> fn = new Labelled<Expr>(Parser.parse(sf).get(), sf);
+		Labelled<Expr> i0 = new Labelled<Expr>(Parser.parse(si0).get(), si0);
+		
+		Map<Var, Labelled<Cplx>> ps = new TreeMap<Var, Labelled<Cplx>>();
+		
+		/*ps.put(new Var("alpha"), new Labelled<Cplx>(new Cplx(1, 0), "1"));
+		ps.put(new Var("beta"), new Labelled<Cplx>(new Cplx(3, 0), "3"));
+		ps.put(new Var("gamma"), new Labelled<Cplx>(new Cplx(-1, 0), "-1"));
+		ps.put(new Var("delta"), new Labelled<Cplx>(new Cplx(-3, 0), "-3"));*/
 		
 		List<Labelled<Expr>> l = new ArrayList<Labelled<Expr>>();
 		l.add(i0);
