@@ -19,14 +19,12 @@ package at.fractview;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -54,23 +52,32 @@ public class EscapeTimeFragment extends Fragment {
 	private Preferences.Task task; // Task, created from preferences-set
 	
 	private Bitmap bitmap; // Bitmap that is shown in imageview
-		
+	
+	private Stack<Preferences> history;
+	
 	public EscapeTimeFragment() {
-        initFractal();
+		Log.d(TAG, "Constructor " + hashCode());
+
+		// initialize preferences
+        this.prefs = EscapeTimeFragment.initFractal();
+        
         bitmap = Bitmap.createBitmap(900, 600, Config.ARGB_8888);
+        
+        // Create history stack
+        history = new Stack<Preferences>();
 	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.d(TAG, "onCreate");
+		Log.d(TAG, "onCreate " + hashCode());
 		
 		// Retain this instance so it isn't destroyed when MainActivity and
         // MainFragment change configuration.
         setRetainInstance(true);
         
-        startTask();
+        startTask(); // the first fractal should be in the history
 	}
 
 	
@@ -78,7 +85,7 @@ public class EscapeTimeFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy");
+		Log.d(TAG, "onDestroy " + hashCode());
 		if(task != null && task.isRunning()) task.cancel();
 		super.onDestroy();
 	}
@@ -87,7 +94,21 @@ public class EscapeTimeFragment extends Fragment {
 		return task != null && task.isRunning();
 	}
 	
-	public void setData(final Preferences prefs, final Bitmap bitmap) {
+	public boolean historyBack() {
+		Log.d(TAG, "History back");
+		
+		if(!history.isEmpty()) {
+			Preferences prefs = history.pop();
+			setData(prefs, null, false);
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void setData(final Preferences prefs, final Bitmap bitmap, final boolean addToHistory) {
+		Log.d(TAG, "Setting new data");
 		new Handler().post(new Runnable() {
 			@Override
 			public void run() {
@@ -100,6 +121,11 @@ public class EscapeTimeFragment extends Fragment {
 						task.join();
 					}
 
+					if(addToHistory && prefs != null) {
+						Log.d(TAG, "Adding to history");
+						history.push(EscapeTimeFragment.this.prefs);
+					}
+					
 					task = null;
 
 					if(prefs != null) {
@@ -112,13 +138,13 @@ public class EscapeTimeFragment extends Fragment {
 						EscapeTimeFragment.this.bitmap = bitmap;
 					}
 
-					startTask();						
+					// Create new task
+					startTask();
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
 			}
 		});
-
 	}
 	
 	/**
@@ -127,13 +153,14 @@ public class EscapeTimeFragment extends Fragment {
 	 * preview).
 	 */
 	private void startTask() {
-		Log.v(TAG, "startTask()");
+		Log.d(TAG, "startTask() "  + hashCode());
 		
 		if(task != null) {
 			Log.e(TAG, "BUG: Starting task, but old task is still running");
 		}
 		
 		if(getTargetFragment() != null) {
+			Log.d(TAG, "telling image view - target fragment about this: " + getTargetFragment().hashCode());
 			// Tell target that we start a calculation
 			((ImageViewFragment) getTargetFragment()).initializeTaskView();
 		}
@@ -144,12 +171,14 @@ public class EscapeTimeFragment extends Fragment {
 	
 	public void setSize(int width, int height) {
 		Log.d(TAG, "New size: " + width + "x" + height);
-		setData(this.prefs, Bitmap.createBitmap(width, height, Config.ARGB_8888));
+		// Do not add current to history since we only change the bitmap size
+		setData(this.prefs, Bitmap.createBitmap(width, height, Config.ARGB_8888), false);
 	}
 	
 	public void setPrefs(Preferences prefs) {
 		Log.d(TAG, "New preferences: " + prefs);
-		setData(prefs, null);
+		// New configuration, add to history
+		setData(prefs, null, true);
 	}
 	
 	public Bitmap bitmap() {
@@ -160,7 +189,7 @@ public class EscapeTimeFragment extends Fragment {
 		return prefs;
 	}
 	
-	private void initFractal() {
+	private static EscapeTime initFractal() {
 		Affine affine = Affine.scalation(4, 4);
 		affine.preConcat(Affine.translation(-2, -2));
 		
@@ -236,7 +265,7 @@ public class EscapeTimeFragment extends Fragment {
 		
 		Specification spec = new Specification(fn, l, ps);
 		
-		prefs = new EscapeTime(affine, maxLength, 
+		return new EscapeTime(affine, maxLength, 
 				spec.create(),
 				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
 				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);

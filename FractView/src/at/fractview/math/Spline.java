@@ -142,8 +142,8 @@ public interface Spline {
 			return y(x, y1, y2, slope(y0, y1, y2), slope(y1, y2, y3));
 		}
 		
-		public static float solveCubic(float a, float b, float c, float d) {
-			//if(a == 0) return solveSquare(b, c, d);
+		/*public static float solveCubic(float a, float b, float c, float d) {
+			if(a == 0) return solveSquare(b, c, d);
 			
 			b = b / a;
 			c = c / a;
@@ -155,40 +155,36 @@ public interface Spline {
 			
 			// and drop d
 			
-			// TODO!!! solve cubic eqs
-			float a_over_3 = a / 3f;
-			float Q = (3*b - a*a) / 9f;
-			float Q_CUBE = Q*Q*Q;
-			float R = (9*a*b - 27*c - 2*a*a*a) / 54f;
-			float R_SQR = R*R;
-			float D = Q_CUBE + R_SQR;
+			float q = (3. * b - a * a) / 9.;
+			float r = (9. * a * b - 27. * c - 2. * a * a * a) / 54.;
+			float D = q * q * q + r * r;
 
-			if(D < 0.0) {
-				// need cos, 3 real solutions.
-				float theta = (float) Math.acos(R / Math.sqrt (-Q_CUBE));
-				float SQRT_Q = (float) Math.sqrt(-Q);
+			if(D < 0.) {
+				double sqrtNegQ = Math.sqrt(-q);
+				// 3 real solutions.
+				double theta = Math.acos(r / (q * sqrtNegQ));
+
+				// Only interested in one.
+				return 2. * sqrtNegQ * Math.cos (theta / 3.) - a / 3.;
+			} else /* (D >= 0.) * / {
+				double sqrtD = Math.sqrt(D);
+				double s = Math.cbrt(r + sqrtD);
+				double t = Math.cbrt(r - sqrtD);
 				
-				return 2.f * SQRT_Q * (float) Math.cos (theta/3.) - a_over_3;
-			} else /* (D >= 0.0) */ {
-				// one (or three if D == 0) real solution
-				float SQRT_D = (float) Math.sqrt(D);
-				float S = (float) Math.cbrt(R + SQRT_D);
-				float T = (float) Math.cbrt(R - SQRT_D);
-				
-				return (S + T) - a_over_3;
+				return (s + t) - a / 3.;
 			}
-        }
+        }*/
 		
-		public static float solveSquare(float a, float b, float c) {
+		/*public static float solveSquare(float a, float b, float c) {
 			if(a == 0) return solveLin(b, c);
 			return Float.NaN; // TODO?
-		}
+		}*/
 		
 		public static float solveLin(float a, float b) {
 			return -b / a;
 		}
 		
-		public static float x(float y, float y0, float y1, float m0, float m1) {
+		/*public static float x(float y, float y0, float y1, float m0, float m1) {
 			float a = (2 * y0 + m0 - 2 * y1 + m1);
 			float b = (-3 * y0 - 2 * m0 + 3 * y1 - m1);
 			float c = m0;
@@ -199,7 +195,7 @@ public interface Spline {
 
 		public static float xNoSlope(float y, float y0, float y1, float y2, float y3) {
 			return x(y, y1, y2, slope(y0, y1, y2), slope(y1, y2, y3));
-		}
+		}*/
 
 		public float y(float x) {
 			if(cyclic) x = x - (float) Math.floor(x);

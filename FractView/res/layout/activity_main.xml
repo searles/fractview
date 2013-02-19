@@ -6,7 +6,7 @@
     tools:context=".MainActivity" >
 
     <fragment
-        android:id="@+id/fragment1"
+        android:id="@+id/imageViewFragment"
         android:name="at.fractview.ImageViewFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

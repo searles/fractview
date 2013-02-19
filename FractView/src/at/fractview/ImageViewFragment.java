@@ -17,9 +17,6 @@
 package at.fractview;
 
 import android.app.Fragment;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.os.Bundle;
@@ -57,6 +54,10 @@ public class ImageViewFragment extends Fragment {
 	private Matrix imageMatrix; // Matrix that is used on the bitmap
 	
 	private EscapeTimeFragment taskFragment;
+
+	public ImageViewFragment() {
+		Log.d(TAG, "Constructor");
+	}	
 
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, 
@@ -99,24 +100,22 @@ public class ImageViewFragment extends Fragment {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(TASK_TAG);
 		
 		if(taskFragment == null) {
-			Log.d(TAG, "No saved instance found");
+			Log.d(TAG, "No saved fragment found");
 			taskFragment = new EscapeTimeFragment();
+			getFragmentManager().beginTransaction().add(taskFragment, TASK_TAG).commit();
 			
 			// The handlers are started from the task fragment.
 			taskFragment.setTargetFragment(this, TASK_FRAGMENT);
-
-			getFragmentManager().beginTransaction().add(taskFragment, TASK_TAG).commit();
-
 
 			// Start task and also handler
 			// taskFragment.startTask(); This is done inside onCreate of taskFragment
 			// via target this will call back to here.
 		} else {
-			Log.d(TAG, "Found old segment");
+			Log.d(TAG, "Found saved fragment");
 			// set target
 			taskFragment.setTargetFragment(this, TASK_FRAGMENT);
 			
-			// start handler
+			// set bitmap and start handler
 			initializeTaskView();
 		}
 
@@ -135,9 +134,35 @@ public class ImageViewFragment extends Fragment {
 	
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy: Stopping handler");
-		this.handler.removeCallbacks(updateView);
+		Log.d(TAG, "onDestroy");
+		stopRedrawing();
 		super.onDestroy();
+	}
+	
+	@Override
+	public void onPause() {
+		Log.d(TAG, "onPause");
+		stopRedrawing();
+		super.onPause();
+	}
+	
+	@Override 
+	public void onResume() {
+		Log.d(TAG, "onResume");
+		startRedrawing();
+		super.onResume();
+	}
+	
+	public void stopRedrawing() {
+		Log.d(TAG, "Removing update-view callbacks");
+		handler.removeCallbacks(updateView);
+	}
+	
+	public void startRedrawing() {
+		Log.d(TAG, "Adding update-view callbacks");
+		// Make sure that it is only once in handler.
+		handler.removeCallbacks(updateView);
+		handler.post(updateView);
 	}
 	
 	private void initImageMatrix() {
@@ -182,18 +207,18 @@ public class ImageViewFragment extends Fragment {
 
 	public void initializeTaskView() {
 		Log.d(TAG, "initializing view...");
-
-		imageView.setImageBitmap(taskFragment.bitmap());
-		initImageMatrix(); // Bitmap might have been resized
-
-		// Make sure that it is only once in handler.
-		handler.removeCallbacks(updateView);
-		handler.post(updateView);
-	}
-	
-	public void taskCancelled() {
-		Log.d(TAG, "Got info that task was cancelled");
-		handler.removeCallbacks(updateView);
+		
+		if(taskFragment != null) {
+			if(taskFragment.getTargetFragment() != this) {
+				Log.e(TAG, "target of task fragment is not this image view!");
+			}
+			
+			imageView.setImageBitmap(taskFragment.bitmap());
+			initImageMatrix(); // Bitmap might have been resized
+			startRedrawing();
+		} else {
+			Log.e(TAG, "createView was not yet called!");
+		}
 	}
 	
 	private void applyTouch(Matrix bitmapMatrix, Matrix prefsMatrix) {
@@ -212,14 +237,9 @@ public class ImageViewFragment extends Fragment {
 		
 		// Create new data
 		ScaleablePrefs prefs = scaleable.relativelyScaledInstance(matrix);
-		// Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
-		
-		// Create preview
-		// Canvas c = new Canvas(newBitmap);
-		// c.drawBitmap(bitmap, bitmapMatrix, null);
 		
 		// And set new data
-		taskFragment.setData(prefs, /* newBitmap */ null);
+		taskFragment.setData(prefs, /* newBitmap */ null, true);
 	}
 	
 	private class TouchListener implements OnTouchListener {

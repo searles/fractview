@@ -551,5 +551,24 @@ http://stackoverflow.com/questions/4473940/android-best-practice-returning-value
 
 Uh, nice one: http://stackoverflow.com/questions/2620444/how-to-prevent-a-dialog-from-closing-when-a-button-is-clicked
 
+2013 - 02 - 19
+
+One bug on my phone: http://stackoverflow.com/questions/9727173/support-fragmentpageradapter-holds-reference-to-old-fragments/9745935#9745935
+
+Okay, I am simply checking whether the imageView has already called OnCreateView.
+
+Apart from that I am writing the documentation.
+
+And I am thinking of adding a history and bookmarks. Hm. History might be quite much, so only bookmarks that are also stored.
+
+http://stackoverflow.com/questions/4962426/best-method-for-saving-data-preferences-sqlite-serializable-or-other
+
+Adding onPause and onResume to ImageViewFragment (redrawing really isn't necessary when the app is paused {is it doing anything anyways?).
+
+Adding history. That's easy, it's just a stack.
+
+Hm, if I implement bookmarks, I should have a default title that should somehow depend on the formula + zoom (center point should be enough).
+
+
 
 Check cubic spline. Check colors. Source file for old stuff...

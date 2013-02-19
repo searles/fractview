@@ -410,4 +410,8 @@ public class Cplx {
 	public String toString() {
 		return "(" + re() + ", " + im() + ")";
 	}
+	
+	public static void main(String[] args) {
+		// Speed test
+	}
 }

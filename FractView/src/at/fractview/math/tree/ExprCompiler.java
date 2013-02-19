@@ -33,7 +33,7 @@ import at.fractview.math.Cplx;
  */
 public class ExprCompiler {
 
-	private static final String TAG = "Compiler";
+	// private static final String TAG = "ExprCompiler";
 	
 	public static final Collection<Var> predefinedVars = Arrays.asList(
 			new Var[]{new Var("c"), new Var("n"), new Var("cr"), new Var("ci"), new Var("z"), new Var("zr"), new Var("zi")}
@@ -55,12 +55,6 @@ public class ExprCompiler {
 		List<Integer> instructionList = new LinkedList<Integer>();
 		tree.generateInstructionList(instructionList);
 
-		Log.v(TAG, "=== Compiler ===");
-		Log.v(TAG, "Expression is " + expr);
-		Log.v(TAG, "Instructions are " + instructionList);
-		Log.v(TAG, "Constants are " + constants);
-		Log.v(TAG, "Parameters are " + parameters);
-		
 		return instructionList;
 	}
 	

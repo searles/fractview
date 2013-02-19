@@ -35,6 +35,10 @@ public class MainActivity extends Activity {
 
 	private static final String TAG = "MainActivity";
 	
+	public MainActivity() {
+		Log.d(TAG, "Constructor");
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -90,6 +94,19 @@ public class MainActivity extends Activity {
 			new ResizeDialogFragment().show(getFragmentManager(), "dialog");
 			return true;
 		default: return super.onOptionsItemSelected(item);
+		}
+	}
+	
+	@Override
+	public void onBackPressed() {
+		Log.d(TAG, "Back-button was pressed");
+		
+		EscapeTimeFragment taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
+
+		if(!taskFragment.historyBack()) {
+			super.onBackPressed();
+		} else {
+			Log.d(TAG, "Back in history");
 		}
 	}
 }

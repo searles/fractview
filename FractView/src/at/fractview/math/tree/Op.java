@@ -504,7 +504,6 @@ public enum Op {
 			Expr dt = args[0].diffZ();
 			
 			if(dt != null) {
-				// -dt / sqr(args[0])
 				return Op.MUL.app(Op.ADD.app(new Num(1), Op.SQR.app(args[0])));
 			}
 			
