@@ -16,21 +16,26 @@
  */
 package at.fractview.math.colors;
 
+import android.graphics.Color;
 import at.fractview.math.Spline;
 
 // Linear gradient lab palette
 public class Palette {
 	
-	// TODO: Documentation! float.
-	private int[] colors; // Keep colors just for documentation purposes...
+	private float[][] colors; // Keep colors just for documentation purposes...
 	private boolean cyclic;
 	
 	private Spline[] splines;
 	private float length;
 	
-	public Palette(int[] colors, boolean cyclic, float length) {
+	/**
+	 * @param colors Colors in hsv format
+	 * @param cyclic
+	 * @param length
+	 */
+	public Palette(float[][] colors, boolean cyclic, float length) {
 
-		this.colors = colors;
+		this.colors = new float[colors.length][3];
 		
 		this.cyclic = cyclic;
 		
@@ -42,7 +47,8 @@ public class Palette {
 		float[][] Labs = new float[colors.length][3];
 		
 		for(int i = 0; i < colors.length; i++) {
-			Labs[i] = Colors.IntToLab(colors[i]);
+			this.colors[i] = new float[]{ colors[i][0], colors[i][1], colors[i][2] };
+			Labs[i] = Colors.IntToLab(Color.HSVToColor(colors[i]));
 		}
 		
 		for(int c = 0; c < 3; c++) {
@@ -56,7 +62,7 @@ public class Palette {
 		}
 	}
 	
-	public int[] colors() {
+	public float[][] colors() {
 		return colors;
 	}
 	

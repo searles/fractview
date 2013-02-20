@@ -567,9 +567,16 @@ Adding onPause and onResume to ImageViewFragment (redrawing really isn't necessa
 
 Adding history. That's easy, it's just a stack. Also added two toasts: Calculation finished (it's sometimes quite tough to tell) and
 "First element in history". And I found a bug: Editing a function and not confirming the input resets it if in some other field the input
-is confirmed (huh? Didn't I fix this bug some time ago??)
+is confirmed (huh? Didn't I fix this bug some time ago??). Forgot that I override input() in PackedFn... Stupid me...
 
-Hm, if I implement bookmarks, I should have a default title that should somehow depend on the formula + zoom (center point should be enough).
+Hm, if I implement bookmarks, I should have a default title that should somehow depend on the formula + zoom (center point should be enough). This should also
+be the default filename.
+
+2013 - 02 - 20
+
+New icons, did a lot on the manual. 
+For creating icons this is great:
+http://android-ui-utils.googlecode.com/hg/asset-studio/dist/icons-launcher.html
 
 
 

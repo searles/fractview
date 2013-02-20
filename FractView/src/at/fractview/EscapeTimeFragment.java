@@ -24,6 +24,7 @@ import java.util.TreeMap;
 
 import android.app.Fragment;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Bitmap.Config;
 import android.os.Bundle;
 import android.os.Handler;
@@ -234,11 +235,11 @@ public class EscapeTimeFragment extends Fragment {
         Colorization lakeColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LastRad, OrbitToFloat.Predefined.LastArc, paletteLake);
 */
         Palette bailoutPalette = new Palette(
-				new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
+				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
 				true, 1);
 		
 		Palette lakePalette = new Palette(
-				new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}, 
+				toHSV(new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}), 
 				true, (float) (2 * Math.PI));
 
 		int maxLength = 1000;
@@ -280,6 +281,16 @@ public class EscapeTimeFragment extends Fragment {
 				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
 	}
 	
+	private static float[][] toHSV(int[] palette) {
+		float[][] hsv = new float[palette.length][3];
+		
+		for(int i = 0; i < palette.length; i++) {
+			Color.colorToHSV(palette[i], hsv[i]);
+		}
+		
+		return hsv;
+	}
+	
 	private static EscapeTime initFractal2() {
 		Affine affine = Affine.scalation(4, 4);
 		affine.preConcat(Affine.translation(-2, -2));
@@ -316,12 +327,12 @@ public class EscapeTimeFragment extends Fragment {
         Colorization lakeColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LastRad, OrbitToFloat.Predefined.LastArc, paletteLake);
 */
         Palette bailoutPalette = new Palette(
-				new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
+				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
 				true, 1);
 		
 		Palette lakePalette = new Palette(
-				new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}, 
-				true, (float) (2 * Math.PI));
+				toHSV(new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}), 
+				true, 360.f);
 
 		int maxLength = 1000;
 		double bailout = 64.;
@@ -338,7 +349,7 @@ public class EscapeTimeFragment extends Fragment {
 		// Functions with two different points: x^3-x^2+c; either 2/3 or 0.
 		// AbstractFunction fn = Function.create(Parser.parse("z log z + c").get(), Parser.parse("e^(-1)").get());
 
-		String sf = "sqr z  + c";
+		String sf = "z^2 + c";
 		String si0 = "0";
 		
 		Labelled<Expr> fn = new Labelled<Expr>(Parser.parse(sf).get(), sf);

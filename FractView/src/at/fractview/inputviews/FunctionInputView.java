@@ -316,7 +316,9 @@ public class FunctionInputView {
 		
 		@Override
 		public void afterTextChanged(Editable s) {
-			expr.setInput(s);
+			Log.d(TAG, "afterTextChanged before " + expr + " => " + s.toString());
+			expr.setInput(s.toString());
+			Log.d(TAG, "afterTextChanged after: " + expr);
 		}
 
 		@Override
@@ -342,8 +344,8 @@ public class FunctionInputView {
 			return input;
 		}
 		
-		void setInput(CharSequence input) {
-			this.input = input.toString();
+		void setInput(String input) {
+			this.input = input;
 		}
 
 		abstract boolean acceptInput();
@@ -402,11 +404,6 @@ public class FunctionInputView {
 				
 				return false;
 			}
-		}
-		
-		@Override
-		String input() {
-			return expr.label();
 		}
 		
 		@Override

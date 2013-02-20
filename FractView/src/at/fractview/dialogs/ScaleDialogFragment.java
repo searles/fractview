@@ -85,17 +85,40 @@ public class ScaleDialogFragment extends InputViewDialogFragment {
 				updateMatrix();
 				
 				// Get center
-				double cx = (matrix[0] + matrix[1]) / 2 + matrix[2];
-				double cy = (matrix[3] + matrix[4]) / 2 + matrix[5];
+				double vx = matrix[0] + matrix[1];
+				double vy = matrix[3] + matrix[4];
+
+				double cx = vx / 2. + matrix[2];
+				double cy = vy / 2. + matrix[5];
 				
 				// Get max scaling factor
-				double scale = Math.max(Math.abs(matrix[0] + matrix[1]), Math.abs(matrix[3] + matrix[4]));
-
-				matrix[0] = matrix[4] = scale;
-				matrix[1] = matrix[3] = 0.;
+				double scale = Math.max(Math.hypot(matrix[0], matrix[3]), Math.hypot(matrix[1], matrix[4]));
 				
-				matrix[2] = cx - scale / 2.;
-				matrix[5] = cy - scale / 2.;
+				// Get appropriate orientation by checking in which direction the vector matrix * (1,1) is pointing
+				if(vx * vy < 0) {
+					matrix[0] = matrix[4] = 0.;
+					matrix[1] = matrix[3] = -scale;
+				} else {
+					matrix[0] = matrix[4] = scale;
+					matrix[1] = matrix[3] = 0.;
+				}
+				
+				if(vx < 0) {
+					matrix[0] = -matrix[0];
+					matrix[3] = -matrix[3];
+				}
+				
+				if(vy < 0) {
+					matrix[1] = -matrix[1];
+					matrix[4] = -matrix[4];
+				}
+				
+				// Move center back to top left.
+				vx = matrix[0] + matrix[1];
+				vy = matrix[3] + matrix[4];
+
+				matrix[2] = cx - vx / 2.;
+				matrix[5] = cy - vy / 2.;
 				
 				updateEditors();
 			}

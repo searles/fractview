@@ -17,6 +17,7 @@
 package at.fractview.inputviews;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -125,9 +126,11 @@ public class PaletteInputView {
 		});
 		
 		addButton.setOnClickListener(new OnClickListener() {
+			Random rnd = new Random();
+			
 			@Override
 			public void onClick(View v) {
-				add(Color.BLACK);
+				add(new float[]{rnd.nextFloat() * 360.f, rnd.nextFloat() * 100.f, rnd.nextFloat() * 100.f});
 			}
 		});
 		
@@ -305,11 +308,7 @@ public class PaletteInputView {
 	}
 	
 	private void updatePalette() {
-		int[] colorArray = new int[colors.size()];
-		
-		for(int i = 0; i < colors.size(); i++) {
-			colorArray[i] = Color.HSVToColor(colors.get(i));
-		}
+		float[][] colorArray = colors.toArray(new float[colors.size()][3]);
 		
 		boolean cyclic = cyclicCheckBox.isChecked();
 		
@@ -373,10 +372,7 @@ public class PaletteInputView {
 		updateSeekBars();
 	}
 	
-	public void add(int color) {
-		float[] hsv = new float[3];
-		Color.colorToHSV(color, hsv);
-		
+	public void add(float[] hsv) {
 		colors.add(selectedIndex, hsv);
 
 		Log.d(TAG, "itemViewSize = " + itemViews.size());

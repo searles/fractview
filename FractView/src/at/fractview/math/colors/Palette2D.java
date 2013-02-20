@@ -29,7 +29,7 @@ public class Palette2D {
 
 	private Palette[] ps;	
 
-	public Palette2D(int[][] colors, 
+	public Palette2D(float[][][] colors, 
 			boolean xCyclic, boolean yCyclic, 
 			float xLength, float yLength) {
 		

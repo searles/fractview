@@ -69,16 +69,10 @@ public interface OrbitToFloat {
 		LastArc {
 			@Override
 			public float value(AbstractOrbit orbit) {
-				return (float) orbit.get(orbit.length() - 1).arc();
+				return (float) (orbit.get(orbit.length() - 1).arc() * 180. / Math.PI);
 			}
 		},
-		Zero {
-			@Override
-			public float value(AbstractOrbit orbit) {
-				return 0;
-			}
-		}/*
-		LastRad {
+		/*LastRad {
 			@Override
 			public float value(AbstractOrbit orbit) {
 				return (float) Math.log(orbit.get(orbit.length() - 1).abs() + 1);
@@ -95,7 +89,13 @@ public interface OrbitToFloat {
 			public float value(AbstractOrbit orbit) {
 				return (float) orbit.get(orbit.length() - 1).im();
 			}
-		},
+		},*/
+		Zero {
+			@Override
+			public float value(AbstractOrbit orbit) {
+				return 0;
+			}
+		}/*
 		Curvature {
 			int m = 2;
 			
