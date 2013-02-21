@@ -578,6 +578,6 @@ New icons, did a lot on the manual.
 For creating icons this is great:
 http://android-ui-utils.googlecode.com/hg/asset-studio/dist/icons-launcher.html
 
+2013 - 02 - 21
 
-
-Check cubic spline. Check colors. Source file for old stuff...
+Two things: Android 2.3 support + Close button on dialogs. This will be version 1.1

@@ -24,8 +24,6 @@ import android.widget.Spinner;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
-import at.fractview.inputviews.PaletteInputView;
-import at.fractview.math.colors.Palette;
 import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.OrbitToFloat;
 
@@ -51,7 +49,6 @@ public class LakeDialogFragment extends InputViewDialogFragment {
 		// Get values from taskFragment
 		double epsilonValue = taskFragment.prefs().epsilon();
 		OrbitToFloat.Predefined method = taskFragment.prefs().lakeDrawingMethod();
-		Palette palette = taskFragment.prefs().lakePalette();
 		
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		View v = inflater.inflate(R.layout.epsilon_lake, null);

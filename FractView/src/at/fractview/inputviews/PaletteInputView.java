@@ -34,7 +34,6 @@ import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -44,8 +43,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.TextView;
-import android.widget.TextView.OnEditorActionListener;
 import at.fractview.R;
 import at.fractview.math.colors.Colors;
 import at.fractview.math.colors.Palette;
@@ -212,16 +209,6 @@ public class PaletteInputView {
 
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
-			}
-		});
-		
-		
-		this.lengthEditor.setOnEditorActionListener(new OnEditorActionListener() {
-
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				// Not necessary to update anything here because it is normalized anyways
-				return true;
 			}
 		});
 		

@@ -1,3 +1,18 @@
+TODOs for Version 1.1: 
+* Android 2.3
+* Bug fixing:
+** Add "Close" to dialogs
+** Check whether z is inside an expression when deriving binary functions.
+** Rotating should not reset dialogs.
+
+TODOs for Version 2.0:
+* Predefined fractals
+* Custom colorizations via Sum-Symbol
+* 2-dim color palettes
+* caching of image
+* dragging parameters
+* Split view for julia next to mandel (TODO for this: boolean set(String label, Cplx value) returns false when no such point).
+
 Insert transfer + offset in palette.
 
 Specification as inner class of function (and Interface)
@@ -11,56 +26,35 @@ Accept "zn" as "z". Limit number of indices.
 
 Add nova as predefined.
 
-Instead of toggle button use normal buttons in color item, and try to add a frame around whole thing. Look at shapes: http://developer.android.com/guide/topics/resources/drawable-resource.html#Shape
-
 Add cyclic-from parameter
 
-Btw. functions, make predefined and wrapping to create julia sets.
-
-Adding icon to edittext: http://stackoverflow.com/questions/4281749/how-to-add-icon-inside-edittext-view-in-android (eg warning,
-
-Underlining things: http://www.coderanch.com/t/550872/Android/Mobile/Underlining-Edit-Text
+Btw. functions, make predefined and wrapping to create julia sets [Wrapping has been done].
 
 Editable ComboBox (keep the first line, show roots as items): http://stackoverflow.com/questions/11284368/autocompletetextview-force-to-show-all-items
-
-Glynn-fractals are julia sets.
 
 Modify function-view so that you can have predefined with numeric parameters, i.e., no function or inits. For this use combobox that holds descriptor string of all subclasses + specification; i.e., all predefined fractals must be creatable via a specification.
 
 Look at these fractals.
 http://eldar.mathstat.uoguelph.ca/dashlock/ftax/Glynn.html
 
-GUI for Affine: Point + scale factor.
-
 And I want this colorization: http://en.wikipedia.org/wiki/File:Julia-set_N_z3-1.png
 http://de.wikipedia.org/wiki/Benutzer:Georg-Johann/Mathematik
 
 average discrete velocity of orbit
 
-
 Ssum symbols. Add dest to eval, but syntax. Change for numbers. What would be the run index and what about nested loops.  Nested loops are not possible. Use expre also for colorization.
 
 Parser will be next.
 And add nova phoenix burningship
-Warnings + Error messages from Parser + Generate for z(0).
-
-Keyboard does not show up for EditTexts in ListView if i remove Edittext on top of it.
-
-Now for bailout + epsilon + maxLength, then polishing and release date will be before valentine's day.
+Generate z(0).
 
 http://stackoverflow.com/questions/5657828/edittext-is-losing-users-input-when-rotating-android-phone
 
-And I want to edit affine transforms with a (Straighten)-button. And I want a "guess z(0)"-button.
-
 Installing EGit turned my ADT into Eclipse Juno :) Funny...
-
 
 Well, this is a nice opportunity to use fragments: Create a separate parameter-view and on tablets you may show it next to the function-view. But then, where to put the Julia-Parameter? Shouldn't it also be in parameter-view and function view? I hate such duplications...
 
-Open question: How should I handle parser error messages + cases in which initial value cannot be generated? Having an icon with a warning or an error-sign would be great.
-
-
-ZN and Z are implemented super-ugly.
+ZN is implemented super-ugly. Use general Indexed-class
 
 Task: Contains bitmap + preferences + task.
 
@@ -86,20 +80,11 @@ following 1 or two ints are data.
 Figure out how to create putPixel-method.
    Kind of like putPix(int[] pixInfo, int x, int y);
 
-Weil: Idea is to add
-
-Change "OrbitToDouble" into float. Figure out where to put colorization.
-
 In Prefs create functions like "scale(Bitmabable preview, Bitmapable newPicture)"
 
 No. Create own functions like "scale" in these Bitmapable-instances. Since
 these classes are anyways related to the corresponding Pref I can do whatever
 I want there.
-
-
-Do caching:
-
-Brain-storming/TODO-List
 
 [DONE] I was just thinking whether I should replace my background threads by AsyncTask, but then I don't need any interaction with the UI, so Thread seems actually fine. But then, think about it... I don't need a Task that only creates the workers and executes them. This can be done in the main-thread. And for the part that spells out "where from do we know whether we are finished" - well, we can share a counter on all onPostExecute-AsyncThread. This would be one less thread to manage and might speed up or at least simplify things.
 I like this article on this topic: http://techtej.blogspot.co.at/2011/03/android-thread-constructspart-4.html
@@ -109,17 +94,7 @@ For now don't touch the design too much. [well I did and it looks nice]
 
 Do the thing with the matrix such that you can pick a full-screen-mode or fit-to-center, and flip so that the number of pixels wasted is as small as possible.
 
-ProgressBar, remember?
-
-Keep parts of image when moving (how to implement this?)
-
-Find starting points using newton! For this purpose, do calculations directly within Expr. For "values" provide a map<String, Cplx> with parameter values so that we can automatically calculate in this one.
-
-Try to reuse old stuff. TileIterator might be useful for this for move.
-
 Allow bookmarks, save configs for images that were completely rendered, create new prefs for each completely rendered pic (include a super-small preview, like 64x64 max), start where you started last time.
-
-Interpreter.
 
 Dragging points
 
@@ -131,39 +106,4 @@ Action View: Create a text field in actionbar for main formula.
 
 Action View then would be "Navigation" with history, Save, Share, Formula (+ sub-elements with parameters and inits.), Colorization
 
-Then there would be the following things: Save Image, Share Image,
-
 Features: Offer "split view" on ImageView. Allow sharing of parameters with formulas. Thereby, changing a parameter in another ImageView changes the parameter in this.
-
-Make widget.
-
-So, next I will most likely play around with DDMS. And take care of app being terminated after some time.
-
-And find out what is slowing down the app.
-
-Add "ProgressBar" {just some line on the lower border}
-
-While reading on multi touch I get an idea: do not rotate image viewer, always show it in best fit mode also with proper orientation. There offer pinch to zoom and stuff. But also offer a pure view mode with zoom and pinch to zoom/move only resizes view.
-
-But for now do a best-fit-thing. Choose portrait as default.
-
-Also, add all images that were fully drawn to history.
-
-Not only use drag and zoom but instead use also rotate. That would be cool. And I love this drag keyboard feature in Android 4.2. Typing is really fast this way. And it works great.
-
-
-
-First goals:
-Implement mandelbrot set
-Implement pinch-to-zoom
-Be happy.
-
-Implement zoom into image
-Implement save-image+share-image
-
-Implement Tile-Drawer
-Implement interpreter
-Implement settings-ui for formular, size
-
-Release first version of this.
-

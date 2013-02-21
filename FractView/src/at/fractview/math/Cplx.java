@@ -16,7 +16,6 @@
  */
 package at.fractview.math;
 
-import java.util.Random;
 
 public class Cplx {
 

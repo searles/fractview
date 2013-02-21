@@ -118,7 +118,7 @@ public class FunctionInputView {
 	
 	public void showError(String title, String msg) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-		builder.setMessage(msg).setTitle(title).create().show();
+		builder.setMessage(msg).setTitle(title).setNeutralButton("Close", null).create().show();
 	}
 
 	public View view() {

@@ -22,12 +22,12 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.TreeMap;
 
-import android.app.Fragment;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Bitmap.Config;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import at.fractview.math.Affine;
 import at.fractview.math.Cplx;

@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.util.Log;
 import at.fractview.math.Cplx;
 
 /** This class analyzes an expression that has been successfully parsed.

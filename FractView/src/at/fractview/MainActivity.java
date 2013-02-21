@@ -16,8 +16,8 @@
  */
 package at.fractview;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,7 +32,7 @@ import at.fractview.dialogs.ResizeDialogFragment;
 import at.fractview.dialogs.SaveDialogFragment;
 import at.fractview.dialogs.ScaleDialogFragment;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
 
 	private static final String TAG = "MainActivity";
 	
@@ -64,35 +64,35 @@ public class MainActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.save:
-			new SaveDialogFragment().show(getFragmentManager(), "dialog");
+			new SaveDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.function:
-			new FunctionDialogFragment().show(getFragmentManager(), "dialog");
+			new FunctionDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.bailout:
-			new BailoutDialogFragment().show(getFragmentManager(), "dialog");
+			new BailoutDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.bailoutcolors:
 			PaletteDialogFragment pdf = new PaletteDialogFragment();
 			pdf.setType(PaletteDialogFragment.Type.Bailout); // TODO Use setArguments
-			pdf.show(getFragmentManager(), "dialog");
+			pdf.show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.lake:
-			new LakeDialogFragment().show(getFragmentManager(), "dialog");
+			new LakeDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.lakecolors:
 			pdf = new PaletteDialogFragment();
 			pdf.setType(PaletteDialogFragment.Type.Lake); // TODO Use setArguments
-			pdf.show(getFragmentManager(), "dialog");
+			pdf.show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.maxiter:
-			new MaxIterDialogFragment().show(getFragmentManager(), "dialog");
+			new MaxIterDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.scale:
-			new ScaleDialogFragment().show(getFragmentManager(), "dialog");
+			new ScaleDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.resize:
-			new ResizeDialogFragment().show(getFragmentManager(), "dialog");
+			new ResizeDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		default: return super.onOptionsItemSelected(item);
 		}
@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
 	public void onBackPressed() {
 		Log.d(TAG, "Back-button was pressed");
 		
-		EscapeTimeFragment taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
+		EscapeTimeFragment taskFragment = (EscapeTimeFragment) getSupportFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 
 		if(taskFragment.isHistoryEmpty()) {
 			super.onBackPressed();			

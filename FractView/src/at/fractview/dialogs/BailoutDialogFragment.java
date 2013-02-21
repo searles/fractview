@@ -24,8 +24,6 @@ import android.widget.Spinner;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
-import at.fractview.inputviews.PaletteInputView;
-import at.fractview.math.colors.Palette;
 import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.OrbitToFloat;
 
@@ -51,7 +49,6 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 		// Get values from taskFragment
 		double bailoutValue = taskFragment.prefs().bailout();
 		OrbitToFloat.Predefined method = taskFragment.prefs().bailoutDrawingMethod();
-		Palette palette = taskFragment.prefs().bailoutPalette();
 		
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		View v = inflater.inflate(R.layout.bailout, null);
