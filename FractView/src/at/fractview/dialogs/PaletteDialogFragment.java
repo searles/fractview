@@ -61,6 +61,8 @@ public class PaletteDialogFragment extends InputViewDialogFragment {
 			return false;
 		}
 		
+		Log.d(TAG, "AcceptInput: Setting palette to " + palette);
+		
 		if(type == Type.Lake) {
 			EscapeTime prefs = taskFragment.prefs().newLakePaletteInstance(palette);
 			taskFragment.setPrefs(prefs);

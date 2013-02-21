@@ -187,7 +187,11 @@ public class Parser {
 		// Now for trailing ' for derivations
 		while(term != null && ch() == '\'') {
 			incr();
-			term = term.diffZ();
+			if(term.containsZ()) {
+				term = term.diffZ();
+			} else {
+				term = new Num(0);
+			}
 				
 			if(term == null) {
 				reportError("Cannot calculate derivate of expression");

@@ -63,7 +63,13 @@ public class Palette {
 	}
 	
 	public float[][] colors() {
-		return colors;
+		float[][] retVal = new float[colors.length][3];
+
+		for(int i = 0; i < colors.length; i++) {
+			retVal[i] = new float[]{ colors[i][0], colors[i][1], colors[i][2] };
+		}
+
+		return retVal;
 	}
 	
 	// Default visibility so that other palettes can access these
@@ -99,5 +105,20 @@ public class Palette {
 
 	public boolean cyclic() {
 		return cyclic;
+	}
+	
+	public String toString() {
+		StringBuilder sb = null;
+		
+		for(float[] hsv : colors) {
+			if(sb == null) {
+				sb = new StringBuilder();
+			} else {
+				sb.append(", ");
+			}
+			sb.append(Integer.toHexString(Color.HSVToColor(hsv)));
+		}
+		
+		return sb.toString();
 	}
 }

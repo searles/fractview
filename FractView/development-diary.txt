@@ -589,4 +589,9 @@ and I create the view there. Now I am creating the view in onCreate.
 "You must call removeView on the child's parent first". Hm, okay... The parent is getDialog()?
 It definitely paid off to create this InputViewDialogFragment.
 
-Okay, simply put ((ViewGroup) view.getParent()).removeView(view); in onDestroyView. Right? Works fine.
+Okay, simply put ((ViewGroup) view.getParent()).removeView(view); in onDestroyView. Right? Works fine; but the 
+focus changes. Well, I can live with that.
+
+New problem: The view is not destroyed when I click the cancel-button. Nope - I simply have a bug with my
+palettes... Calming that I am just stupid enough to share my float-array where I just keep colors with the
+rest of the world. 

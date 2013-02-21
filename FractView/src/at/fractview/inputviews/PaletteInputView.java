@@ -55,7 +55,7 @@ import at.fractview.math.colors.Palette;
  */
 public class PaletteInputView {
 	
-	private static final String TAG = "ColorArray";
+	private static final String TAG = "PaletteInputView";
 	
 	private View view;
 	
@@ -86,6 +86,7 @@ public class PaletteInputView {
 	private Palette palette;
 	
 	public PaletteInputView(View view, Palette palette) {
+		Log.d(TAG, "Constructor: " + palette);
 		this.view = view;
 		
 		this.palette = palette;

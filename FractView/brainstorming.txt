@@ -1,8 +1,8 @@
 TODOs for Version 1.1: 
 * Android 2.3
 * Bug fixing:
-** Add "Close" to dialogs
-** Check whether z is inside an expression when deriving binary functions.
+** Add "Close" to dialogs [DONE]
+** Check whether z is inside an expression when deriving binary functions. [DONE]
 ** Rotating should not reset dialogs.
 
 TODOs for Version 2.0:
