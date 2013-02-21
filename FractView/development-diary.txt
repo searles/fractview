@@ -581,3 +581,12 @@ http://android-ui-utils.googlecode.com/hg/asset-studio/dist/icons-launcher.html
 2013 - 02 - 21
 
 Two things: Android 2.3 support + Close button on dialogs. This will be version 1.1
+
+Compatibility-layer added, and also Close-buttons. That was easy. And also this bug that 
+the content of everything is recreated, I found its source. Stupid me - onCreateDialog is called
+and I create the view there. Now I am creating the view in onCreate.
+
+"You must call removeView on the child's parent first". Hm, okay... The parent is getDialog()?
+It definitely paid off to create this InputViewDialogFragment.
+
+Okay, simply put ((ViewGroup) view.getParent()).removeView(view); in onDestroyView. Right? Works fine.

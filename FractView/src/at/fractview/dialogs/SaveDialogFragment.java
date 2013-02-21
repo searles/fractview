@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,21 +31,23 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 	protected String title() {
 		return "Save as PNG";
 	}
-
+	
 	@Override
 	protected View createView() {
+		Log.d(TAG, "createView");
+		
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		final View v = inflater.inflate(R.layout.save, null);
-		
-		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
-		
-		filenameEditor = (EditText) v.findViewById(R.id.filenameEditor);
-		
-		filenameEditor.setText("Fractal");
+
+		if(taskFragment == null) {
+			taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
+			filenameEditor = (EditText) v.findViewById(R.id.filenameEditor);
+			filenameEditor.setText("Fractal");
+		}
 
 		return v;
 	}
-
+	
 	private boolean saveFile() {
 		String filename = filenameEditor.getText().toString();
 		

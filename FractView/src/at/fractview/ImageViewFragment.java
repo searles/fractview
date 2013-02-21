@@ -64,7 +64,7 @@ public class ImageViewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, 
         Bundle savedInstanceState) {        
 		
-		Log.d(TAG, "onCreateView");
+		// Log.d(TAG, "onCreateView");
 
 		View v = inflater.inflate(R.layout.imageview, container, false);
 		
@@ -91,10 +91,10 @@ public class ImageViewFragment extends Fragment {
 				if(taskFragment.taskIsRunning()) {
 					handler.postDelayed(this, MILLISECONDS_TILL_UPDATE);
 				} else {
-					Log.d(this.toString(), "No further updates because task is not running anymore");
+					// Log.d(this.toString(), "No further updates because task is not running anymore");
 					
 					if(!taskFragment.taskIsCancelled()) {
-						// TODO: Show toast
+						// Show toast
 						Toast.makeText(getActivity(), "Calculation finished", Toast.LENGTH_SHORT).show();
 					}
 				}
@@ -106,7 +106,7 @@ public class ImageViewFragment extends Fragment {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(TASK_TAG);
 		
 		if(taskFragment == null) {
-			Log.d(TAG, "No saved fragment found");
+			// Log.d(TAG, "No saved fragment found");
 			taskFragment = new EscapeTimeFragment();
 			getFragmentManager().beginTransaction().add(taskFragment, TASK_TAG).commit();
 			
@@ -117,7 +117,7 @@ public class ImageViewFragment extends Fragment {
 			// taskFragment.startTask(); This is done inside onCreate of taskFragment
 			// via target this will call back to here.
 		} else {
-			Log.d(TAG, "Found saved fragment");
+			// Log.d(TAG, "Found saved fragment");
 			// set target
 			taskFragment.setTargetFragment(this, TASK_FRAGMENT);
 			
@@ -129,7 +129,7 @@ public class ImageViewFragment extends Fragment {
 		imageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 		    @Override
 		    public void onGlobalLayout() {
-		    	Log.d(TAG, "Global layout: updating image view matrices");
+		    	// Log.d(TAG, "Global layout: updating image view matrices");
 		    	initImageMatrix();
 		    }
 		});
@@ -140,32 +140,32 @@ public class ImageViewFragment extends Fragment {
 	
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy");
+		// Log.d(TAG, "onDestroy");
 		stopRedrawing();
 		super.onDestroy();
 	}
 	
 	@Override
 	public void onPause() {
-		Log.d(TAG, "onPause");
+		// Log.d(TAG, "onPause");
 		stopRedrawing();
 		super.onPause();
 	}
 	
 	@Override 
 	public void onResume() {
-		Log.d(TAG, "onResume");
+		// Log.d(TAG, "onResume");
 		startRedrawing();
 		super.onResume();
 	}
 	
 	public void stopRedrawing() {
-		Log.d(TAG, "Removing update-view callbacks");
+		// Log.d(TAG, "Removing update-view callbacks");
 		handler.removeCallbacks(updateView);
 	}
 	
 	public void startRedrawing() {
-		Log.d(TAG, "Adding update-view callbacks");
+		// Log.d(TAG, "Adding update-view callbacks");
 		// Make sure that it is only once in handler.
 		handler.removeCallbacks(updateView);
 		handler.post(updateView);
@@ -212,7 +212,7 @@ public class ImageViewFragment extends Fragment {
 	}
 
 	public void initializeTaskView() {
-		Log.d(TAG, "initializing view...");
+		// Log.d(TAG, "initializing view...");
 		
 		if(taskFragment != null) {
 			if(taskFragment.getTargetFragment() != this) {

@@ -70,8 +70,8 @@ public enum Op {
 		@Override
 		public Expr diffZ(Expr...args) {
 			// (a + b)' = a' + b'
-			Expr dl = args[0].diffZ();
-			Expr dr = args[1].diffZ();
+			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
+			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
 			
 			if(dl != null && dr != null) {
 				return ADD.app(dl, dr);
@@ -129,8 +129,8 @@ public enum Op {
 		@Override
 		public Expr diffZ(Expr...args) {
 			// (a - b)' = a' - b'
-			Expr dl = args[0].diffZ();
-			Expr dr = args[1].diffZ();
+			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
+			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
 			
 			if(dl != null && dr != null) {
 				return SUB.app(dl, dr);
@@ -217,8 +217,8 @@ public enum Op {
 
 		@Override
 		public Expr diffZ(Expr...args) {
-			Expr dl = args[0].diffZ();
-			Expr dr = args[1].diffZ();
+			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
+			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
 			
 			if(dl != null && dr != null) {
 				// (a * b)' = a'*b + a*b'
@@ -292,8 +292,8 @@ public enum Op {
 
 		@Override
 		public Expr diffZ(Expr...args) {
-			Expr dl = args[0].diffZ();
-			Expr dr = args[1].diffZ();
+			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
+			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
 			
 			if(dl != null && dr != null) {
 				// (a / b)' = a'*b - a*b' / sqr(b) = a' / b - a * b' / sqr(b)
@@ -382,8 +382,8 @@ public enum Op {
 		public Expr diffZ(Expr...args) {
 			if(args[1].containsZ()) {
 				// (f ^ g)' = exp(log(f) * g)' = f ^ g * (log(f) * g)' = f ^ g * (g * f' / f + log(f) * g')
-				Expr dr = args[1].diffZ();
-				Expr dl = args[0].diffZ();
+				Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
+				Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
 				
 				if(dl != null && dr != null) {
 					Expr fract = DIV.app(MUL.app(args[1], dl), args[0]);

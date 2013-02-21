@@ -372,4 +372,6 @@ public class EscapeTimeFragment extends Fragment {
 				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
 				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
 	}
+	
+	
 }
