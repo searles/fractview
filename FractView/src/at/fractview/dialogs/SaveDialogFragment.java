@@ -9,12 +9,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
@@ -29,7 +29,7 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 	
 	@Override
 	protected String title() {
-		return "Save as PNG";
+		return "Save Image";
 	}
 	
 	@Override
@@ -79,7 +79,9 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 			if(bm.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
 				// Successfully written picture
 				fos.close();
-				Log.d(TAG, "Successfully wrote image file");
+
+				// Show toast
+				Toast.makeText(getActivity(), "Image saved as " + imageFile.getName(), Toast.LENGTH_SHORT).show();
 
 				// Add it to the gallery
 				Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
@@ -88,16 +90,16 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 				getActivity().sendBroadcast(mediaScanIntent);
 			} else {
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-				builder.setMessage("Unknown error calling 'compress' on bitmap").setTitle("Error saving file").create().show();
+				builder.setMessage("Unknown error calling 'compress' on bitmap").setTitle("Error saving file").setNeutralButton("Close", null).create().show();
 				
-				Log.d(TAG, "Could not write image file");
+				Log.w(TAG, "Could not write image file");
 				fos.close();
 				return false;
 			}
 		} catch(IOException e) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-			builder.setMessage(e.getMessage()).setTitle("Error saving file").create().show();
-			Log.d(TAG, e.getMessage());
+			builder.setMessage(e.getMessage()).setTitle("Error saving file").setNeutralButton("Close", null).create().show();
+			Log.e(TAG, e.getMessage());
 		}
 		
 		return true;

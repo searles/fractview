@@ -45,6 +45,9 @@ public class EscapeTimeFragment extends Fragment {
 	
 	private static final String TAG = "EscapeTimeFragment";
 	
+	private static final int INIT_WIDTH = 800;
+	private static final int INIT_HEIGHT = 480;
+	
 	// Contains bitmap, configuration, task
 	// Preserved when everything is destroyed
 	// This fragment should also manage dialogs.
@@ -58,9 +61,9 @@ public class EscapeTimeFragment extends Fragment {
 	
 	public EscapeTimeFragment() {
 		// initialize preferences
-        this.prefs = EscapeTimeFragment.initFractal2();
+        this.prefs = EscapeTimeFragment.initFractal();
         
-        bitmap = Bitmap.createBitmap(900, 600, Config.ARGB_8888);
+        bitmap = Bitmap.createBitmap(INIT_WIDTH, INIT_HEIGHT, Config.ARGB_8888);
         
         // Create history stack
         history = new Stack<Preferences>();
@@ -188,88 +191,7 @@ public class EscapeTimeFragment extends Fragment {
 		return prefs;
 	}
 	
-	private static EscapeTime initFractal() {
-		Affine affine = Affine.scalation(4, 4);
-		affine.preConcat(Affine.translation(-2, -2));
-		
-		/* Palette.TwoDim palette2DLake = new Palette.TwoDim(
-				new int[][]{
-						{0xff000000, 0xff112255, 0xffffffff, 0xff552211},
-						{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
-						{0xffaaff00, 0xff023130, 0xff070064, 0xff6b20cb, 0xffffedff}
-						}, 
-				true, true, 0, 0, 5, 2 * Math.PI);
 
-		Colorization lakeCol = new Colorization.TwoDimensional(OrbitToDouble.SumDiff, OrbitToDouble.LastArc, palette2DLake);*/
-
-		/*Palette2D paletteBailout = new Palette2D(
-				new int[][]{
-						{0xff000000, 0xffffffff},
-						{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
-						}, 
-				true, true, 0, 0, 1, 20);
-
-		Colorization bailoutColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LengthInterpolated, OrbitToFloat.Predefined.Curvature, paletteBailout);
-
-
-		
-        Palette2D paletteLake = new Palette2D(
-                new int[][]{
-                        {0xff000000, 0xff112255, 0xffffffff, 0xff552211},
-                        {0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
-                        {0xffaaff00, 0xff023130, 0xff070064, 0xff6b20cb, 0xffffedff}
-                        },
-                true, true, 0, 0, 1f, (float) (2 * Math.PI));
-
-        Colorization lakeColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LastRad, OrbitToFloat.Predefined.LastArc, paletteLake);
-*/
-        Palette bailoutPalette = new Palette(
-				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
-				true, 1);
-		
-		Palette lakePalette = new Palette(
-				toHSV(new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}), 
-				true, (float) (2 * Math.PI));
-
-		int maxLength = 1000;
-		double bailout = 64.;
-		double epsilon = 1e-9;
-		
-		// z^2 * (z + x) + y*z(n-1)
-		// sqr((z^3 + 3(c - 1)z + (c - 1)(c - 2)) / (3 * z^2 + 3(c - 2)z + (c - 1)(c - 2) + 1))
-		// horner(0, 0, [-1.4, -1.4], 0, c)
-		// Cczcpaczcp (no, not a typo): c(z^3 + 1/z^3), 1
-		
-		// Golden Ratio:
-		// z^3/3 - z^2/2 - z + c
-		
-		// Functions with two different points: x^3-x^2+c; either 2/3 or 0.
-		// AbstractFunction fn = Function.create(Parser.parse("z log z + c").get(), Parser.parse("e^(-1)").get());
-
-		String sf = "c(alpha*z^beta + gamma*z^delta)";
-		String si0 = "(- gamma delta / alpha beta) ^ rec(beta - delta)";
-		
-		Labelled<Expr> fn = new Labelled<Expr>(Parser.parse(sf).get(), sf);
-		Labelled<Expr> i0 = new Labelled<Expr>(Parser.parse(si0).get(), si0);
-		
-		Map<Var, Labelled<Cplx>> ps = new TreeMap<Var, Labelled<Cplx>>();
-		
-		ps.put(new Var("alpha"), new Labelled<Cplx>(new Cplx(1, 0), "1"));
-		ps.put(new Var("beta"), new Labelled<Cplx>(new Cplx(3, 0), "3"));
-		ps.put(new Var("gamma"), new Labelled<Cplx>(new Cplx(-1, 0), "-1"));
-		ps.put(new Var("delta"), new Labelled<Cplx>(new Cplx(-3, 0), "-3"));
-		
-		List<Labelled<Expr>> l = new ArrayList<Labelled<Expr>>();
-		l.add(i0);
-		
-		Specification spec = new Specification(fn, l, ps);
-		
-		return new EscapeTime(affine, maxLength, 
-				spec.create(),
-				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
-				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
-	}
-	
 	private static float[][] toHSV(int[] palette) {
 		float[][] hsv = new float[palette.length][3];
 		
@@ -280,41 +202,15 @@ public class EscapeTimeFragment extends Fragment {
 		return hsv;
 	}
 	
-	private static EscapeTime initFractal2() {
+	private static EscapeTime initFractal() {
+		int maxIter = 100;
+		double bailout = 64.;
+		double epsilon = 1e-9;
+
 		Affine affine = Affine.scalation(4, 4);
 		affine.preConcat(Affine.translation(-2, -2));
 		
-		/* Palette.TwoDim palette2DLake = new Palette.TwoDim(
-				new int[][]{
-						{0xff000000, 0xff112255, 0xffffffff, 0xff552211},
-						{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
-						{0xffaaff00, 0xff023130, 0xff070064, 0xff6b20cb, 0xffffedff}
-						}, 
-				true, true, 0, 0, 5, 2 * Math.PI);
 
-		Colorization lakeCol = new Colorization.TwoDimensional(OrbitToDouble.SumDiff, OrbitToDouble.LastArc, palette2DLake);*/
-
-		/*Palette2D paletteBailout = new Palette2D(
-				new int[][]{
-						{0xff000000, 0xffffffff},
-						{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
-						}, 
-				true, true, 0, 0, 1, 20);
-
-		Colorization bailoutColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LengthInterpolated, OrbitToFloat.Predefined.Curvature, paletteBailout);
-
-
-		
-        Palette2D paletteLake = new Palette2D(
-                new int[][]{
-                        {0xff000000, 0xff112255, 0xffffffff, 0xff552211},
-                        {0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF},
-                        {0xffaaff00, 0xff023130, 0xff070064, 0xff6b20cb, 0xffffedff}
-                        },
-                true, true, 0, 0, 1f, (float) (2 * Math.PI));
-
-        Colorization lakeColorization = new Colorization.TwoDimensional(OrbitToFloat.Predefined.LastRad, OrbitToFloat.Predefined.LastArc, paletteLake);
-*/
         Palette bailoutPalette = new Palette(
 				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
 				true, 1);
@@ -323,9 +219,6 @@ public class EscapeTimeFragment extends Fragment {
 				toHSV(new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}), 
 				true, 360.f);
 
-		int maxLength = 1000;
-		double bailout = 64.;
-		double epsilon = 1e-9;
 		
 		// z^2 * (z + x) + y*z(n-1)
 		// sqr((z^3 + 3(c - 1)z + (c - 1)(c - 2)) / (3 * z^2 + 3(c - 2)z + (c - 1)(c - 2) + 1))
@@ -336,7 +229,6 @@ public class EscapeTimeFragment extends Fragment {
 		// z^3/3 - z^2/2 - z + c
 		
 		// Functions with two different points: x^3-x^2+c; either 2/3 or 0.
-		// AbstractFunction fn = Function.create(Parser.parse("z log z + c").get(), Parser.parse("e^(-1)").get());
 
 		String sf = "z^2 + c";
 		String si0 = "0";
@@ -356,7 +248,7 @@ public class EscapeTimeFragment extends Fragment {
 		
 		Specification spec = new Specification(fn, l, ps);
 		
-		return new EscapeTime(affine, maxLength, 
+		return new EscapeTime(affine, maxIter, 
 				spec.create(),
 				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
 				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);

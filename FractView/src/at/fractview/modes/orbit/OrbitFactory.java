@@ -131,5 +131,13 @@ public abstract class OrbitFactory extends ScaleablePrefs implements RasterTask.
 		public Cplx c() {
 			return c;
 		}
+		
+		public double absSqr(int i) {
+			return orbit[i].absSqr();
+		}
+		
+		public double distSqr(int i) {
+			return orbit[i-1].distSqr(orbit[i]);
+		}
 	}
 }

@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:id="@+id/scale" android:title="@string/scale"></item>
     <item android:id="@+id/maxiter" android:title="@string/maxiter"></item>
-    <item android:id="@+id/function" android:title="@string/function"></item>
+    <item android:id="@+id/function" android:title="@string/function" android:showAsAction="ifRoom|withText"></item>
     <item android:id="@+id/bailout" android:title="@string/bailout"></item>
-    <item android:id="@+id/bailoutcolors" android:title="@string/bailoutcolors"></item>
+    <item android:id="@+id/bailoutcolors" android:title="@string/bailoutcolors" android:showAsAction="ifRoom|withText"></item>
     <item android:id="@+id/lake" android:title="@string/lake"></item>
-    <item android:id="@+id/lakecolors" android:title="@string/lakecolors"></item>
+    <item android:id="@+id/lakecolors" android:title="@string/lakecolors" android:showAsAction="ifRoom|withText"></item>
     
 
 </menu>

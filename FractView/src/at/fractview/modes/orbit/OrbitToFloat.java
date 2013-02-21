@@ -43,12 +43,16 @@ public interface OrbitToFloat {
 			}
 		},
 		SumExp {
+			double expSmooth(AbstractOrbit orbit, int i) {
+				return Math.exp(-orbit.absSqr(i) - 0.5 / orbit.distSqr(i));
+			}
+			
 			@Override
 			public float value(AbstractOrbit orbit) {
 				double degree = 0;
 	
 				for(int i = 1; i < orbit.length(); i++) {
-					degree += Math.exp(-orbit.get(i).absSqr() - 0.5 / orbit.get(i - 1).distSqr(orbit.get(i)));
+					degree += expSmooth(orbit, i);
 				}
 	
 				return (float) Math.log(degree + 1);
@@ -90,6 +94,36 @@ public interface OrbitToFloat {
 				return (float) orbit.get(orbit.length() - 1).im();
 			}
 		},*/
+		/*CurvatureExp {
+			int m = 2;
+			
+			float t(OrbitFactory.AbstractOrbit orbit, int i) {
+				Cplx z = orbit.get(i);
+				Cplx zp = orbit.get(i - 1);
+				Cplx zpp = orbit.get(Math.max(0, i - 2));
+	
+				double d0 = new Cplx().sub(z, zp).arc();
+				double d1 = new Cplx().sub(zp, zpp).arc();
+	
+				return (float) Math.cos(d0 - d1);
+			}
+			
+			@Override
+			public float value(AbstractOrbit orbit) {
+				float sum = 0;
+	
+				for(int i = m + 1; i < orbit.length(); i++) {
+					sum += Math.exp(/*-orbit.absSqr(i) *- 0.5 / orbit.distSqr(i)) * t(orbit, i);				
+				}
+	
+				// float last = t(orbit, orbit.length());
+	
+				//float d = ((EscapeTime.Orbit) orbit).smooth();
+	
+				return sum;// + last * d;
+			}
+			
+		},*/
 		Zero {
 			@Override
 			public float value(AbstractOrbit orbit) {
@@ -126,6 +160,7 @@ public interface OrbitToFloat {
 			}
 		},
 		TriangleInequality {
+			// TODO: This is only useful for mandelbrot
 			int m = 1;
 				
 			float t(OrbitFactory.AbstractOrbit orbit, int i) {
@@ -137,7 +172,7 @@ public interface OrbitToFloat {
 	
 				float cAbs = (float) orbit.c().abs();
 	
-				float m = Math.abs(zpAbs * zpAbs - cAbs);
+				float m = Math.abs(zpAbs * zpAbs - cAbs); // Because of here...
 				float M = Math.abs(zpAbs * zpAbs + cAbs);
 	
 				float d = (zAbs - m) / (M - m);
@@ -163,7 +198,7 @@ public interface OrbitToFloat {
 	
 				return sum + last * d;
 			}
-		}*/
+		}//*/
 	}
 	;
 }

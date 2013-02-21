@@ -595,3 +595,9 @@ focus changes. Well, I can live with that.
 New problem: The view is not destroyed when I click the cancel-button. Nope - I simply have a bug with my
 palettes... Calming that I am just stupid enough to share my float-array where I just keep colors with the
 rest of the world. 
+
+Also managed to add some menus to the top action bar.
+
+And again: Invalid layout of java.lang.String at value
+
+On sharing images: http://stackoverflow.com/questions/5555405/share-bitmap-on-android-to-twitter-facebook-mail
