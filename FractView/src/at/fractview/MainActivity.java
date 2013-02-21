@@ -18,7 +18,6 @@ package at.fractview;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -36,15 +35,9 @@ public class MainActivity extends FragmentActivity {
 
 	private static final String TAG = "MainActivity";
 	
-	public MainActivity() {
-		Log.d(TAG, "Constructor");
-	}
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		Log.d(TAG, "onCreate");
 		
 		setContentView(R.layout.activity_main);
 		
@@ -100,15 +93,11 @@ public class MainActivity extends FragmentActivity {
 	
 	@Override
 	public void onBackPressed() {
-		Log.d(TAG, "Back-button was pressed");
-		
 		EscapeTimeFragment taskFragment = (EscapeTimeFragment) getSupportFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 
 		if(taskFragment.isHistoryEmpty()) {
 			super.onBackPressed();			
 		} else {
-			Log.d(TAG, "Back in history");
-			
 			if(!taskFragment.historyBack()) {
 				Toast.makeText(this, "First element in history", Toast.LENGTH_SHORT).show();
 			}

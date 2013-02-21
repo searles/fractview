@@ -56,16 +56,10 @@ public class ImageViewFragment extends Fragment {
 	
 	private EscapeTimeFragment taskFragment;
 
-	public ImageViewFragment() {
-		Log.d(TAG, "Constructor");
-	}	
-
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, 
         Bundle savedInstanceState) {        
 		
-		// Log.d(TAG, "onCreateView");
-
 		View v = inflater.inflate(R.layout.imageview, container, false);
 		
 		imageView = (ImageView) v.findViewById(R.id.imageView);
@@ -102,11 +96,10 @@ public class ImageViewFragment extends Fragment {
 		};
 
 		// Get (if there is) old DataFragment
-		Log.d(TAG, "Looking for old instances");
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(TASK_TAG);
 		
 		if(taskFragment == null) {
-			// Log.d(TAG, "No saved fragment found");
+			// Creeate new task fragment
 			taskFragment = new EscapeTimeFragment();
 			getFragmentManager().beginTransaction().add(taskFragment, TASK_TAG).commit();
 			
@@ -117,8 +110,7 @@ public class ImageViewFragment extends Fragment {
 			// taskFragment.startTask(); This is done inside onCreate of taskFragment
 			// via target this will call back to here.
 		} else {
-			// Log.d(TAG, "Found saved fragment");
-			// set target
+			// set old task fragment
 			taskFragment.setTargetFragment(this, TASK_FRAGMENT);
 			
 			// set bitmap and start handler
@@ -129,7 +121,6 @@ public class ImageViewFragment extends Fragment {
 		imageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 		    @Override
 		    public void onGlobalLayout() {
-		    	// Log.d(TAG, "Global layout: updating image view matrices");
 		    	initImageMatrix();
 		    }
 		});
@@ -140,32 +131,27 @@ public class ImageViewFragment extends Fragment {
 	
 	@Override
 	public void onDestroy() {
-		// Log.d(TAG, "onDestroy");
 		stopRedrawing();
 		super.onDestroy();
 	}
 	
 	@Override
 	public void onPause() {
-		// Log.d(TAG, "onPause");
 		stopRedrawing();
 		super.onPause();
 	}
 	
 	@Override 
 	public void onResume() {
-		// Log.d(TAG, "onResume");
 		startRedrawing();
 		super.onResume();
 	}
 	
 	public void stopRedrawing() {
-		// Log.d(TAG, "Removing update-view callbacks");
 		handler.removeCallbacks(updateView);
 	}
 	
 	public void startRedrawing() {
-		// Log.d(TAG, "Adding update-view callbacks");
 		// Make sure that it is only once in handler.
 		handler.removeCallbacks(updateView);
 		handler.post(updateView);
@@ -212,8 +198,6 @@ public class ImageViewFragment extends Fragment {
 	}
 
 	public void initializeTaskView() {
-		// Log.d(TAG, "initializing view...");
-		
 		if(taskFragment != null) {
 			if(taskFragment.getTargetFragment() != this) {
 				Log.e(TAG, "target of task fragment is not this image view!");
@@ -228,11 +212,8 @@ public class ImageViewFragment extends Fragment {
 	}
 	
 	private void applyTouch(Matrix bitmapMatrix, Matrix prefsMatrix) {
-		// taskFragment.cancelTask(); // stop calculation
-
 		// Get old data
 		ScaleablePrefs scaleable = (ScaleablePrefs) taskFragment.prefs();		
-		// Bitmap bitmap = taskFragment.bitmap();
 
 		// Update zoom
 		Matrix m = new Matrix();

@@ -57,8 +57,6 @@ public class EscapeTimeFragment extends Fragment {
 	private Stack<Preferences> history;
 	
 	public EscapeTimeFragment() {
-		Log.d(TAG, "Constructor " + hashCode());
-
 		// initialize preferences
         this.prefs = EscapeTimeFragment.initFractal2();
         
@@ -72,8 +70,6 @@ public class EscapeTimeFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.d(TAG, "onCreate " + hashCode());
-		
 		// Retain this instance so it isn't destroyed when MainActivity and
         // MainFragment change configuration.
         setRetainInstance(true);
@@ -86,7 +82,6 @@ public class EscapeTimeFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy " + hashCode());
 		if(task != null && task.isRunning()) task.cancel();
 		super.onDestroy();
 	}
@@ -108,7 +103,7 @@ public class EscapeTimeFragment extends Fragment {
 	 * @throws IllegalArgumentException If the history is empty before this call.
 	 */
 	public boolean historyBack() throws IllegalArgumentException {
-		Log.d(TAG, "History back");
+		//Log.d(TAG, "History back");
 		if(history.isEmpty()) throw new IllegalArgumentException("History is empty");		
 		
 		Preferences prefs = history.pop();
@@ -118,7 +113,6 @@ public class EscapeTimeFragment extends Fragment {
 	}
 	
 	public void setData(final Preferences prefs, final Bitmap bitmap, final boolean addToHistory) {
-		Log.d(TAG, "Setting new data");
 		new Handler().post(new Runnable() {
 			@Override
 			public void run() {
@@ -132,7 +126,7 @@ public class EscapeTimeFragment extends Fragment {
 					}
 
 					if(addToHistory && prefs != null) {
-						Log.d(TAG, "Adding to history");
+						// Add to history
 						history.push(EscapeTimeFragment.this.prefs);
 					}
 					
@@ -144,7 +138,7 @@ public class EscapeTimeFragment extends Fragment {
 					}
 
 					if(bitmap != null) {
-						Log.d(TAG, "Setting new preferences.");
+						Log.d(TAG, "Setting new bitmap.");
 						EscapeTimeFragment.this.bitmap = bitmap;
 					}
 
@@ -163,14 +157,11 @@ public class EscapeTimeFragment extends Fragment {
 	 * preview).
 	 */
 	private void startTask() {
-		Log.d(TAG, "startTask() "  + hashCode());
-		
 		if(task != null) {
 			Log.e(TAG, "BUG: Starting task, but old task is still running");
 		}
 		
 		if(getTargetFragment() != null) {
-			Log.d(TAG, "telling image view - target fragment about this: " + getTargetFragment().hashCode());
 			// Tell target that we start a calculation
 			((ImageViewFragment) getTargetFragment()).initializeTaskView();
 		}
@@ -180,13 +171,11 @@ public class EscapeTimeFragment extends Fragment {
 
 	
 	public void setSize(int width, int height) {
-		Log.d(TAG, "New size: " + width + "x" + height);
 		// Do not add current to history since we only change the bitmap size
 		setData(this.prefs, Bitmap.createBitmap(width, height, Config.ARGB_8888), false);
 	}
 	
 	public void setPrefs(Preferences prefs) {
-		Log.d(TAG, "New preferences: " + prefs);
 		// New configuration, add to history
 		setData(prefs, null, true);
 	}
