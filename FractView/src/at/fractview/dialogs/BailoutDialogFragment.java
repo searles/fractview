@@ -25,7 +25,8 @@ import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
 import at.fractview.modes.orbit.EscapeTime;
-import at.fractview.modes.orbit.OrbitToFloat;
+import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
+import at.fractview.modes.orbit.colorization.OrbitTransfer;
 
 public class BailoutDialogFragment extends InputViewDialogFragment {
 
@@ -34,9 +35,12 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 	private EscapeTimeFragment taskFragment;
 	
 	private EditText bailoutEditor;
-	private ArrayAdapter<OrbitToFloat.Predefined> colorizationAdapter;
-	private Spinner colorizationTypeSpinner;
 	
+	private ArrayAdapter<CommonOrbitToFloat> methodAdapter;
+	private Spinner methodSpinner;
+	
+	private TransferInput transferInput;
+
 	@Override
 	protected String title() {
 		return "Bailout-Settings";
@@ -46,28 +50,26 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 	protected View createView() {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 		
-		// Get values from taskFragment
-		double bailoutValue = taskFragment.prefs().bailout();
-		OrbitToFloat.Predefined method = taskFragment.prefs().bailoutDrawingMethod();
-		
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		View v = inflater.inflate(R.layout.bailout, null);
 		
 		// Initialize components
 		bailoutEditor = (EditText) v.findViewById(R.id.bailoutEditor);
 		
-		bailoutEditor.setText(Double.toString(bailoutValue));
+		bailoutEditor.setText(Double.toString(taskFragment.prefs().bailout()));
 		
-		colorizationTypeSpinner = (Spinner) v.findViewById(R.id.colorizationTypeSpinner);
+		methodSpinner = (Spinner) v.findViewById(R.id.methodSpinner);
 		
-		colorizationAdapter = new ArrayAdapter<OrbitToFloat.Predefined>(
+		methodAdapter = new ArrayAdapter<CommonOrbitToFloat>(
 				getActivity(), 
 				android.R.layout.simple_list_item_1, 
-				OrbitToFloat.Predefined.values());
+				CommonOrbitToFloat.values());
 		
-		colorizationTypeSpinner.setAdapter(colorizationAdapter);
+		methodSpinner.setAdapter(methodAdapter);
 
-		colorizationTypeSpinner.setSelection(colorizationAdapter.getPosition(method));
+		methodSpinner.setSelection(methodAdapter.getPosition(taskFragment.prefs().bailoutMethod()));
+
+		this.transferInput = new TransferInput(getActivity(), v, taskFragment.prefs().bailoutTransfer());
 		
 		return v;
 	}
@@ -83,9 +85,16 @@ public class BailoutDialogFragment extends InputViewDialogFragment {
 			return false;
 		}
 		
-		OrbitToFloat.Predefined method = (OrbitToFloat.Predefined) colorizationTypeSpinner.getSelectedItem();
+		OrbitTransfer transfer = transferInput.get();
 		
-		EscapeTime prefs = taskFragment.prefs().newBailoutInstance(bailoutValue, method);
+		if(transfer == null) {
+			Log.w(TAG, "Transfer is null");
+			return false;
+		}
+		
+		CommonOrbitToFloat method = (CommonOrbitToFloat) methodSpinner.getSelectedItem();
+		
+		EscapeTime prefs = taskFragment.prefs().newBailout(bailoutValue, method, transfer);
 		taskFragment.setPrefs(prefs);
 		
 		return true;

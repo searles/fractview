@@ -3,9 +3,15 @@ TODOs for Version 1.1:
 * Bug fixing:
 ** Add "Close" to dialogs [DONE]
 ** Check whether z is inside an expression when deriving binary functions. [DONE]
-** Rotating should not reset dialogs.
+** Rotating should not reset dialogs. [DONE]
+** LastArc should be between 0 and 1
+** Colorizations should have names
+
+* Optimiations:
+
 
 TODOs for Version 2.0:
+* Bookmarks must definitely be in SQLite, but with the possibility to export them 
 * Predefined fractals
 * Custom colorizations via Sum-Symbol
 * 2-dim color palettes

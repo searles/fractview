@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import android.util.Log;
 import at.fractview.math.Cplx;
 
 /** This class analyzes an expression that has been successfully parsed.
@@ -35,7 +36,7 @@ public class ExprCompiler {
 	// private static final String TAG = "ExprCompiler";
 	
 	public static final Collection<Var> predefinedVars = Arrays.asList(
-			new Var[]{new Var("c"), new Var("n"), new Var("cr"), new Var("ci"), new Var("z"), new Var("zr"), new Var("zi")}
+			new Var[]{new Var("c"), new Var("n"), new Var("x"), new Var("y"), new Var("z")}
 	);
 	
 	/** Compiles this expression.
@@ -68,10 +69,6 @@ public class ExprCompiler {
 
 		if(expr instanceof App) {
 			return app((App) expr, constants, parameters);
-		}
-		
-		if(expr instanceof Indexed.ZN) {
-			return new InstructionTree(Executable.ATOM_Z_LAST, true, ((Indexed.ZN) expr).index());
 		}
 		
 		throw new IllegalArgumentException("Unsupported type");
@@ -119,6 +116,8 @@ public class ExprCompiler {
 		case SREC: return new InstructionTree(Executable.UN_SREC, false, 0, args);
 		case TAN: return new InstructionTree(Executable.UN_TAN, false, 0, args);
 		case TANH: return new InstructionTree(Executable.UN_TANH, false, 0, args);
+		case CABS: return new InstructionTree(Executable.UN_CABS, false, 0, args);
+		case POLAR: return new InstructionTree(Executable.UN_POLAR, false, 0, args);
 		default: throw new IllegalArgumentException("Found function " + app.op() + 
 				" but it is not implemented. Please file a bug!");
 		}
@@ -148,16 +147,16 @@ public class ExprCompiler {
 	private static InstructionTree parameter(Var v, List<Cplx> constants, List<String> parameters) {
 		if(v.is("c")) {
 			return new InstructionTree(Executable.ATOM_C, false, 0);
-		} else if(v.is("z") || v.is("zn")) {
+		} else if(v.is("z")) {
+			Log.e("XXXXXXXXXXXXXXXXX", "It is z");
 			return new InstructionTree(Executable.ATOM_Z, false, 0);
-		} else if(v.is("cr")) {
-			return new InstructionTree(Executable.ATOM_CR, false, 0);
-		} else if(v.is("ci")) {
-			return new InstructionTree(Executable.ATOM_CI, false, 0);
-		} else if(v.is("zr")) {
-			return new InstructionTree(Executable.ATOM_ZR, false, 0);
-		} else if(v.is("zi")) {
-			return new InstructionTree(Executable.ATOM_ZI, false, 0);
+		} else if(v.isIndexed("z")) {
+			Log.e("XXXXXXXXXXXXXXXXX", "It is z with index");
+			return new InstructionTree(Executable.ATOM_Z_LAST, true, v.index());
+		} else if(v.is("x")) {
+			return new InstructionTree(Executable.ATOM_X, false, 0);
+		} else if(v.is("y")) {
+			return new InstructionTree(Executable.ATOM_Y, false, 0);
 		} else if(v.is("n")) {
 			return new InstructionTree(Executable.ATOM_N, false, 0);
 		} else {
@@ -174,7 +173,7 @@ public class ExprCompiler {
 			}
 			
 			if(index == parameters.size()) {
-				parameters.add(v.id());
+				parameters.add(v.indexedId());
 				// index is already the right value
 			}
 			

@@ -37,7 +37,9 @@ import at.fractview.math.tree.Parser;
 import at.fractview.math.tree.Var;
 import at.fractview.modes.Preferences;
 import at.fractview.modes.orbit.EscapeTime;
-import at.fractview.modes.orbit.OrbitToFloat;
+import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
+import at.fractview.modes.orbit.colorization.CommonTransfer;
+import at.fractview.modes.orbit.colorization.OrbitTransfer;
 import at.fractview.modes.orbit.functions.Specification;
 import at.fractview.tools.Labelled;
 
@@ -213,11 +215,11 @@ public class EscapeTimeFragment extends Fragment {
 
         Palette bailoutPalette = new Palette(
 				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
-				true, 1);
+				true);
 		
 		Palette lakePalette = new Palette(
 				toHSV(new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}), 
-				true, 360.f);
+				true);
 
 		
 		// z^2 * (z + x) + y*z(n-1)
@@ -230,7 +232,7 @@ public class EscapeTimeFragment extends Fragment {
 		
 		// Functions with two different points: x^3-x^2+c; either 2/3 or 0.
 
-		String sf = "z^2 + c";
+		String sf = "sqr z + c";
 		String si0 = "0";
 		
 		Labelled<Expr> fn = new Labelled<Expr>(Parser.parse(sf).get(), sf);
@@ -250,8 +252,8 @@ public class EscapeTimeFragment extends Fragment {
 		
 		return new EscapeTime(affine, maxIter, 
 				spec.create(),
-				bailout, OrbitToFloat.Predefined.LengthSmooth, bailoutPalette, 
-				epsilon, OrbitToFloat.Predefined.LastArc, lakePalette);
+				bailout, CommonOrbitToFloat.LengthSmooth, new OrbitTransfer(0, 1, CommonTransfer.Log), bailoutPalette, 
+				epsilon, CommonOrbitToFloat.LastArc, new OrbitTransfer(0, 360, CommonTransfer.None), lakePalette);
 	}
 	
 	

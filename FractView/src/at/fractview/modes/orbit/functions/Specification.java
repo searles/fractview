@@ -43,12 +43,12 @@ public class Specification {
 	
 	public Specification(Labelled<Expr> function, List<Labelled<Expr>> inits, Map<Var, Labelled<Cplx>> parameters) {
 		// Verify whether this is a valid specification
-		if(function.get().maxIndexZ() != inits.size()) {
+		if(function.get().maxIndex("z") != inits.size()) {
 			throw new IllegalArgumentException("Number of inits is not correct");
 		}
 		
 		for(int i = 0; i < inits.size(); i++) {
-			if(inits.get(i).get().maxIndexZ() - 1 > i) { // - 1 because z(1) may use z(n - 1)
+			if(inits.get(i).get().maxIndex("z") - 1 > i) { // - 1 because z(1) may use z(n - 1)
 				throw new IllegalArgumentException("Init " + i + " requires z-value that only is defined later");
 			}
 		}

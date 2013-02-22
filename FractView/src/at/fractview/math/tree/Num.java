@@ -58,17 +58,17 @@ public class Num extends Expr {
 	}
 
 	@Override
-	public Cplx eval(Map<Var, Cplx> values) {
-		return new Cplx(c);
+	public Cplx eval(Cplx dest, Map<Var, Cplx> values) {
+		return dest.set(c);
 	}
 
 	@Override
-	public Expr diffZ() {
+	public Expr derive(String v) {
 		return new Num(0);
 	}
 
 	@Override
-	public boolean containsZ() {
+	public boolean contains(String v) {
 		return false;
 	}
 
@@ -98,7 +98,7 @@ public class Num extends Expr {
 	}
 	
 	@Override
-	public int maxIndexZ() {
+	public int maxIndex(String v) {
 		return 0;
 	}
 	

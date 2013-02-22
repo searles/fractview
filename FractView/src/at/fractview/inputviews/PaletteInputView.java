@@ -39,7 +39,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -72,8 +71,6 @@ public class PaletteInputView {
 	private Button addButton;
 	private Button removeButton;
 	private Button rightButton;
-	
-	private EditText lengthEditor;
 	
 	private CheckBox cyclicCheckBox;
 	
@@ -110,7 +107,6 @@ public class PaletteInputView {
 		this.satSeekBar = (SeekBar) view.findViewById(R.id.saturationSeekBar);
 		this.valSeekBar = (SeekBar) view.findViewById(R.id.valueSeekBar);
 
-		this.lengthEditor = (EditText) view.findViewById(R.id.lengthEditor);
 		this.cyclicCheckBox = (CheckBox) view.findViewById(R.id.cyclicCheckBox);
 
 		// Create listeners for add and remove-Button
@@ -213,8 +209,6 @@ public class PaletteInputView {
 			}
 		});
 		
-		this.lengthEditor.setText(Float.toString(palette.length()));
-		
 		this.cyclicCheckBox.setChecked(palette.cyclic());
 		
 		// Add colors
@@ -300,17 +294,7 @@ public class PaletteInputView {
 		
 		boolean cyclic = cyclicCheckBox.isChecked();
 		
-		float length;
-		
-		try {
-			length = Float.valueOf(lengthEditor.getText().toString());
-		} catch(NumberFormatException e) {
-			// Use old value
-			length = palette.length();
-			lengthEditor.setText(Float.toString(length));
-		}
-		
-		this.palette = new Palette(colorArray, cyclic, length);
+		this.palette = new Palette(colorArray, cyclic);
 	}
 	
 	public Palette acceptAndReturn() {

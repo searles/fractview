@@ -187,8 +187,8 @@ public class Parser {
 		// Now for trailing ' for derivations
 		while(term != null && ch() == '\'') {
 			incr();
-			if(term.containsZ()) {
-				term = term.diffZ();
+			if(term.contains(null)) {
+				term = term.derive(null);
 			} else {
 				term = new Num(0);
 			}
@@ -271,7 +271,7 @@ public class Parser {
 			}*/
 			
 			// We have an id. Is it a function?
-			Op op = Expr.op(id);
+			Op op = Expr.createOp(id);
 			
 			if(op != null) {
 				// Yes. Fetch arguments.
@@ -306,7 +306,7 @@ public class Parser {
 					return op.app();
 				}
 			} else {
-				return Expr.var(id);
+				return Expr.createVar(id);
 			}
 		}
 	}

@@ -33,6 +33,7 @@ import at.fractview.dialogs.ScaleDialogFragment;
 
 public class MainActivity extends FragmentActivity {
 
+	@SuppressWarnings("unused")
 	private static final String TAG = "MainActivity";
 	
 	@Override

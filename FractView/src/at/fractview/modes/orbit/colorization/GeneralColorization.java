@@ -14,17 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with FractView.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.fractview.modes.orbit;
+package at.fractview.modes.orbit.colorization;
 
 import at.fractview.math.colors.Palette;
 import at.fractview.math.colors.Palette2D;
+import at.fractview.modes.orbit.OrbitFactory;
 import at.fractview.modes.orbit.OrbitFactory.AbstractOrbit;
 
 /** This interface represents functions from an orbit into a color
  * @author searles
  *
  */
-public interface Colorization {
+public interface GeneralColorization {
 	
 	int color(OrbitFactory.AbstractOrbit orbit);
 	
@@ -33,7 +34,7 @@ public interface Colorization {
 	 * @author searles
 	 *
 	 */
-	public static class LinearDouble implements Colorization {
+	public static class LinearDouble implements GeneralColorization {
 		
 		private OrbitToFloat trans;
 		private Palette palette;
@@ -57,7 +58,7 @@ public interface Colorization {
 		}
 	}
 	
-	public static class TwoDimensional implements Colorization {
+	public static class TwoDimensional implements GeneralColorization {
 		private OrbitToFloat trans0;
 		private OrbitToFloat trans1;
 		private Palette2D palette;
@@ -76,7 +77,7 @@ public interface Colorization {
 
 	
 
-	public static class Constant implements Colorization {
+	public static class Constant implements GeneralColorization {
 		private int color;
 		
 		public Constant(int color) {

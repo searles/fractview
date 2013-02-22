@@ -1,0 +1,25 @@
+* Bug fixing:
+** LastArc should be between 0 and 1
+** Colorizations should have names
+** Put 'length' away from palette into Bailout/Lake. Palette is always normalized at 0-1. 
+** Caching
+*** Allow for min/max-values in Bailout/lake.
+** Colorization from http://www.fractalforums.com/new-theories-and-research/a-new-look-into-escapetime-fractals-using-abs-and-inner-coloring/
+** Bookmarks: How to do it? Create parse-method in every object, like Palette, Function etc...? Most likely, yes. For bitmap use Base64 encoding.
+*** Add 'pick
+
+** New functions:
+*** Add a function |zr| + i |zi|, name: abs; rename current abs to rad, and arg to arc. [done, called it 'cabs']
+*** Add a function polar z -> abs z + i arg z
+*** Add a function sgn z -> sgn zr + i sgn zi
+
+TODOs:
+1. Bookmarks must definitely be in SQLite, but with the possibility to export them
+Store last fractal and restore it. 
+Allow restoring only parts of bookmarks like color palette
+2. Predefined fractals + custom colorization methods (requires Sum/Product; min index value can be obtained from minIndex(Var))
+4. 2-dim color palettes
+6. dragging parameters
+7. Split view for julia next to mandel (TODO for this: boolean set(String label, Cplx value) returns false when no such point).
+8. Transfer into palette
+9. Caching

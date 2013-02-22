@@ -16,6 +16,11 @@
  */
 package at.fractview.math.colors;
 
+import java.util.InputMismatchException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
+
 import android.graphics.Color;
 import at.fractview.math.Spline;
 
@@ -26,20 +31,17 @@ public class Palette {
 	private boolean cyclic;
 	
 	private Spline[] splines;
-	private float length;
 	
 	/**
 	 * @param colors Colors in hsv format
 	 * @param cyclic
 	 * @param length
 	 */
-	public Palette(float[][] colors, boolean cyclic, float length) {
+	public Palette(float[][] colors, boolean cyclic) {
 
 		this.colors = new float[colors.length][3];
 		
 		this.cyclic = cyclic;
-		
-		this.length = length;
 		
 		// Set colors
 		splines = new Spline[3];
@@ -72,12 +74,6 @@ public class Palette {
 		return retVal;
 	}
 	
-	// Default visibility so that other palettes can access these
-	// No public visibility because these things might be subject to changes
-	float norm(float x) {
-		return x / length;
-	}
-	
 	float l(float f) {
 		return splines[0].y(f);
 	}
@@ -91,16 +87,10 @@ public class Palette {
 	}
 	
 	public int color(float x) {
-		float d = x / length;
-		
 		return Colors.LabToRGB(
-				splines[0].y(d), 
-				splines[1].y(d), 
-				splines[2].y(d), 1);
-	}
-
-	public float length() {
-		return length;
+				splines[0].y(x), 
+				splines[1].y(x), 
+				splines[2].y(x), 1);
 	}
 
 	public boolean cyclic() {
@@ -108,17 +98,43 @@ public class Palette {
 	}
 	
 	public String toString() {
-		StringBuilder sb = null;
+		StringBuilder sb = new StringBuilder();
 		
-		for(float[] hsv : colors) {
-			if(sb == null) {
-				sb = new StringBuilder();
-			} else {
-				sb.append(", ");
+		sb.append(cyclic);
+		
+		for(int i = 0; i < colors.length; i++) {
+			for(int j = 0; j < 3; j++) {
+				sb.append(' ');
+				sb.append(colors[i][j]);
 			}
-			sb.append(Integer.toHexString(Color.HSVToColor(hsv)));
 		}
 		
 		return sb.toString();
+	}
+	
+	public static Palette fromString(String s) throws InputMismatchException {
+		Scanner sc = new Scanner(s);
+
+		boolean cyclic = sc.nextBoolean();
+		
+		List<Float> values = new LinkedList<Float>();
+		
+		while(sc.hasNextFloat()) {
+			values.add(sc.nextFloat());
+		}
+		
+		if(sc.hasNext()) throw new InputMismatchException("Input is not empty");
+		if(values.size() % 3 != 0 || values.isEmpty()) throw new InputMismatchException("Bad number of floats");
+		
+		float[][] colors = new float[values.size() / 3][3];
+		
+		int i = 0;
+		
+		for(float value : values) {
+			colors[i / 3][i % 3] = value;
+			i++;
+		}
+		
+		return new Palette(colors, cyclic);
 	}
 }

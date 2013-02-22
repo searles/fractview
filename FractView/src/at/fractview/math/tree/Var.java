@@ -25,25 +25,40 @@ import at.fractview.math.Cplx;
 public class Var extends Expr {
 
 	private String id;
+	private int index;
+	
+	// TODO: What about negative indices?
+	
+	public Var(String id, int index) {
+		this.id = id;
+		this.index = index;
+	}
 	
 	public Var(String id) {
-		this.id = id;
+		this(id, 0);
 	}
 	
 	public boolean is(String id) {
+		return index == 0 && isIndexed(id);
+	}
+	
+	public boolean isIndexed(String id) {
 		return this.id.equalsIgnoreCase(id);
 	}
 
 	@Override
-	public Cplx eval(Map<Var, Cplx> values) {
-		return values.get(this);
+	public Cplx eval(Cplx dest, Map<Var, Cplx> values) {
+		return dest.set(values.get(this));
 	}
 
 	@Override
-	public Expr diffZ() {
+	public Expr derive(String v) {
 		// Exclude zr and zi
-		if(is("zr") || is("zi")) return null;
-		return new Num(is("z") ? 1 : 0); 
+		if(is(v)) {
+			return index != 0 ? null : new Num(1);
+		} else {
+			return new Num(0);
+		}
 	}
 	
 	@Override
@@ -72,15 +87,23 @@ public class Var extends Expr {
 	}
 
 	@Override
-	public boolean containsZ() {
-		return this.is("z") || this.is("zr") || this.is("zi");
+	public boolean contains(String v) {
+		return this.is(v);
 	}
 	
 	@Override
-	public int maxIndexZ() {
-		return containsZ() ? 1 : 0;
+	public int maxIndex(String v) {
+		return isIndexed(v) ? index + 1 : 0;
 	}
-	
+
+	public int index() {
+		return index;
+	}
+
+	public String indexedId() {
+		return id + index;
+	}
+
 	public String id() {
 		return id;
 	}
@@ -99,15 +122,15 @@ public class Var extends Expr {
 	protected int cmp(Expr that) {
 		Var v = (Var) that;
 			
-		if(this.is(v.id)) return 0;
+		if(this.is(v.id)) return this.index - v.index;
 		else return id.compareTo(v.id); // They are not equal, so we dont care about case.
 	}
 	
 	public int hashCode() {
-		return id.toLowerCase(Locale.US).hashCode();
+		return id.toLowerCase(Locale.US).hashCode() + index;
 	}
 	
 	public String toString() {
-		return id;
+		return index == 0 ? id() : indexedId();
 	}
 }

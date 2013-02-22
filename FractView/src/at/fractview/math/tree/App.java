@@ -67,29 +67,29 @@ public class App extends Expr {
 	}
 
 	@Override
-	public Cplx eval(Map<Var, Cplx> values) {
+	public Cplx eval(Cplx dest, Map<Var, Cplx> values) {
 		Cplx[] cArgs = new Cplx[op.arity()];
 		
 		for(int i = 0; i < op.arity(); i++) {
-			Cplx arg = args[i].eval(values);
+			Cplx arg = args[i].eval(new Cplx(), values);
 			
 			if(arg == null) return null;
 			
 			cArgs[i] = arg;
 		}
 		
-		return op.eval(cArgs);
+		return op.eval(dest, cArgs);
 	}
 
 	@Override
-	public Expr diffZ() {
-		return op.diffZ(args);
+	public Expr derive(String v) {
+		return op.derive(null, args);
 	}
 
 	@Override
-	public boolean containsZ() {
+	public boolean contains(String v) {
 		for(Expr arg : args) {
-			if(arg.containsZ()) {
+			if(arg.contains(null)) {
 				return true;
 			}
 		}
@@ -98,11 +98,11 @@ public class App extends Expr {
 	}
 
 	@Override
-	public int maxIndexZ() {
+	public int maxIndex(String v) {
 		int max = 0;
 		
 		for(Expr arg : args) {
-			int i = arg.maxIndexZ();
+			int i = arg.maxIndex(v);
 			
 			if(i > max) max = i;
 		}
@@ -110,7 +110,7 @@ public class App extends Expr {
 		return max;
 	}
 	
-	@Override
+	/*@Override
 	public Cplx findRoot(Var v, Map<Var, Cplx> values, double epsilon, int maxIter) {
 		if(op == Op.MUL) {
 			// Find root of all components that contain v
@@ -130,7 +130,7 @@ public class App extends Expr {
 		}
 		
 		return super.findRoot(v, values, epsilon, maxIter);
-	}
+	}*/
 	
 	@Override
 	public Set<Var> parameters(Set<Var> vars) {

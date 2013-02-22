@@ -82,7 +82,7 @@ public class Cplx {
 		return dr * dr + di * di;
 	}
 	
-	public double arc() {
+	public double arg() {
 		double arc = Math.atan2(im(), re());
 		if(arc < 0) arc += 2 * Math.PI;
 		return arc;

@@ -37,10 +37,15 @@
             android:text="Method: " />
         
         <Spinner
-            android:id="@+id/colorizationTypeSpinner"
+            android:id="@+id/methodSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
     </LinearLayout>
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/transfer" />
 
 </LinearLayout>

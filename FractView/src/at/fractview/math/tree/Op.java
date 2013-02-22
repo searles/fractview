@@ -63,15 +63,15 @@ public enum Op {
 		}
 		
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().add(args[0], args[1]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.add(args[0], args[1]);
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// (a + b)' = a' + b'
-			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
-			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
+			Expr dl = args[0].contains(v) ? args[0].derive(v) : new Num(0);
+			Expr dr = args[1].contains(v) ? args[1].derive(v) : new Num(0);
 			
 			if(dl != null && dr != null) {
 				return ADD.app(dl, dr);
@@ -122,15 +122,15 @@ public enum Op {
 		}
 		
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().sub(args[0], args[1]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.sub(args[0], args[1]);
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// (a - b)' = a' - b'
-			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
-			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
+			Expr dl = args[0].contains(v) ? args[0].derive(v) : new Num(0);
+			Expr dr = args[1].contains(v) ? args[1].derive(v) : new Num(0);
 			
 			if(dl != null && dr != null) {
 				return SUB.app(dl, dr);
@@ -211,14 +211,14 @@ public enum Op {
 		}
 	
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().mul(args[0], args[1]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.mul(args[0], args[1]);
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
-			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
+		public Expr derive(String v, Expr...args) {
+			Expr dl = args[0].contains(v) ? args[0].derive(v) : new Num(0);
+			Expr dr = args[1].contains(v) ? args[1].derive(v) : new Num(0);
 			
 			if(dl != null && dr != null) {
 				// (a * b)' = a'*b + a*b'
@@ -286,14 +286,14 @@ public enum Op {
 		}
 		
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().div(args[0], args[1]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.div(args[0], args[1]);
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
-			Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
+		public Expr derive(String v, Expr...args) {
+			Expr dl = args[0].contains(v) ? args[0].derive(v) : new Num(0);
+			Expr dr = args[1].contains(v) ? args[1].derive(v) : new Num(0);
 			
 			if(dl != null && dr != null) {
 				// (a / b)' = a'*b - a*b' / sqr(b) = a' / b - a * b' / sqr(b)
@@ -374,16 +374,16 @@ public enum Op {
 		}
 		
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().pow(args[0], args[1]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.pow(args[0], args[1]);
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			if(args[1].containsZ()) {
+		public Expr derive(String v, Expr...args) {
+			if(args[1].contains(v)) {
 				// (f ^ g)' = exp(log(f) * g)' = f ^ g * (log(f) * g)' = f ^ g * (g * f' / f + log(f) * g')
-				Expr dl = args[0].containsZ() ? args[0].diffZ() : new Num(0);
-				Expr dr = args[1].containsZ() ? args[1].diffZ() : new Num(0);
+				Expr dl = args[0].contains(v) ? args[0].derive(v) : new Num(0);
+				Expr dr = args[1].contains(v) ? args[1].derive(v) : new Num(0);
 				
 				if(dl != null && dr != null) {
 					Expr fract = DIV.app(MUL.app(args[1], dl), args[0]);
@@ -397,7 +397,7 @@ public enum Op {
 				return null;
 			} else {
 				// (f ^ n)' = n * f ^ (n-1) * f'
-				Expr dl = args[0].diffZ();
+				Expr dl = args[0].derive(v);
 				
 				if(dl != null) {
 					Expr exp = SUB.app(args[1], new Num(1));
@@ -433,8 +433,8 @@ public enum Op {
 		}
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				return NEG.app(dt);
@@ -444,8 +444,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().neg(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.neg(args[0]);
 		}
 
 		@Override
@@ -476,8 +476,8 @@ public enum Op {
 		}
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// -dt / sqr(args[0])
@@ -488,8 +488,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().rec(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.rec(args[0]);
 		}
 
 		@Override
@@ -500,8 +500,8 @@ public enum Op {
 	},
 	SREC {
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				return Op.MUL.app(Op.SUB.app(new Num(1), Op.SQR.app(args[0])));
@@ -511,8 +511,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().srec(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.srec(args[0]);
 		}
 
 		@Override
@@ -523,8 +523,8 @@ public enum Op {
 	},
 	DREC {
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				return Op.MUL.app(Op.ADD.app(new Num(1), Op.SQR.app(args[0])));
@@ -534,8 +534,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().drec(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.drec(args[0]);
 		}
 
 		@Override
@@ -561,8 +561,8 @@ public enum Op {
 		}		
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				return Op.MUL.app(Op.MUL.app(new Num(2), args[0]), dt);
@@ -572,8 +572,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().sqr(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.sqr(args[0]);
 		}
 
 		@Override
@@ -593,8 +593,8 @@ public enum Op {
 		}		
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// sqrt(args[0])' = 0.5*da / sqrt(args[0])
@@ -605,8 +605,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().sqrt(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.sqrt(args[0]);
 		}
 
 		@Override
@@ -627,8 +627,8 @@ public enum Op {
 		}		
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// exp(args[0])' = exp(args[0]) * da
@@ -639,8 +639,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().exp(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.exp(args[0]);
 		}
 
 		@Override
@@ -667,8 +667,8 @@ public enum Op {
 
 
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// log(args[0])' = da / a
@@ -679,8 +679,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().log(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.log(args[0]);
 		}
 
 
@@ -701,8 +701,8 @@ public enum Op {
 		}
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// sin(args[0])' = cos(args[0]) * da
@@ -713,8 +713,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().sin(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.sin(args[0]);
 		}
 
 		@Override
@@ -734,8 +734,8 @@ public enum Op {
 		}
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// cos(args[0])' = -sin(args[0]) * da
@@ -746,8 +746,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().cos(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.cos(args[0]);
 		}
 
 		@Override
@@ -767,8 +767,8 @@ public enum Op {
 		}		
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// tan(args[0])' = da / sqr cos args[0]
@@ -779,8 +779,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().tan(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.tan(args[0]);
 		}
 
 		@Override
@@ -800,8 +800,8 @@ public enum Op {
 		}		
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// atan(args[0])' = da / (1 + sqr args[0])
@@ -812,8 +812,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().atan(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.atan(args[0]);
 		}
 
 		@Override
@@ -833,8 +833,8 @@ public enum Op {
 		}
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// sinh(args[0])' = cosh(args[0]) * da
@@ -845,8 +845,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().sinh(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.sinh(args[0]);
 		}
 
 		@Override
@@ -868,8 +868,8 @@ public enum Op {
 		}		
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// cosh(args[0])' = sinh(args[0]) * da
@@ -880,8 +880,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().cosh(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.cosh(args[0]);
 		}
 
 		@Override
@@ -901,8 +901,8 @@ public enum Op {
 		}		
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// tanh(args[0])' = da / sqr cosh(args[0])
@@ -913,8 +913,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().tanh(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.tanh(args[0]);
 		}
 
 		@Override
@@ -927,11 +927,11 @@ public enum Op {
 		public Expr app(Expr...args) {
 			// TODO
 			return super.app(args[0]);
-		}		
+		}	
 		
 		@Override
-		public Expr diffZ(Expr...args) {
-			Expr dt = args[0].diffZ();
+		public Expr derive(String v, Expr...args) {
+			Expr dt = args[0].derive(v);
 			
 			if(dt != null) {
 				// atanh(args[0])' = da / (1 - sqr args[0])
@@ -942,8 +942,8 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().atanh(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.atanh(args[0]);
 		}
 
 		@Override
@@ -954,14 +954,14 @@ public enum Op {
 	CONJ {
 		// No optimizations since not a derivation (users can easily simply themselves)
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// No derivative
 			return null;
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx().conj(args[0]);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.conj(args[0]);
 		}
 
 		@Override
@@ -971,14 +971,14 @@ public enum Op {
 	}, 
 	ABS {
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// No derivative
 			return null;
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx(args[0].abs(), 0.);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(args[0].abs(), 0.);
 		}
 
 		@Override
@@ -988,14 +988,14 @@ public enum Op {
 	}, 
 	ARG {
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// No derivative
 			return null;
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx(args[0].arc(), 0.);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(args[0].arg(), 0.);
 		}
 
 		@Override
@@ -1006,14 +1006,14 @@ public enum Op {
 	}, 
 	RE {
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// No derivative
 			return null;
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx(args[0].re(), 0.);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(args[0].re(), 0.);
 		}
 
 		@Override
@@ -1023,14 +1023,46 @@ public enum Op {
 	}, 
 	IM {
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// No derivative
 			return null;
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx(args[0].im(), 0.);
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(args[0].im(), 0.);
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}
+	},
+	CABS {
+		@Override
+		public Expr derive(String v, Expr...args) {
+			return null;
+		}
+
+		@Override
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(Math.abs(args[0].re()), Math.abs(args[0].re()));
+		}
+
+		@Override
+		public int arity() {
+			return 1;
+		}
+	},
+	POLAR {
+		@Override
+		public Expr derive(String v, Expr...args) {
+			return null;
+		}
+
+		@Override
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(args[0].abs(), args[0].arg());
 		}
 
 		@Override
@@ -1040,14 +1072,14 @@ public enum Op {
 	},
 	FLOOR {
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			// This is flat
 			return new Num(0);
 		}
 
 		@Override
-		public Cplx eval(Cplx...args) {
-			return new Cplx(Math.floor(args[0].re()), Math.floor(args[0].re()));
+		public Cplx eval(Cplx dest, Cplx...args) {
+			return dest.set(Math.floor(args[0].re()), Math.floor(args[0].re()));
 		}
 
 		@Override
@@ -1063,12 +1095,12 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx... args) {
-			return new Cplx(Math.PI, 0);
+		public Cplx eval(Cplx dest, Cplx... args) {
+			return dest.set(Math.PI, 0);
 		}
 
 		@Override
-		public Expr diffZ(Expr... args) {
+		public Expr derive(String v, Expr... args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 	},
@@ -1079,12 +1111,12 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx... args) {
-			return new Cplx(Math.E, 0);
+		public Cplx eval(Cplx dest, Cplx... args) {
+			return dest.set(Math.E, 0);
 		}
 
 		@Override
-		public Expr diffZ(Expr... args) {
+		public Expr derive(String v, Expr... args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 	},
@@ -1095,28 +1127,70 @@ public enum Op {
 		}
 
 		@Override
-		public Cplx eval(Cplx... args) {
-			return new Cplx(0, 1);
+		public Cplx eval(Cplx dest, Cplx... args) {
+			return dest.set(0, 1);
 		}
 
 		@Override
-		public Expr diffZ(Expr... args) {
+		public Expr derive(String v, Expr... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+	},
+	ZR {
+		@Override
+		public Expr app(Expr...args) {
+			return Op.RE.app(new Var("z"));
+		}
+
+		@Override
+		public int arity() {
+			return 0;
+		}
+
+		@Override
+		public Cplx eval(Cplx dest, Cplx... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public Expr derive(String v, Expr... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+	},
+	ZI {
+		@Override
+		public Expr app(Expr...args) {
+			return Op.IM.app(new Var("z"));
+		}
+
+		@Override
+		public int arity() {
+			return 0;
+		}
+
+		@Override
+		public Cplx eval(Cplx dest, Cplx... args) {
+			throw new IllegalArgumentException("Not a valid op");
+		}
+
+		@Override
+		public Expr derive(String v, Expr... args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 	},
 	// Now some special things:
-	DIFF {
+	DERIVE {
 		@Override
 		public Expr app(Expr...args) {
-			return args[0].diffZ();
+			return args[0].derive("z");
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 		
-		public Cplx eval(Cplx...args) {
+		public Cplx eval(Cplx dest, Cplx...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 
@@ -1129,7 +1203,7 @@ public enum Op {
 		@Override
 		public Expr app(Expr...args) {
 			Var z = new Var("z");
-			Expr da = args[0].diffZ();
+			Expr da = args[0].derive("z");
 			
 			if(da == null) return null;
 			
@@ -1138,11 +1212,11 @@ public enum Op {
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 		
-		public Cplx eval(Cplx...args) {
+		public Cplx eval(Cplx dest, Cplx...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 
@@ -1156,7 +1230,7 @@ public enum Op {
 		public Expr app(Expr...args) {
 			Var z = new Var("z");
 			
-			Expr da = args[0].diffZ();
+			Expr da = args[0].derive("z");
 
 			if(da == null) return null;
 
@@ -1169,11 +1243,11 @@ public enum Op {
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 		
-		public Cplx eval(Cplx...args) {
+		public Cplx eval(Cplx dest, Cplx...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 
@@ -1198,11 +1272,11 @@ public enum Op {
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 		
-		public Cplx eval(Cplx...args) {
+		public Cplx eval(Cplx dest, Cplx...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 
@@ -1227,11 +1301,11 @@ public enum Op {
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 		
-		public Cplx eval(Cplx...args) {
+		public Cplx eval(Cplx dest, Cplx...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 
@@ -1248,11 +1322,11 @@ public enum Op {
 		}
 
 		@Override
-		public Expr diffZ(Expr...args) {
+		public Expr derive(String v, Expr...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 		
-		public Cplx eval(Cplx...args) {
+		public Cplx eval(Cplx dest, Cplx...args) {
 			throw new IllegalArgumentException("Not a valid op");
 		}
 
@@ -1264,8 +1338,8 @@ public enum Op {
 	;
 	public abstract int arity();
 	
-	public abstract Cplx eval(Cplx...args);
-	public abstract Expr diffZ(Expr...args);	
+	public abstract Cplx eval(Cplx dest, Cplx...args);
+	public abstract Expr derive(String v, Expr...args);	
 
 	public Expr app(Expr...args) {
 		for(Expr arg : args) {
@@ -1277,9 +1351,10 @@ public enum Op {
 		Cplx[] cArgs = new Cplx[args.length];
 		
 		for(int i = 0; i < args.length; i++) {
-			cArgs[i] = args[i].eval(null);
+			// No parameters because all are numeric values
+			cArgs[i] = args[i].eval(new Cplx(), null);
 		}
 		
-		return new Num(eval(cArgs));
+		return new Num(eval(new Cplx(), cArgs));
 	}	
 }

@@ -23,7 +23,7 @@ import at.fractview.math.tree.Expr;
 import at.fractview.math.tree.Op;
 import at.fractview.math.tree.Var;
 
-public class Predefined {
+public class CommonFunctions {
 	public static final class Mandelbrot extends ParameterizedFn {
 		public Mandelbrot() {
 			super(new LinkedList<String>());
@@ -153,7 +153,7 @@ public class Predefined {
 		@Override
 		public int init(Cplx[] orbit, Cplx c) {
 			// TODO: How to get it into this one? If it's immutable, it's easy.
-			orbit[0].set(z0.eval(null));
+			orbit[0].set(z0.eval(null, null));
 			return 1;
 		}
 

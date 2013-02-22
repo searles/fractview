@@ -20,6 +20,8 @@ import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
 import at.fractview.math.Spline;
 import at.fractview.math.colors.Palette;
+import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
+import at.fractview.modes.orbit.colorization.OrbitTransfer;
 import at.fractview.modes.orbit.functions.Function;
 
 public class EscapeTime extends OrbitFactory {
@@ -33,15 +35,18 @@ public class EscapeTime extends OrbitFactory {
 	
 	private Function function;
 	
-	private OrbitToFloat.Predefined bailoutDrawingMethod;
-	private OrbitToFloat.Predefined lakeDrawingMethod;
+	private CommonOrbitToFloat bailoutMethod;
+	private CommonOrbitToFloat lakeMethod;
+	
+	private OrbitTransfer bailoutTransfer;
+	private OrbitTransfer lakeTransfer;
 	
 	private Palette bailoutPalette;
 	private Palette lakePalette;
 	
 	public EscapeTime(Affine affine, int maxIter, Function function, 
-			double bailout, OrbitToFloat.Predefined bailoutDrawingMethod, Palette bailoutPalette,
-			double epsilon, OrbitToFloat.Predefined lakeDrawingMethod, Palette lakePalette) {
+			double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer, Palette bailoutPalette,
+			double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer, Palette lakePalette) {
 		super(affine, maxIter);
 		
 		this.function = function;
@@ -51,8 +56,11 @@ public class EscapeTime extends OrbitFactory {
 		this.bailout = bailout;
 		this.epsilon = epsilon;
 		
-		this.bailoutDrawingMethod = bailoutDrawingMethod;
-		this.lakeDrawingMethod = lakeDrawingMethod;
+		this.bailoutMethod = bailoutMethod;
+		this.lakeMethod = lakeMethod;
+		
+		this.bailoutTransfer = bailoutTransfer;
+		this.lakeTransfer = lakeTransfer;
 		
 		this.bailoutPalette = bailoutPalette;
 		this.lakePalette = lakePalette;
@@ -71,8 +79,12 @@ public class EscapeTime extends OrbitFactory {
 		return bailout;
 	}
 
-	public OrbitToFloat.Predefined bailoutDrawingMethod() {
-		return bailoutDrawingMethod;
+	public CommonOrbitToFloat bailoutMethod() {
+		return bailoutMethod;
+	}
+
+	public OrbitTransfer bailoutTransfer() {
+		return bailoutTransfer;
 	}
 
 	public Palette bailoutPalette() {
@@ -83,8 +95,12 @@ public class EscapeTime extends OrbitFactory {
 		return epsilon;
 	}
 
-	public OrbitToFloat.Predefined lakeDrawingMethod() {
-		return lakeDrawingMethod;
+	public CommonOrbitToFloat lakeMethod() {
+		return lakeMethod;
+	}
+
+	public OrbitTransfer lakeTransfer() {
+		return lakeTransfer;
 	}
 
 	public Palette lakePalette() {
@@ -94,45 +110,45 @@ public class EscapeTime extends OrbitFactory {
 	@Override
 	public EscapeTime newAffineInstance(Affine affine) {
 		return new EscapeTime(affine, this.maxIter(), this.function, 
-				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
-				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
+				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 	
 	@Override
 	public EscapeTime newMaxIterInstance(int maxIter) {
 		return new EscapeTime(this.affine(), maxIter, this.function, 
-				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
-				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
+				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 
 	public EscapeTime newFunctionInstance(Function function) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
-				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
+				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 	
-	public EscapeTime newBailoutInstance(double bailout, OrbitToFloat.Predefined bailoutDrawingMethod) {
+	public EscapeTime newBailout(double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				bailout, bailoutDrawingMethod, bailoutPalette,
-				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+				bailout, bailoutMethod, bailoutTransfer, this.bailoutPalette,
+				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 
-	public EscapeTime newLakeInstance(double epsilon, OrbitToFloat.Predefined lakeDrawingMethod) {
+	public EscapeTime newLake(double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
-				epsilon, lakeDrawingMethod, this.lakePalette);
+				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
+				epsilon, lakeMethod, lakeTransfer, this.lakePalette);
 	}
 	
 	public EscapeTime newBailoutPaletteInstance(Palette bailoutPalette) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutDrawingMethod, bailoutPalette,
-				this.epsilon, this.lakeDrawingMethod, this.lakePalette);
+				this.bailout, this.bailoutMethod, this.bailoutTransfer, bailoutPalette,
+				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 
 	public EscapeTime newLakePaletteInstance(Palette lakePalette) {
 		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutDrawingMethod, this.bailoutPalette,
-				this.epsilon, this.lakeDrawingMethod, lakePalette);		
+				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
+				this.epsilon, this.lakeMethod, this.lakeTransfer, lakePalette);
 	}
 
 	public class Orbit extends AbstractOrbit {
@@ -168,10 +184,10 @@ public class EscapeTime extends OrbitFactory {
 		
 		public int color() {
 			if(type == Type.Bailout) {
-				return bailoutPalette.color(bailoutDrawingMethod.value(this));
+				return bailoutPalette.color(bailoutTransfer.value(bailoutMethod.value(this)));
 			} else {
 				// Lake
-				return lakePalette.color(lakeDrawingMethod.value(this));
+				return lakePalette.color(lakeTransfer.value(lakeMethod.value(this)));
 			}
 		}
 		

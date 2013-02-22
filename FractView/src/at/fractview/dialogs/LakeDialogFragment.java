@@ -25,17 +25,19 @@ import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
 import at.fractview.modes.orbit.EscapeTime;
-import at.fractview.modes.orbit.OrbitToFloat;
+import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
+import at.fractview.modes.orbit.colorization.OrbitTransfer;
 
 public class LakeDialogFragment extends InputViewDialogFragment {
 
 	private static final String TAG = "LakeDialogFragment";
 	
-	EscapeTimeFragment taskFragment;
+	private EscapeTimeFragment taskFragment;
 	
-	EditText epsilonEditor;
-	ArrayAdapter<OrbitToFloat.Predefined> colorizationAdapter;
-	Spinner colorizationTypeSpinner;
+	private EditText epsilonEditor;
+	private ArrayAdapter<CommonOrbitToFloat> methodAdapter;
+	private Spinner methodSpinner;
+	private TransferInput transferInput;
 	
 	@Override
 	protected String title() {
@@ -47,28 +49,27 @@ public class LakeDialogFragment extends InputViewDialogFragment {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 		
 		// Get values from taskFragment
-		double epsilonValue = taskFragment.prefs().epsilon();
-		OrbitToFloat.Predefined method = taskFragment.prefs().lakeDrawingMethod();
-		
 		LayoutInflater inflater = getActivity().getLayoutInflater();
-		View v = inflater.inflate(R.layout.epsilon_lake, null);
+		View v = inflater.inflate(R.layout.lake, null);
 		
 		// Initialize components
 		epsilonEditor = (EditText) v.findViewById(R.id.epsilonEditor);
 		
-		epsilonEditor.setText(Double.toString(epsilonValue));
+		epsilonEditor.setText(Double.toString(taskFragment.prefs().epsilon()));
 		
-		colorizationTypeSpinner = (Spinner) v.findViewById(R.id.colorizationTypeSpinner);
+		methodSpinner = (Spinner) v.findViewById(R.id.methodSpinner);
 		
 		// TODO: only items that are useful for lake
-		colorizationAdapter = new ArrayAdapter<OrbitToFloat.Predefined>(
+		methodAdapter = new ArrayAdapter<CommonOrbitToFloat>(
 				getActivity(), 
 				android.R.layout.simple_list_item_1, 
-				OrbitToFloat.Predefined.values());
+				CommonOrbitToFloat.values());
 		
-		colorizationTypeSpinner.setAdapter(colorizationAdapter);
+		methodSpinner.setAdapter(methodAdapter);
 
-		colorizationTypeSpinner.setSelection(colorizationAdapter.getPosition(method));
+		methodSpinner.setSelection(methodAdapter.getPosition(taskFragment.prefs().lakeMethod()));
+		
+		this.transferInput = new TransferInput(getActivity(), v, taskFragment.prefs().lakeTransfer());
 		
 		return v;
 	}
@@ -84,9 +85,16 @@ public class LakeDialogFragment extends InputViewDialogFragment {
 			return false;
 		}
 		
-		OrbitToFloat.Predefined method = (OrbitToFloat.Predefined) colorizationTypeSpinner.getSelectedItem();
+		OrbitTransfer transfer = transferInput.get();
 		
-		EscapeTime prefs = taskFragment.prefs().newLakeInstance(epsilonValue, method);
+		if(transfer == null) {
+			Log.w(TAG, "Transfer is null");
+			return false;
+		}
+		
+		CommonOrbitToFloat method = (CommonOrbitToFloat) methodSpinner.getSelectedItem();
+		
+		EscapeTime prefs = taskFragment.prefs().newLake(epsilonValue, method, transfer);
 		taskFragment.setPrefs(prefs);
 		
 		return true;

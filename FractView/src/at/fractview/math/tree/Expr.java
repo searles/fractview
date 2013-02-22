@@ -18,16 +18,13 @@ package at.fractview.math.tree;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeMap;
 
-import android.util.Log;
 import at.fractview.math.Cplx;
 
 public abstract class Expr implements Comparable<Expr> {
 	
+	@SuppressWarnings("unused")
 	private static final String TAG = "Expr";
 	
 	/*static Expr create(Parser p, String id, List<Expr> args) {
@@ -147,7 +144,7 @@ public abstract class Expr implements Comparable<Expr> {
 		return null;
 	}*/
 	
-	static Op op(String id) {
+	static Op createOp(String id) {
 		try {
 			return Enum.valueOf(Op.class, id.toUpperCase(Locale.US));
 		} catch(IllegalArgumentException e) {
@@ -156,22 +153,18 @@ public abstract class Expr implements Comparable<Expr> {
 		}
 	}
 	
-	static Expr var(String id) {
-		if(id.length() > 2 && id.substring(0, 2).equalsIgnoreCase("zn")) {
-			// "zn2" corresponds to "z(n-2)".
-			
-			// Is the rest a number?
-			Scanner sc = new Scanner(id.substring(2));
-			
-			if(sc.hasNextInt()) {
-				int index = sc.nextInt();
-				if(!sc.hasNext()) {
-					return new Indexed.ZN(index);
-				}
-			}
+	static Expr createVar(String id) {
+		// Is it a variable followed by a number?
+		int i;
+		
+		for(i = id.length(); i > 0 && Character.isDigit(id.charAt(i - 1)); i--);
+		
+		if(i < id.length()) {
+			int index = Integer.parseInt(id.substring(i));
+			return new Var(id.substring(0, i), index);
+		} else {
+			return new Var(id);
 		}
-	
-		return new Var(id);
 	}
 
 	public abstract boolean isNum();
@@ -182,25 +175,27 @@ public abstract class Expr implements Comparable<Expr> {
 	
 	public abstract Expr get(int i);
 	
-	public abstract Cplx eval(Map<Var, Cplx> values);
+	public abstract Cplx eval(Cplx dest, Map<Var, Cplx> values);
 
 	public abstract Set<Var> parameters(Set<Var> vars);
 
 	/**************** Methods for symbolic computation, independent of interpreter ******************/
 
 	/**
+	 * @param v TODO
 	 * @param var Variable for which we are differentiating
 	 * @return d.this / d.var, or null if the expression cannot be differentiated
 	 */
-	public abstract Expr diffZ();
+	public abstract Expr derive(String v);
 	
 	/**
+	 * @param v TODO
 	 * @param var
 	 * @return true, if this tree contains the variable var.
 	 */
-	public abstract boolean containsZ();	
+	public abstract boolean contains(String v);	
 	
-	public abstract int maxIndexZ();
+	public abstract int maxIndex(String v);
 
 	public abstract int hashCode();
 	
@@ -239,7 +234,7 @@ public abstract class Expr implements Comparable<Expr> {
 	 * @param values
 	 * @param epsilon
 	 * @return
-	 */
+	 *
 	public Cplx findRoot(Var v, Map<Var, Cplx> values, double epsilon, int maxIter) {
 		// if the variable does not occur in expression
 		if(!this.containsZ()) {

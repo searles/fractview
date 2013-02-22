@@ -245,7 +245,7 @@ public class FunctionInputView {
 	private boolean updateInits() {
 		Log.d(TAG, "updateInits()");
 
-		int initCount = fn.expr.get().maxIndexZ();
+		int initCount = fn.expr.get().maxIndex("z");
 
 		boolean initCountChanged = initCount != this.initCount;
 		
@@ -433,9 +433,11 @@ public class FunctionInputView {
 			Expr e = parser.get();
 			
 			if(e != null) {
-				if(e.maxIndexZ() - 1 > index) {
-					showError("Could not set z(" + index + ")", "Expression tries to access z(" + e.maxIndexZ() + ")");
-					Log.d(TAG, index + " init was NOT updated: " + e + " has too high z-count: " + e.maxIndexZ());
+				int maxIndex = e.maxIndex("z");
+				
+				if(maxIndex - 1 > index) {
+					showError("Could not set z(" + index + ")", "Expression tries to access z(" + maxIndex + ")");
+					Log.d(TAG, index + " init was NOT updated: " + e + " has too high z-count: " + maxIndex);
 					return false;
 				} else {
 					this.expr = new Labelled<Expr>(e, input);
@@ -489,7 +491,7 @@ public class FunctionInputView {
 			Expr e = parser.get();
 			
 			if(e != null && e.isNum()) {
-				value = new Labelled<Cplx>(e.eval(null), input);
+				value = new Labelled<Cplx>(e.eval(new Cplx(), null), input);
 				
 				Log.d(TAG, id + " parameter was updated: " + e);
 				

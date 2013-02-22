@@ -41,10 +41,8 @@ public class Executable {
 	public static final int ATOM_C =    0x00000100;
 	public static final int ATOM_Z =    0x00000200;
 	public static final int ATOM_N =    0x00000300;
-	public static final int ATOM_CR =    0x00000400;
-	public static final int ATOM_CI =    0x00000500;
-	public static final int ATOM_ZR =    0x00000600;
-	public static final int ATOM_ZI =    0x00000700;
+	public static final int ATOM_X =    0x00000400;
+	public static final int ATOM_Y =    0x00000500;
 
 	// the following require the n-field unsigned
 	public static final int ATOM_Z_LAST =  0x00000800;
@@ -92,10 +90,13 @@ public class Executable {
 	public static final int UN_ABS = 0x00000014;
 	public static final int UN_ARG = 0x00000015;
 
-	public static final int UN_FLOOR = 0x00000016;
+	public static final int UN_CABS = 0x00000016;
+	public static final int UN_POLAR = 0x00000017;
+
+	public static final int UN_FLOOR = 0x00000018;
 
 	// Things that require n signed
-	public static final int UN_POW_INT = 0x00000017;
+	public static final int UN_POW_INT = 0x00000019;
 	
 	// Now binary functions
 	public static final int BINARY_FLAG = 0x00000080;
@@ -168,17 +169,11 @@ public class Executable {
 		case ATOM_N:
 			dest.set(n, 0);
 			break;
-		case ATOM_CR:
+		case ATOM_X:
 			dest.set(c.re(), 0);
 			break;
-		case ATOM_CI:
+		case ATOM_Y:
 			dest.set(c.im(), 0);
-			break;
-		case ATOM_ZR:
-			dest.set(zs[n].re(), 0);
-			break;
-		case ATOM_ZI:
-			dest.set(zs[n].im(), 0);
 			break;
 		case ATOM_Z_LAST: {
 			int index = pc.instruction >>> 16;
@@ -266,7 +261,13 @@ public class Executable {
 				dest.set(dest.abs(), 0);
 				break;
 			case UN_ARG: 
-				dest.set(dest.arc(), 0);
+				dest.set(dest.arg(), 0);
+				break;
+			case UN_CABS: 
+				dest.set(Math.abs(dest.re()), Math.abs(dest.im()));
+				break;
+			case UN_POLAR: 
+				dest.set(dest.abs(), dest.arg());
 				break;
 			case UN_FLOOR: 
 				dest.set(Math.floor(dest.re()), Math.floor(dest.im()));
