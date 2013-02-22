@@ -601,3 +601,8 @@ Also managed to add some menus to the top action bar.
 And again: Invalid layout of java.lang.String at value
 
 On sharing images: http://stackoverflow.com/questions/5555405/share-bitmap-on-android-to-twitter-facebook-mail
+
+2013 - 02 - 22
+
+Added a dest-parameter to Expr.eval, added an index-parameter to values and therefore removed the Indexed-thing. Also added
+a function cabs and polar. And changed the bailout/lake-picker so that one can enter min/max.

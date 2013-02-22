@@ -124,7 +124,7 @@ public class PaletteInputView {
 			
 			@Override
 			public void onClick(View v) {
-				add(new float[]{rnd.nextFloat() * 360.f, rnd.nextFloat() * 100.f, rnd.nextFloat() * 100.f});
+				add(new float[]{rnd.nextFloat() * 360.f, rnd.nextFloat(), rnd.nextFloat()});
 			}
 		});
 		

@@ -50,7 +50,7 @@ public class Function extends ParameterizedFn {
 		}
 
 		Function function = new Function(spec, instructionsFn, instructionsInits, constants, parameterLabels);
-		
+
 		// Set parameters
 		for(String p : parameterLabels) {
 			function.set(p, spec.parameter(new Var(p)).get());

@@ -173,7 +173,7 @@ public class ExprCompiler {
 			}
 			
 			if(index == parameters.size()) {
-				parameters.add(v.indexedId());
+				parameters.add(v.toString());
 				// index is already the right value
 			}
 			
