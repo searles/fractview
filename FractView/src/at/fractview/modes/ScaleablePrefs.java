@@ -27,7 +27,17 @@ public abstract class ScaleablePrefs implements Preferences {
 		this.affine = affine;
 	}
 
-	public float[] norm(float[] p, int w, int h) {
+	public float normX(float x, int w, int h) {
+		int size = Math.min(w, h);
+		return x / (float) size + ((float) (size - w)) / (float) ((2 * size));
+	}
+	
+	public float normY(float y, int w, int h) {
+		int size = Math.min(w, h);
+		return y / (float) size + ((float) (size - h)) / (float) (2 * size);
+	}
+	
+	/*public float[] norm(float[] p, int w, int h) {
 		int size = Math.min(w, h);
 		
 		p[0] = p[0] / (float) size + ((float) (size - w)) / (float) ((2 * size));
@@ -44,7 +54,7 @@ public abstract class ScaleablePrefs implements Preferences {
 				y / (float) size + ((float) (size - h)) / (float) ((2 * size)));
 		
 		return c;
-	}
+	}*/
 
 	/*private Cplx inv(Cplx src, Cplx dest) {
 		int size = Math.min(width, height);
@@ -62,33 +72,12 @@ public abstract class ScaleablePrefs implements Preferences {
 		return dest;
 	}*/
 	
-	public Cplx map(float[] p, int w, int h, Cplx c) {
-		norm(p, w, h);
-		
-		c.set(p[0], p[1]);
-		return c.map(c, affine);
-	}
+	/*public Cplx map(float[] p, int w, int h, Cplx c) {
+		return map(p[0], p[1], w, h, c);
+	}*/
 
 	public Cplx map(float x, float y, int w, int h, Cplx c) {
-		norm(x, y, w, h, c);
-		
-		return c.map(c, affine);
-	}
-
-	public ScaleablePrefs relativelyScaledInstance(float[] m) {
-		// fields 6, 7, 8 are ignored since they are considered to be 0f, 0f, 1f
-		double a = m[0];
-		double b = m[1];
-		double e = m[2];
-		double c = m[3];
-		double d = m[4];
-		double f = m[5];
-		
-		Affine affine = Affine.create(a, b, e, c, d, f);
-		
-		affine.preConcat(this.affine);
-		
-		return newAffineInstance(affine);
+		return affine.map(normX(x, w, h), normY(y, w, h), c);
 	}
 
 	/** Returns a copy of this preferences but with the scale set to the affine transformation given in the parameter

@@ -60,7 +60,9 @@ public class Cplx {
 	}
 
 	public Cplx set(Cplx that) {
-		this.set(that.re, that.im);
+		this.re = that.re;
+		this.im = that.im;
+		
 		return this;
 	}
 
@@ -149,7 +151,7 @@ public class Cplx {
 			zi = 2 * t * zi;
 		}
 
-		if(inv) this.rec(this);
+		if(inv) this.rec(re, im);
 		
 		return this;
 	}
@@ -418,15 +420,6 @@ public class Cplx {
 		return this.sqrt(arg.re, arg.im);
 	}
 
-	// Stuff for affine things
-	public Cplx map(Cplx arg, Affine affine) {
-		return affine.map(arg, this);
-	}
-
-	public Cplx invMap(Cplx arg, Affine affine) {
-		return affine.invmap(arg, this);
-	}
-	
 	public String toString() {
 		return "(" + re() + ", " + im() + ")";
 	}

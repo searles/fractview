@@ -25,12 +25,16 @@ import android.widget.EditText;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
+import at.fractview.UnsafeImageEditor;
 import at.fractview.math.Affine;
-import at.fractview.modes.orbit.EscapeTime;
+import at.fractview.modes.AbstractImgCache;
+import at.fractview.modes.ScaleableCache;
+import at.fractview.modes.ScaleablePrefs;
 
 public class ScaleDialogFragment extends InputViewDialogFragment {
 	
 	private static final String TAG = "Scale";
+	private static final double INIT_SCALE = 4.;
 	
 	/*public static ResizeDialogFragment create(int initWidth, int initHeight) {
 		ResizeDialogFragment f = new ResizeDialogFragment();
@@ -63,7 +67,7 @@ public class ScaleDialogFragment extends InputViewDialogFragment {
 		
 		this.taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
 		
-		Affine affine = taskFragment.prefs().affine();
+		Affine affine = ((ScaleablePrefs) taskFragment.prefs()).affine();
         matrix = affine.get();
 		
 		editors = new EditText[6];
@@ -123,6 +127,16 @@ public class ScaleDialogFragment extends InputViewDialogFragment {
 				updateEditors();
 			}
         });
+        
+        ((Button) v.findViewById(R.id.resetButton)).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				matrix[0] = matrix[4] = INIT_SCALE;
+				matrix[1] = matrix[3] = 0.;
+				matrix[2] = matrix[5] = -INIT_SCALE / 2.;
+				updateEditors();
+			}
+        });
 		
 		return v;
 	}
@@ -130,24 +144,56 @@ public class ScaleDialogFragment extends InputViewDialogFragment {
 	@Override
 	protected boolean acceptInput() {
 		updateMatrix();
-		EscapeTime prefs = taskFragment.prefs().newAffineInstance(Affine.create(matrix));
-		taskFragment.setPrefs(prefs);
+		taskFragment.modifyImage(new UnsafeImageEditor() {
+			@Override
+			public void edit(AbstractImgCache cache) {
+				ScaleableCache scaleable = (ScaleableCache) cache;
+				ScaleablePrefs prefs = scaleable.prefs();
+				scaleable.setPrefs(prefs.newAffineInstance(Affine.create(matrix)));
+			}
+		}, true);
 		return true;
 	}
 	
 	private void updateEditors() {
-        for(int i = 0; i < 6; i++) {
+        for(int i : new int[]{ 0, 1, 3, 4 }) {
         	editors[i].setText(Double.toString(matrix[i]));
         }
+        
+		// Get center
+		double vx = matrix[0] + matrix[1];
+		double vy = matrix[3] + matrix[4];
+
+		double cx = vx / 2. + matrix[2];
+		double cy = vy / 2. + matrix[5];
+        
+        editors[2].setText(Double.toString(cx));
+        editors[5].setText(Double.toString(cy));
 	}
 	
-	private void updateMatrix() {
-        for(int i = 0; i < 6; i++) {
-        	try {
-        		matrix[i] = Double.valueOf(editors[i].getText().toString());
-        	} catch(NumberFormatException e) {
-        		Log.w(TAG, i + "th editor does not contain a valid number");
-        	}
-        }
+	private boolean updateMatrix() {
+    	try {
+    		double a = Double.valueOf(editors[0].getText().toString());
+    		double b = Double.valueOf(editors[1].getText().toString());
+    		double c = Double.valueOf(editors[3].getText().toString());
+    		double d = Double.valueOf(editors[4].getText().toString());
+
+    		double cx = Double.valueOf(editors[2].getText().toString());
+    		double cy = Double.valueOf(editors[5].getText().toString());
+		
+    		// All input was fine.
+    		
+    		matrix[0] = a;
+    		matrix[1] = b;
+    		matrix[3] = c;
+    		matrix[4] = d;
+    		matrix[2] = cx - (a + b) / 2.;
+    		matrix[5] = cy - (c + d) / 2.;
+    		
+    		return true;
+    	} catch(NumberFormatException e) {
+    		Log.e(TAG, "Bad number format: " + e);
+    		return false;
+    	}
 	}
 }

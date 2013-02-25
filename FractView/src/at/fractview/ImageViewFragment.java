@@ -30,6 +30,8 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.ImageView;
 import android.widget.Toast;
+import at.fractview.modes.AbstractImgCache;
+import at.fractview.modes.ScaleableCache;
 import at.fractview.modes.ScaleablePrefs;
 
 public class ImageViewFragment extends Fragment {
@@ -40,7 +42,7 @@ public class ImageViewFragment extends Fragment {
 	
 	static final int TASK_FRAGMENT = 0;
 	
-	private static final int MILLISECONDS_TILL_UPDATE = 125; // 8 times per second
+	private static final int MILLISECONDS_TILL_UPDATE = 166; // 6 times per second
 
 	private static final Matrix.ScaleToFit viewPolicy = Matrix.ScaleToFit.CENTER; 
 
@@ -212,21 +214,20 @@ public class ImageViewFragment extends Fragment {
 	}
 	
 	private void applyTouch(Matrix bitmapMatrix, Matrix prefsMatrix) {
-		// Get old data
-		ScaleablePrefs scaleable = (ScaleablePrefs) taskFragment.prefs();		
-
 		// Update zoom
 		Matrix m = new Matrix();
 		prefsMatrix.invert(m);
 		
-		float[] matrix = new float[9];
+		final float[] matrix = new float[9];
 		m.getValues(matrix);
 		
-		// Create new data
-		ScaleablePrefs prefs = scaleable.relativelyScaledInstance(matrix);
-		
-		// And set new data
-		taskFragment.setData(prefs, /* newBitmap */ null, true);
+		taskFragment.modifyImage(new UnsafeImageEditor() {
+			@Override
+			public void edit(AbstractImgCache cache) {
+				ScaleableCache scaleable = (ScaleableCache) cache;
+				scaleable.newRelativeScale(matrix);
+			}
+		}, true);
 	}
 	
 	private class TouchListener implements OnTouchListener {
@@ -259,7 +260,9 @@ public class ImageViewFragment extends Fragment {
 
 					bitmapTouch.down(id, p);
 
-					scaleable.norm(p, w, h);
+					p[0] = scaleable.normX(p[0], w, h);
+					p[1] = scaleable.normY(p[1], w, h);
+					
 					prefsTouch.down(id, p);
 				}
 
@@ -283,7 +286,9 @@ public class ImageViewFragment extends Fragment {
 						int id = evt.getPointerId(i); // Careful, we need the id in the touch event
 						bitmapTouch.moveTo(id, p);
 
-						scaleable.norm(p, w, h);
+						p[0] = scaleable.normX(p[0], w, h);
+						p[1] = scaleable.normY(p[1], w, h);
+						
 						prefsTouch.moveTo(id, p);					
 					}
 				}
@@ -299,7 +304,9 @@ public class ImageViewFragment extends Fragment {
 
 					bitmapTouch.down(id, p);
 
-					scaleable.norm(p, w, h);
+					p[0] = scaleable.normX(p[0], w, h);
+					p[1] = scaleable.normY(p[1], w, h);
+					
 					prefsTouch.down(id, p);					
 				}
 				break;

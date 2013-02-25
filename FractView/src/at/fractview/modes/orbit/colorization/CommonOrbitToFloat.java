@@ -1,7 +1,7 @@
 package at.fractview.modes.orbit.colorization;
 
 import at.fractview.modes.orbit.EscapeTime;
-import at.fractview.modes.orbit.OrbitFactory.AbstractOrbit;
+import at.fractview.modes.orbit.AbstractOrbitPrefs.AbstractOrbit;
 
 public enum CommonOrbitToFloat implements OrbitToFloat {
 	LengthSmooth {

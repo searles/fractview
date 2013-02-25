@@ -2,6 +2,9 @@
 ** LastArc should be between 0 and 1 [No, now it is easier to edit anyways]
 ** Colorizations should have better names 
 ** Mention that + creates a random color. 
+* The 3 slider at color palette menu are too close to each other [done]
+* Reset fractal zoom [done]
+* Bug: when palette length displayed as 0.0E0 formula I cannot edit mantissa (division by 0?)
 
 ** New functions:
 *** Add a function |zr| + i |zi|, name: abs; rename current abs to rad, and arg to arc. [done, called it 'cabs']
@@ -24,4 +27,6 @@ Allow restoring only parts of bookmarks like color palette
 ** Colorization from http://www.fractalforums.com/new-theories-and-research/a-new-look-into-escapetime-fractals-using-abs-and-inner-coloring/
 ** Bookmarks: How to do it? Create parse-method in every object, like Palette, Function etc...? Most likely, yes. For bitmap use Base64 encoding.
 *** Add 'pick from bookmark'
+** Relative colors: automatcally set palette length after pre-calculation of acual zoomed area
 
+*

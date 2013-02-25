@@ -6,9 +6,12 @@ import android.view.View;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
+import at.fractview.UnsafeImageEditor;
 import at.fractview.inputviews.PaletteInputView;
 import at.fractview.math.colors.Palette;
+import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.orbit.EscapeTime;
+import at.fractview.modes.orbit.EscapeTimeCache;
 
 public class PaletteDialogFragment extends InputViewDialogFragment {
 
@@ -33,15 +36,16 @@ public class PaletteDialogFragment extends InputViewDialogFragment {
 	@Override
 	protected View createView() {
 		taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
-		
+		EscapeTime prefs = (EscapeTime) taskFragment.prefs();
+
 		// Get value from taskFragment
 		
 		Palette palette;
 		
 		if(type == Type.Lake) {
-			palette = taskFragment.prefs().lakePalette();
+			palette = prefs.lakePalette();
 		} else {
-			palette = taskFragment.prefs().bailoutPalette();
+			palette = prefs.bailoutPalette();
 		}
 		
 		LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -54,22 +58,34 @@ public class PaletteDialogFragment extends InputViewDialogFragment {
 
 	@Override
 	protected boolean acceptInput() {
-		Palette palette = input.acceptAndReturn();
+		final Palette palette = input.acceptAndReturn();
 		
 		if(palette == null) {
 			Log.w(TAG, "Returned palette was null");
 			return false;
 		}
 		
-		Log.d(TAG, "AcceptInput: Setting palette to " + palette);
+		UnsafeImageEditor editor;
 		
-		if(type == Type.Lake) {
-			EscapeTime prefs = taskFragment.prefs().newLakePaletteInstance(palette);
-			taskFragment.setPrefs(prefs);
+		if(type == Type.Bailout) {
+			editor = new UnsafeImageEditor() {
+				@Override
+				public void edit(AbstractImgCache cache) {
+					EscapeTimeCache ch = (EscapeTimeCache) cache;
+					ch.newBailoutPalette(palette);
+				}
+			};
 		} else {
-			EscapeTime prefs = taskFragment.prefs().newBailoutPaletteInstance(palette);
-			taskFragment.setPrefs(prefs);
+			editor = new UnsafeImageEditor() {
+				@Override
+				public void edit(AbstractImgCache cache) {
+					EscapeTimeCache ch = (EscapeTimeCache) cache;
+					ch.newLakePalette(palette);
+				}
+			};
 		}
+		
+		taskFragment.modifyImage(editor, true);
 		
 		return true;
 	}

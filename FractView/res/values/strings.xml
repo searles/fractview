@@ -15,5 +15,20 @@
     <string name="scale">Scale</string>
     <string name="share">Share</string>
     <string name="save">Save</string>
+    <string name="transfer">Transfer</string>
+    <string name="colors">Colors</string>
+    <string name="bailout_label">"Bailout: "</string>
+    <string name="method_label">"Method: "</string>
+    <string name="epsilon_label">Epsilon</string>
+    <string name="transfer_label">"Transfer: "</string>
+    <string name="range_label">"Range: "</string>
+    <string name="minimum">Minimum</string>
+    <string name="maximum">Maximum</string>
+    <string name="filename">Filename</string>
+    <string name="cyclic">Cyclic</string>
+    <string name="shift_left">&lt;&lt;</string>
+    <string name="add">+</string>
+    <string name="remove">-</string>
+    <string name="shift_right">>></string>
 
 </resources>

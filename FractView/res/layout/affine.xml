@@ -83,10 +83,17 @@
         <Button
             android:id="@+id/straightenButton"
             style="?android:attr/buttonStyleSmall"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Straighten" />
 
+        <Button
+            android:id="@+id/resetButton"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reset" />
+        
     </LinearLayout>
 
 </LinearLayout>

@@ -22,13 +22,12 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Process;
 import android.util.Log;
 
-public class RasterTask implements Preferences.Task {
+public class RasterTask implements AbstractImgCache.Task {
 	
 	private static final String TAG = "RasterTask"; 
 	
@@ -62,19 +61,17 @@ public class RasterTask implements Preferences.Task {
 		this.wc = this.lock.newCondition();
 	}
 
-	public void start(Bitmap bitmap) {
+	public void start(AbstractImgCache cache) {
 		Log.d(TAG, "starting task...");
 		
 		startTime = System.currentTimeMillis();
 		
-		Canvas canvas = new Canvas(bitmap);
-
 		// initialize iterator to get tiles
 		tileIterators = new LinkedList<TileIterator>();
 				
 		// Width, height
-		int w = bitmap.getWidth();
-		int h = bitmap.getHeight();
+		int w = cache.width();
+		int h = cache.height();
 
 		// Start pixel: This must not be out of bounds of image!
 		int x0 = w / 2;
@@ -99,7 +96,7 @@ public class RasterTask implements Preferences.Task {
 			// Create new worker and run it [recycling old workers is not a 
 			// good idea because they might be still running]
 			
-			threads[i] = new Thread(new Worker(canvas));
+			threads[i] = new Thread(new Worker(cache));
 			
 			// Set priority (low priority keeps device responsive.)
 			threads[i].start();
@@ -140,6 +137,7 @@ public class RasterTask implements Preferences.Task {
 		boolean skipFirstPix;
 		
 		void calc(Environment env, Canvas canvas, Paint paint) throws CancelException {
+			// TODO: The distribution of labor is not perfect here... canvas is inside cache, paint can be inside Environment.
 			int w = canvas.getWidth();
 			int h = canvas.getHeight();
 			
@@ -156,7 +154,7 @@ public class RasterTask implements Preferences.Task {
 
 					if(!skipFirstPix) {
 						// Calculate pixel
-						int color = env.color(x, y, w, h);
+						int color = env.color(x, y);
 
 						// and paint it
 						paint.setColor(color);
@@ -354,28 +352,28 @@ public class RasterTask implements Preferences.Task {
 	private class Worker implements Runnable {		
 		private static final String TAG = "RasterTask.Worker";
 		
-		Canvas canvas;
+		private AbstractImgCache cache;
 		
-		Worker(Canvas canvas) {
-			this.canvas = canvas;
+		Worker(AbstractImgCache cache) {
+			this.cache = cache;
 		}
 		
 		public void run() {
 			// Use lower thread priority to have less impact on our runtime
 			Process.setThreadPriority(THREAD_PRIORITY);
 			
-			Paint paint = new Paint();
-			Environment env = preferences.createEnvironment();
+			Paint paint = new Paint(); // Create one paint per worker.
+			
+			// And create new environment per worker
+			Environment env = preferences.createEnvironment(cache);
 			
 			// We create one tile and reuse it.
 			Tile t = new Tile();
 			
-			Log.d(TAG, "Worker " + hashCode() + " started");
-			
 			try {
 				for(TileIterator ti : tileIterators) {
 					while(ti.next(t) != null) {
-						t.calc(env, canvas, paint);
+						t.calc(env, cache.canvas(), paint);
 					}
 				
 					// Wait until all threads are done with this tileIterator
@@ -412,20 +410,19 @@ public class RasterTask implements Preferences.Task {
 	}
 	
 	public static interface Environment {
-		/** Returns the color of the pixel at the given coordinates (as screen coordinates).
-		 * Call ScaleablePrefs.map to map the point into the current coordinates.
-		 * @param x Coordinates of current pixel
-		 * @param y Coordinates of current pixel
+		/** Calculates the point
+		 * 
+		 * @param x
+		 * @param y
 		 * @return
 		 */
-		int color(float x, float y, int w, int h);
+		int color(int x, int y);
 	}
 	
 	public static interface Rasterable {
-		Environment createEnvironment();
+		Environment createEnvironment(AbstractImgCache cache);
 	}
-
-
+	
 	/** This exception is thrown if during calculation cancel is called.
 	 *
 	 */

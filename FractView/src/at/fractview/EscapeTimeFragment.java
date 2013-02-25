@@ -23,7 +23,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,8 +34,10 @@ import at.fractview.math.colors.Palette;
 import at.fractview.math.tree.Expr;
 import at.fractview.math.tree.Parser;
 import at.fractview.math.tree.Var;
+import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.Preferences;
 import at.fractview.modes.orbit.EscapeTime;
+import at.fractview.modes.orbit.EscapeTimeCache;
 import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
 import at.fractview.modes.orbit.colorization.CommonTransfer;
 import at.fractview.modes.orbit.colorization.OrbitTransfer;
@@ -54,18 +55,14 @@ public class EscapeTimeFragment extends Fragment {
 	// Preserved when everything is destroyed
 	// This fragment should also manage dialogs.
 	
-	private EscapeTime prefs; // Preferences-Set
-	private Preferences.Task task; // Task, created from preferences-set
-	
-	private Bitmap bitmap; // Bitmap that is shown in imageview
+	private EscapeTimeCache image; // Preferences-Set
+	private AbstractImgCache.Task task; // Task, created from preferences-set
 	
 	private Stack<Preferences> history;
 	
 	public EscapeTimeFragment() {
 		// initialize preferences
-        this.prefs = EscapeTimeFragment.initFractal();
-        
-        bitmap = Bitmap.createBitmap(INIT_WIDTH, INIT_HEIGHT, Config.ARGB_8888);
+        this.image = (EscapeTimeCache) EscapeTimeFragment.initFractal().createImgCache(INIT_WIDTH, INIT_HEIGHT);
         
         // Create history stack
         history = new Stack<Preferences>();
@@ -111,13 +108,17 @@ public class EscapeTimeFragment extends Fragment {
 		//Log.d(TAG, "History back");
 		if(history.isEmpty()) throw new IllegalArgumentException("History is empty");		
 		
-		Preferences prefs = history.pop();
-		setData(prefs, null, false);
+		modifyImage(new UnsafeImageEditor() {
+			@Override
+			public void edit(AbstractImgCache cache) {
+				cache.setPrefs(history.pop());
+			}
+		}, false);
 			
 		return !history.isEmpty();
 	}
 	
-	public void setData(final Preferences prefs, final Bitmap bitmap, final boolean addToHistory) {
+	public void modifyImage(final UnsafeImageEditor editor, final boolean addToHistory) {
 		new Handler().post(new Runnable() {
 			@Override
 			public void run() {
@@ -130,22 +131,14 @@ public class EscapeTimeFragment extends Fragment {
 						task.join();
 					}
 
-					if(addToHistory && prefs != null) {
+					if(addToHistory) {
 						// Add to history
-						history.push(EscapeTimeFragment.this.prefs);
+						history.push(EscapeTimeFragment.this.image.prefs());
 					}
 					
 					task = null;
 
-					if(prefs != null) {
-						Log.d(TAG, "Setting new preferences.");
-						EscapeTimeFragment.this.prefs = (EscapeTime) prefs;
-					}
-
-					if(bitmap != null) {
-						Log.d(TAG, "Setting new bitmap.");
-						EscapeTimeFragment.this.bitmap = bitmap;
-					}
+					editor.edit(EscapeTimeFragment.this.image);
 
 					// Create new task
 					startTask();
@@ -163,7 +156,13 @@ public class EscapeTimeFragment extends Fragment {
 	 */
 	private void startTask() {
 		if(task != null) {
+			// This must not happen. Someone forgot to call "cancelTask"...
 			Log.e(TAG, "BUG: Starting task, but old task is still running");
+			
+			if(task.isRunning()) {
+				// Race condition?
+				throw new IllegalStateException("Old task is still running!");
+			}
 		}
 		
 		if(getTargetFragment() != null) {
@@ -171,28 +170,17 @@ public class EscapeTimeFragment extends Fragment {
 			((ImageViewFragment) getTargetFragment()).initializeTaskView();
 		}
 		
-		task = prefs.calculateInBackground(bitmap);
+		task = image.calculateInBackground();
 	}
 
 	
-	public void setSize(int width, int height) {
-		// Do not add current to history since we only change the bitmap size
-		setData(this.prefs, Bitmap.createBitmap(width, height, Config.ARGB_8888), false);
-	}
-	
-	public void setPrefs(Preferences prefs) {
-		// New configuration, add to history
-		setData(prefs, null, true);
-	}
-	
 	public Bitmap bitmap() {
-		return bitmap;
+		return image.bitmap();
 	}
 	
-	public EscapeTime prefs() {
-		return prefs;
+	public Preferences prefs() {
+		return image.prefs();
 	}
-	
 
 	private static float[][] toHSV(int[] palette) {
 		float[][] hsv = new float[palette.length][3];
@@ -255,6 +243,4 @@ public class EscapeTimeFragment extends Fragment {
 				bailout, CommonOrbitToFloat.LengthSmooth, new OrbitTransfer(0, 1, CommonTransfer.Log), bailoutPalette, 
 				epsilon, CommonOrbitToFloat.LastArc, new OrbitTransfer(0, 360, CommonTransfer.None), lakePalette);
 	}
-	
-	
 }

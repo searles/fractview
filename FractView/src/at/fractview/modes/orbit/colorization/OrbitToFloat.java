@@ -16,9 +16,9 @@
  */
 package at.fractview.modes.orbit.colorization;
 
-import at.fractview.modes.orbit.OrbitFactory;
+import at.fractview.modes.orbit.AbstractOrbitPrefs;
 
 
 public interface OrbitToFloat {
-	float value(OrbitFactory.AbstractOrbit orbit);
+	float value(AbstractOrbitPrefs.AbstractOrbit orbit);
 }

@@ -167,7 +167,7 @@ public class PaletteInputView {
 		// Set shape of progress drawables
 		updateHueProgressDrawables();
 		updateSatProgressDrawables();
-		updateValueProgressDrawables();
+		// Set in XML file. updateValueProgressDrawables();
 		
 		satSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 			@Override
@@ -272,7 +272,7 @@ public class PaletteInputView {
 		this.satSeekBar.setProgressDrawable((Drawable) p);
 	}
 	
-	private void updateValueProgressDrawables() {
+	/*private void updateValueProgressDrawables() { // This one is set in the XML file
 		ShapeDrawable.ShaderFactory valShader = new ShapeDrawable.ShaderFactory() {
 		    @Override
 		    public Shader resize(int width, int height) {
@@ -287,7 +287,7 @@ public class PaletteInputView {
 		p.setShaderFactory(valShader);
 		
 		this.valSeekBar.setProgressDrawable((Drawable) p);
-	}
+	}*/
 	
 	private void updatePalette() {
 		float[][] colorArray = colors.toArray(new float[colors.size()][3]);

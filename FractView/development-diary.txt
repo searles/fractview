@@ -606,3 +606,47 @@ On sharing images: http://stackoverflow.com/questions/5555405/share-bitmap-on-an
 
 Added a dest-parameter to Expr.eval, added an index-parameter to values and therefore removed the Indexed-thing. Also added
 a function cabs and polar. And changed the bailout/lake-picker so that one can enter min/max.
+
+2013 - 02 - 24
+
+Okay, added a "reset"-button to scale, started working on caching.
+
+2013 - 02 - 25
+
+Caching took quite some work - I now have an image wrapper that can be created out of preferences and that hosts
+a pref-object. When changing preferences, the input dialogs create an editor-object that is executed in a safe place.
+
+Quite cool stuff, but hm, I should maybe check whether the number of objects stays the same...
+
+I now implemented caching and removed quite some bugs. But now, it is way more slow than before...
+Or is it? 
+
+Accessing the naked "c"-function takes 6839ms!!! Where's the slow-down?
+
+Okay, the good: Caching does not slow down anything. The bad: for mandelbrot with 100 iterations, 800x840 it now takes 13 seconds...
+
+Am I just plain stupid? I put the thread count to 1... :D Yeah, 4290 for mandelbrot with cache. That's the spirit..
+New colors takes 2.5 seconds
+
+Now size 2048x2048
+Mandelbrot takes (quite some time...) 52900ms. Pfu... really?? Why??? Shouldn't it be sth like 4.29 * 6.25 seconds?
+
+Setting colors also takes some time... 18 seconds for fetching values, calculating a color and putting it back onto a bitmap?
+Hm, redrawing actually takes up quite some time... 1/3 of the total, that's 6 seconds...
+The rastering is not that significant. But I will lower the number of image updates per second...
+
+Okay, now 48299 ms :D Not really what I expected... Also colors is almost the same - 16624. So, I will keep it at the old value. 
+
+Woops, I broke pinch to zoom (but also fixed the Scale-Dialog-bug, so this is kind of even?)
+
+Oj, and my first official uninstall - one install and one uninstall, that's disappointing for a sunday...
+
+It was someone from Romania - if you read this, could you provide me with some feedback why? :D
+
+What is that... only one worker is done?? The others are kept waiting...
+
+Test plan:
+Functions:
+nova, newton.
+
+Scale: Test all buttons

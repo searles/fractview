@@ -10,13 +10,13 @@
         android:layout_height="wrap_content" >
 
         <TextView
-            android:id="@+id/epsilonLabel"
+            android:id="@+id/valueLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Epsilon: " />
+            android:text="&quot;Value&quot;" />
 
         <EditText
-            android:id="@+id/epsilonEditor"
+            android:id="@+id/valueEditor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -34,7 +34,7 @@
             android:id="@+id/methodLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Method: " />
+            android:text="@string/method_label" />
         
         <Spinner
             android:id="@+id/methodSpinner"

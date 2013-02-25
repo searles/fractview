@@ -4,18 +4,39 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
+       <TextView
+       android:id="@+id/hueLabel"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="Hue"
+       android:textAppearance="?android:attr/textAppearanceSmall" />
+    
     <SeekBar
         android:id="@+id/hueSeekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="1000" />
 
+       <TextView
+       android:id="@+id/saturationLabel"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="Saturation"
+       android:textAppearance="?android:attr/textAppearanceSmall" />
+    
     <SeekBar
         android:id="@+id/saturationSeekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="1000" />
 
+       <TextView
+       android:id="@+id/valueLabel"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="Value"
+       android:textAppearance="?android:attr/textAppearanceSmall" />
+    
     <SeekBar
         android:id="@+id/valueSeekBar"
         android:progressDrawable="@drawable/value_shape"
@@ -46,23 +67,23 @@
            android:layout_width="0dp"
            android:layout_height="wrap_content"
            android:layout_weight="1"
-           android:text="&lt;&lt;" />
+           android:text="@string/shift_left" />
 
        <Button
            android:id="@+id/addButton"
            style="?android:attr/buttonStyleSmall"
-           android:layout_weight="1"
            android:layout_width="0dp"
            android:layout_height="wrap_content"
-           android:text="+"  />
+           android:layout_weight="1"
+           android:text="@string/add" />
        
        <Button
            android:id="@+id/removeButton"
            style="?android:attr/buttonStyleSmall"
-           android:layout_weight="1"
            android:layout_width="0dp"
            android:layout_height="wrap_content"
-           android:text="-" />
+           android:layout_weight="1"
+           android:text="@string/remove" />
 
        <Button
            android:id="@+id/moveRightButton"
@@ -70,21 +91,17 @@
            android:layout_width="0dp"
            android:layout_height="wrap_content"
            android:layout_weight="1"
-           android:text="&gt;&gt;" />
+           android:text="@string/shift_right" />
 
+       <CheckBox
+           android:id="@+id/cyclicCheckBox"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:layout_weight="1"
+           android:gravity="center_vertical"
+           android:text="@string/cyclic" />
+       
    </LinearLayout>
 
-   <LinearLayout
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content" >
-
-   </LinearLayout>
-
-   <CheckBox
-       android:id="@+id/cyclicCheckBox"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_gravity="right"
-       android:text="Cyclic" />
 
 </LinearLayout>

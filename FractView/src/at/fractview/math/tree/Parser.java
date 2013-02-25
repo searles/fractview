@@ -236,7 +236,7 @@ public class Parser {
 		// Every term might be followed by other terms (but without leading '-' to
 		// avoid confusion with SUB)
 		Expr e2 = term(false);
-				
+
 		return e2 == null ? e : Op.MUL.app(e, e2);
 	}
 	
@@ -249,57 +249,31 @@ public class Parser {
 		
 		if(id == null) {
 			return null;
-		} else {
-			// TODO: Allow parameters in [], like eg ranges for sums
-			/*if(ch() == '[') {
-				// z[index]
-				incr();
-				
-				// TODO index(); // TODO
-				
-				if(ch() == ']') {
-					incr();
-				} else {
-					reportError("Missing ]");
-				}
-				
-				// could be a lot of things
-				// Ideas:
-				// sum[2..5]
-				// What is not possible: nested sums where you need to access the run-var inside.
-				return null;
-			}*/
-			
+		} else {			
 			// We have an id. Is it a function?
 			Op op = Expr.createOp(id);
 			
 			if(op != null) {
 				// Yes. Fetch arguments.
 				if(op.arity() != 0) {
-					if(ch() == '(') { // ( e1 ; e2 ; ... ; en )
-						// ; because explain to me, why should horner 2,3 be equal to horner((2,3)) but different from horner(2,3)?
-						incr();
-						
-						List<Expr> l = args();
-						
-						if(ch() != ')') {
-							reportError("Missing )");
-						} else {
-							incr();
-						}
-						
-						if(op.arity() < 0 || l.size() == op.arity()) {
-							return op.app(l.toArray(new Expr[l.size()]));
-						}
-					} else if(op.arity() < 0 || op.arity() == 1) {
-						Expr arg = term(true); // We allow sin -x.
-						
-						if(arg != null) {
-							return op.app(arg);
-						}
-					}
+					List<Expr> args = new LinkedList<Expr>();
 					
-					reportError(op + " requires " + op.arity() + " arguments");
+					// An arity of -1 means that we don't know
+					Expr expr;
+					for(int i = 0; (op.arity() == -1 || i < op.arity()) && ((expr = term(true)) != null); i++) {
+						args.add(expr);
+
+						if(ch() == ';') {
+							// Skip a terminating ;
+							incr();
+						}						
+					}
+
+					if(op.arity() < 0 || args.size() == op.arity()) {
+						return op.app(args.toArray(new Expr[args.size()]));
+					} else {
+						reportError(op + " requires " + op.arity() + " arguments");
+					}
 					return null;
 				} else {
 					// Constants
@@ -309,33 +283,6 @@ public class Parser {
 				return Expr.createVar(id);
 			}
 		}
-	}
-	
-	private List<Expr> args() {
-		// e1 ; e2 ; e3 etc...
-		List<Expr> l = new LinkedList<Expr>();
-		
-		Expr e = sum();
-		
-		if(e == null) {
-			reportError("missing argument in argument-list");
-		} else {
-			l.add(e);
-		}
-		
-		while(ch() == ';') {
-			incr(); // skip ';'
-			
-			e = sum();
-			
-			if(e == null) {
-				reportError("missing argument in argument-list");
-			} else {
-				l.add(e);
-			}
-		}
-		
-		return l;
 	}
 	
 	private Expr enclosed() {

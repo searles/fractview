@@ -23,6 +23,8 @@ import android.widget.EditText;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
+import at.fractview.UnsafeImageEditor;
+import at.fractview.modes.AbstractImgCache;
 
 public class ResizeDialogFragment extends InputViewDialogFragment {
 	
@@ -73,7 +75,7 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 
 	@Override
 	protected boolean acceptInput() {
-		int width;
+		final int width;
 		
 		try {
 			width = Integer.parseInt(widthEditor.getText().toString());
@@ -87,7 +89,7 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 			return false;
 		}
 
-		int height;
+		final int height;
 		
 		try {
 			height = Integer.parseInt(heightEditor.getText().toString());
@@ -101,7 +103,12 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 			return false;
 		}
 		
-		taskFragment.setSize(width, height);
+		taskFragment.modifyImage(new UnsafeImageEditor() {
+			@Override
+			public void edit(AbstractImgCache cache) {
+				cache.resize(width, height);
+			}
+		}, false);
 		
 		return true;
 	}

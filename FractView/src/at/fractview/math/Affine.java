@@ -46,9 +46,11 @@ public class Affine {
 	}
 	
 	private double[] m;
+	private double det;
 	
 	private Affine(double...m) {
 		this.m = m;
+		update();		
 	}
 	
 	public Affine concat(Affine a0, Affine a1) {
@@ -66,7 +68,13 @@ public class Affine {
 		m[4] = m4;
 		m[5] = m5;
 		
+		update();
+		
 		return this;
+	}
+	
+	private void update() {
+		this.det = m[0] * m[4] - m[1] * m[3];
 	}
 	
 	public Affine preConcat(Affine a) {
@@ -81,30 +89,33 @@ public class Affine {
 		return new double[]{m[0], m[1], m[2], m[3], m[4], m[5]};
 	}
 	
-	public double det() {
-		return m[0] * m[4] - m[1] * m[3];
-	}
-	
-	public Cplx map(Cplx src, Cplx dest) {
+	/*public Cplx map(Cplx src, Cplx dest) {
 		dest.set(
 				m[0] * src.re() + m[1] * src.im() + m[2],
 				m[3] * src.re() + m[4] * src.im() + m[5]
 		);
 		
 		return dest;
-	}
+	}*/
 	
-	public Cplx invmap(Cplx src, Cplx dest) {
-		double det = det();
-		
-		dest.set(src.re() - m[2], src.im() - m[5]);
+	public Cplx invmap(double x, double y, Cplx dest) {
+		x -= m[2];
+		y -= m[5];
 		
 		dest.set(
-				(m[0] * dest.re() + m[3] * dest.im()) / det,
-				(m[1] * dest.re() + m[4] * dest.im()) / det
+				(m[0] * x + m[3] * y) / det,
+				(m[1] * x + m[4] * y) / det
 		);
 		
 		return dest;
 	}
-	
+
+	public Cplx map(double x, double y, Cplx dest) {
+		dest.set(
+				m[0] * x + m[1] * y + m[2],
+				m[3] * x + m[4] * y + m[5]
+		);
+		
+		return dest;
+	}
 }

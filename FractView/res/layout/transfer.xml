@@ -12,7 +12,7 @@
             android:id="@+id/transferLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Transfer: " />
+            android:text="@string/transfer_label" />
 
         <Spinner
             android:id="@+id/transferSpinner"
@@ -29,7 +29,7 @@
             android:id="@+id/rangeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Range: " />
+            android:text="@string/range_label" />
 
         <EditText
             android:id="@+id/minEditor"
@@ -37,9 +37,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
-            android:inputType="numberDecimal|numberSigned"
-            android:hint="Minimum"
-             />
+            android:hint="@string/minimum"
+            android:inputType="numberDecimal|numberSigned" />
 
         <EditText
             android:id="@+id/maxEditor"
@@ -47,9 +46,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
-            android:inputType="numberDecimal|numberSigned"
-            android:hint="Maximum"
-             />
+            android:hint="@string/maximum"
+            android:inputType="numberDecimal|numberSigned" />
+
+        <CheckBox
+            android:id="@+id/relativeCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Relative" />
         
     </LinearLayout>
 

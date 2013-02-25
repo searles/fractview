@@ -18,14 +18,14 @@ package at.fractview;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
-import at.fractview.dialogs.BailoutDialogFragment;
 import at.fractview.dialogs.FunctionDialogFragment;
-import at.fractview.dialogs.LakeDialogFragment;
 import at.fractview.dialogs.MaxIterDialogFragment;
+import at.fractview.dialogs.OrbitTransferDialogFragment;
 import at.fractview.dialogs.PaletteDialogFragment;
 import at.fractview.dialogs.ResizeDialogFragment;
 import at.fractview.dialogs.SaveDialogFragment;
@@ -33,12 +33,13 @@ import at.fractview.dialogs.ScaleDialogFragment;
 
 public class MainActivity extends FragmentActivity {
 
-	@SuppressWarnings("unused")
 	private static final String TAG = "MainActivity";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		Log.d(TAG, "onCreate activity");
 		
 		setContentView(R.layout.activity_main);
 		
@@ -64,7 +65,9 @@ public class MainActivity extends FragmentActivity {
 			new FunctionDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.bailout:
-			new BailoutDialogFragment().show(getSupportFragmentManager(), "dialog");
+			OrbitTransferDialogFragment otdf = new OrbitTransferDialogFragment();
+			otdf.setType(OrbitTransferDialogFragment.Type.Bailout);
+			otdf.show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.bailoutcolors:
 			PaletteDialogFragment pdf = new PaletteDialogFragment();
@@ -72,7 +75,9 @@ public class MainActivity extends FragmentActivity {
 			pdf.show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.lake:
-			new LakeDialogFragment().show(getSupportFragmentManager(), "dialog");
+			otdf = new OrbitTransferDialogFragment();
+			otdf.setType(OrbitTransferDialogFragment.Type.Lake);
+			otdf.show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.lakecolors:
 			pdf = new PaletteDialogFragment();

@@ -20,15 +20,20 @@ import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
 import at.fractview.math.Spline;
 import at.fractview.math.colors.Palette;
+import at.fractview.modes.AbstractImgCache;
+import at.fractview.modes.RasterTask;
 import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
 import at.fractview.modes.orbit.colorization.OrbitTransfer;
 import at.fractview.modes.orbit.functions.Function;
 
-public class EscapeTime extends OrbitFactory {
+public class EscapeTime extends AbstractOrbitPrefs {
 
-	public static enum Type { 
-		Bailout , Epsilon , Lake 
-	};
+	// We combine number of iterations with type in the cache.
+	public static final int LENGTH_MASK = 0x00ffffff;
+	public static final int TYPE_MASK = 0xff000000;
+	
+	public static final int BAILOUT_TYPE = 0x01000000;
+	public static final int LAKE_TYPE = 0x02000000;
 	
 	private double bailout;
 	private double epsilon;
@@ -106,6 +111,20 @@ public class EscapeTime extends OrbitFactory {
 	public Palette lakePalette() {
 		return lakePalette;
 	}
+	
+	public int color(int type, float value) {
+		if(type == BAILOUT_TYPE) {
+			return bailoutPalette.color(bailoutTransfer.value(value));
+		} else {
+			// Lake
+			return lakePalette.color(lakeTransfer.value(value));
+		}
+	}
+	
+	@Override
+	public AbstractImgCache createImgCache(int width, int height) {
+		return new EscapeTimeCache(this, width, height);
+	}
 
 	@Override
 	public EscapeTime newAffineInstance(Affine affine) {
@@ -114,50 +133,31 @@ public class EscapeTime extends OrbitFactory {
 				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 	
+	public RasterTask.Environment createEnvironment(final AbstractImgCache abstractCache) {
+		return new RasterTask.Environment() {
+			Orbit orbit = new Orbit();
+			EscapeTimeCache cache = (EscapeTimeCache) abstractCache;
+			
+			public int color(int x, int y) {
+				return cache.color(EscapeTime.this, x, y, orbit);
+			}
+		};
+	}
+
 	@Override
-	public EscapeTime newMaxIterInstance(int maxIter) {
+	public AbstractOrbitPrefs newMaxIterInstance(int maxIter) {
 		return new EscapeTime(this.affine(), maxIter, this.function, 
 				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
 				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
-
-	public EscapeTime newFunctionInstance(Function function) {
-		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
-				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
-	}
 	
-	public EscapeTime newBailout(double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer) {
-		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				bailout, bailoutMethod, bailoutTransfer, this.bailoutPalette,
-				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
-	}
-
-	public EscapeTime newLake(double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer) {
-		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
-				epsilon, lakeMethod, lakeTransfer, this.lakePalette);
-	}
-	
-	public EscapeTime newBailoutPaletteInstance(Palette bailoutPalette) {
-		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutMethod, this.bailoutTransfer, bailoutPalette,
-				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
-	}
-
-	public EscapeTime newLakePaletteInstance(Palette lakePalette) {
-		return new EscapeTime(this.affine(), this.maxIter(), function, 
-				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
-				this.epsilon, this.lakeMethod, this.lakeTransfer, lakePalette);
-	}
-
 	public class Orbit extends AbstractOrbit {
-		// For thread safety, one might think of making this class static
-		// and adding an orbit. Especially interesting if you think of functions
-		private Type type;
+		// Also store type + value here...
+		private int type;
+		float value;
 		
 		protected void generate() {
-			type = Type.Lake;
+			type = LAKE_TYPE;
 			
 			for(length = function.init(orbit, c); length < maxIter() - 1; length++) {
 				function.step(orbit, length - 1, c); // the parameter is the last calculated value
@@ -167,7 +167,8 @@ public class EscapeTime extends OrbitFactory {
 				double bailoutValue = z.absSqr();
 
 				if(bailoutValue >= bailout * bailout) {
-					type = Type.Bailout; // repelling point
+					type = BAILOUT_TYPE; // repelling point
+					value = bailoutMethod.value(this);
 					return;
 				}
 
@@ -175,22 +176,27 @@ public class EscapeTime extends OrbitFactory {
 					double epsilonValue = z.distSqr(orbit[length - 1]);
 						
 					if(epsilonValue < epsilon * epsilon) {
-						type = Type.Epsilon; // constant point
+						// constant point, use lake-parameters.
+						value = lakeMethod.value(this);
 						return;
 					}
 				}				
 			}
+
+			// Set value of lake.
+			value = lakeMethod.value(this);
 		}
 		
-		public int color() {
-			if(type == Type.Bailout) {
-				return bailoutPalette.color(bailoutTransfer.value(bailoutMethod.value(this)));
-			} else {
-				// Lake
-				return lakePalette.color(lakeTransfer.value(lakeMethod.value(this)));
-			}
+		// These two values will be cached.
+		public float value() {
+			return value;
 		}
 		
+		public int type() {
+			return type;
+		}
+
+		// TODO: move the next method somewhere else...
 		public float smooth() {
 			// Linear interpolation, smoothened by logarithm if possible
 			double y = bailout();

@@ -83,13 +83,13 @@ public class App extends Expr {
 
 	@Override
 	public Expr derive(String v) {
-		return op.derive(null, args);
+		return op.derive(v, args);
 	}
 
 	@Override
 	public boolean contains(String v) {
 		for(Expr arg : args) {
-			if(arg.contains(null)) {
+			if(arg.contains(v)) {
 				return true;
 			}
 		}

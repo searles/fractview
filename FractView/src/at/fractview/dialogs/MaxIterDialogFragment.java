@@ -23,7 +23,11 @@ import android.widget.EditText;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
+import at.fractview.UnsafeImageEditor;
+import at.fractview.modes.AbstractImgCache;
+import at.fractview.modes.orbit.AbstractOrbitPrefs;
 import at.fractview.modes.orbit.EscapeTime;
+import at.fractview.modes.orbit.EscapeTimeCache;
 
 public class MaxIterDialogFragment extends InputViewDialogFragment {
 	
@@ -48,7 +52,7 @@ public class MaxIterDialogFragment extends InputViewDialogFragment {
 
 		editor = (EditText) v.findViewById(R.id.maxIterEditor);
 		
-		maxIter = taskFragment.prefs().maxIter();
+		maxIter = ((EscapeTime) taskFragment.prefs()).maxIter();
 		
 		editor.setText(Integer.toString(maxIter));
 		
@@ -60,14 +64,20 @@ public class MaxIterDialogFragment extends InputViewDialogFragment {
 		try {
 			int maxIter = Integer.parseInt(editor.getText().toString());
 			
-			if(maxIter > 1000000) {
-				// TODO
-				Log.d(TAG, "Maximum number is 1000000. This is a hard limit");
-				return false;
+			if(maxIter > AbstractOrbitPrefs.MAX_LENGTH) {
+				Log.w(TAG, "Maximum number of iterations set to " + AbstractOrbitPrefs.MAX_LENGTH);
+				maxIter = AbstractOrbitPrefs.MAX_LENGTH;
 			}
-			
-			EscapeTime prefs = taskFragment.prefs().newMaxIterInstance(maxIter);
-			taskFragment.setPrefs(prefs);
+
+			final int i = maxIter;
+
+			taskFragment.modifyImage(new UnsafeImageEditor() {
+				@Override
+				public void edit(AbstractImgCache cache) {
+					EscapeTimeCache ch = (EscapeTimeCache) cache;
+					ch.setMaxIter(i);
+				}
+			}, true);
 			
 			return true;
 		} catch(NumberFormatException e) {

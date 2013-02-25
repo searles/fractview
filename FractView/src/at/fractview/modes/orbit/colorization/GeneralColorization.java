@@ -18,8 +18,8 @@ package at.fractview.modes.orbit.colorization;
 
 import at.fractview.math.colors.Palette;
 import at.fractview.math.colors.Palette2D;
-import at.fractview.modes.orbit.OrbitFactory;
-import at.fractview.modes.orbit.OrbitFactory.AbstractOrbit;
+import at.fractview.modes.orbit.AbstractOrbitPrefs;
+import at.fractview.modes.orbit.AbstractOrbitPrefs.AbstractOrbit;
 
 /** This interface represents functions from an orbit into a color
  * @author searles
@@ -27,7 +27,7 @@ import at.fractview.modes.orbit.OrbitFactory.AbstractOrbit;
  */
 public interface GeneralColorization {
 	
-	int color(OrbitFactory.AbstractOrbit orbit);
+	int color(AbstractOrbitPrefs.AbstractOrbit orbit);
 	
 	/** This class contains a transfer function of an orbit to a
 	 * double value that is then used to obtain a color value from a palette

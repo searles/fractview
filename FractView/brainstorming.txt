@@ -1,3 +1,7 @@
+Modify input views so that acceptInput returns an UnsafeImageEditor-object, and
+additionally that they contain a "set input"-method, so that they are independent from
+taskFragment.
+
 http://en.wikipedia.org/wiki/Collatz_fractal#Collatz_fractal
 
 TODOs for Version 1.1: 
