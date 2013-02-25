@@ -21,7 +21,6 @@ import at.fractview.math.Cplx;
 import at.fractview.math.Spline;
 import at.fractview.math.colors.Palette;
 import at.fractview.modes.AbstractImgCache;
-import at.fractview.modes.RasterTask;
 import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
 import at.fractview.modes.orbit.colorization.OrbitTransfer;
 import at.fractview.modes.orbit.functions.Function;
@@ -133,17 +132,6 @@ public class EscapeTime extends AbstractOrbitPrefs {
 				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
 	}
 	
-	public RasterTask.Environment createEnvironment(final AbstractImgCache abstractCache) {
-		return new RasterTask.Environment() {
-			Orbit orbit = new Orbit();
-			EscapeTimeCache cache = (EscapeTimeCache) abstractCache;
-			
-			public int color(int x, int y) {
-				return cache.color(EscapeTime.this, x, y, orbit);
-			}
-		};
-	}
-
 	@Override
 	public AbstractOrbitPrefs newMaxIterInstance(int maxIter) {
 		return new EscapeTime(this.affine(), maxIter, this.function, 
@@ -159,7 +147,7 @@ public class EscapeTime extends AbstractOrbitPrefs {
 		protected void generate() {
 			type = LAKE_TYPE;
 			
-			for(length = function.init(orbit, c); length < maxIter() - 1; length++) {
+			for(length = function.init(orbit, c); length < maxIter(); length++) {
 				function.step(orbit, length - 1, c); // the parameter is the last calculated value
 
 				Cplx z = orbit[length];

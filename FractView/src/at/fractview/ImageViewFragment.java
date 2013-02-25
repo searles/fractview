@@ -40,7 +40,9 @@ public class ImageViewFragment extends Fragment {
 
 	public static final String TASK_TAG = "at.fractview.TASK_FRAGMENT_TAG";
 	
-	static final int TASK_FRAGMENT = 0;
+	private static int MIN_TOUCH_TIME = 166; // Touch event must last at least this many MS, otherwise it is considered to be accidential
+	
+	private static final int TASK_FRAGMENT = 0;
 	
 	private static final int MILLISECONDS_TILL_UPDATE = 166; // 6 times per second
 
@@ -235,6 +237,8 @@ public class ImageViewFragment extends Fragment {
 		private MultiTouch bitmapTouch; // current touch event, scaled to bitmap size
 		private MultiTouch prefsTouch; // current touch event, scaled to preferences size
 		
+		private long touchStartTime;
+		
 		@Override
 		public boolean onTouch(View v, MotionEvent evt) {
 			// Careful not to confuse index and id of evt
@@ -249,6 +253,8 @@ public class ImageViewFragment extends Fragment {
 			case MotionEvent.ACTION_DOWN:
 				bitmapTouch = new MultiTouch();
 				prefsTouch = new MultiTouch();
+				
+				touchStartTime = System.currentTimeMillis();
 
 				for(int i = 0; i < evt.getPointerCount(); i++) {
 					// Yes, in fact pointerCounter can be > 1.
@@ -262,7 +268,7 @@ public class ImageViewFragment extends Fragment {
 
 					p[0] = scaleable.normX(p[0], w, h);
 					p[1] = scaleable.normY(p[1], w, h);
-					
+			
 					prefsTouch.down(id, p);
 				}
 
@@ -270,7 +276,15 @@ public class ImageViewFragment extends Fragment {
 			case MotionEvent.ACTION_UP:
 				// Apply selection: Change prefs, create new bitmap with preview and set it in view
 				if(bitmapTouch != null) {
-					applyTouch(bitmapTouch.matrix(), prefsTouch.matrix());
+					long duration = System.currentTimeMillis() - touchStartTime;
+					
+					if(duration > MIN_TOUCH_TIME) {
+						applyTouch(bitmapTouch.matrix(), prefsTouch.matrix());
+					} else { // otherwise ignore
+						Log.d(TAG, "Touch event ignored because it was too short");
+						imageView.setImageMatrix(viewToImageMatrix);
+					}
+					
 					bitmapTouch = prefsTouch = null;
 				} else {
 					Log.w(TAG, "Received Action-up, but there's no touch-object...");
@@ -322,9 +336,7 @@ public class ImageViewFragment extends Fragment {
 
 			if (bitmapTouch != null) {
 				imageMatrix.setConcat(viewToImageMatrix, bitmapTouch.matrix());
-				
 				view.setImageMatrix(imageMatrix);
-				
 				v.invalidate();
 			}
 

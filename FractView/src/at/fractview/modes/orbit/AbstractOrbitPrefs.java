@@ -18,11 +18,9 @@ package at.fractview.modes.orbit;
 
 import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
-import at.fractview.modes.AbstractImgCache;
-import at.fractview.modes.RasterTask;
 import at.fractview.modes.ScaleablePrefs;
 
-public abstract class AbstractOrbitPrefs extends ScaleablePrefs implements RasterTask.Rasterable {
+public abstract class AbstractOrbitPrefs extends ScaleablePrefs {
 
 	public static final int LENGTH_MASK = 0x00ffffff;
 	public static final int MAX_LENGTH = 0x01000000; // Maximum orbit length. 
@@ -40,8 +38,6 @@ public abstract class AbstractOrbitPrefs extends ScaleablePrefs implements Raste
 		return maxIter;
 	}
 	
-
-	public abstract RasterTask.Environment createEnvironment(AbstractImgCache imgCache);
 
 	/** This method is useful if the gui wants to show the orbit on mouseover
 	 * @return

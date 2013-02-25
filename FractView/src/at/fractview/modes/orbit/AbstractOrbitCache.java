@@ -3,7 +3,7 @@ package at.fractview.modes.orbit;
 import at.fractview.modes.RasterTask;
 import at.fractview.modes.ScaleableCache;
 
-public abstract class AbstractOrbitCache extends ScaleableCache {
+public abstract class AbstractOrbitCache extends ScaleableCache implements RasterTask.Rasterable {
 
 	protected AbstractOrbitCache(AbstractOrbitPrefs prefs, int width, int height) {
 		super(prefs, width, height);
@@ -14,7 +14,7 @@ public abstract class AbstractOrbitCache extends ScaleableCache {
 		
 		updateMaxIter(p.maxIter(), maxIter);
 		
-		p.newMaxIterInstance(maxIter);
+		setPrefs(p.newMaxIterInstance(maxIter));
 	}
 	
 	/** Tells subclasses that maximum number of iterations is to be updated
@@ -26,7 +26,7 @@ public abstract class AbstractOrbitCache extends ScaleableCache {
 	
 	@Override
 	public RasterTask calculateInBackground() {
-		RasterTask task = new RasterTask((RasterTask.Rasterable) prefs());
+		RasterTask task = new RasterTask(this);
 		task.start(this);
 		
 		return task;

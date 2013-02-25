@@ -16,6 +16,7 @@
  */
 package at.fractview.modes;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -38,24 +39,23 @@ public class RasterTask implements AbstractImgCache.Task {
 	
 	private static final int TILE_SIZE = 4;
 	
-	private Rasterable preferences;
+	private Rasterable rasterable;
 	
 	private LinkedList<TileIterator> tileIterators;
+
 	private volatile boolean cancelled;
-	
-	private AtomicInteger runningThreadCount;
+	private volatile boolean running;
 	
 	private long startTime;
 
-	private int checkPointCount = 0;
+	private volatile int checkPointCount = 0;
 	private Lock lock;
 	private Condition wc;
 	
 	private Thread[] threads;
 	
-	public RasterTask(Rasterable preferences) {
-		this.preferences = preferences;
-		this.runningThreadCount = new AtomicInteger(THREAD_COUNT);
+	public RasterTask(Rasterable rasterable) {
+		this.rasterable = rasterable;
 		this.threads = new Thread[THREAD_COUNT];
 		this.lock = new ReentrantLock();
 		this.wc = this.lock.newCondition();
@@ -92,7 +92,9 @@ public class RasterTask implements AbstractImgCache.Task {
 		} while(skipFirstPix);
 
 		// Create threads
-		for(int i = 0; i < runningThreadCount.get(); i++) {
+		running = true;
+		
+		for(int i = 0; i < THREAD_COUNT; i++) {
 			// Create new worker and run it [recycling old workers is not a 
 			// good idea because they might be still running]
 			
@@ -110,7 +112,7 @@ public class RasterTask implements AbstractImgCache.Task {
 	}
 	
 	public boolean isRunning() {
-		return runningThreadCount.get() > 0;
+		return running;
 	}
 	
 	public void cancel() {
@@ -355,6 +357,7 @@ public class RasterTask implements AbstractImgCache.Task {
 		private AbstractImgCache cache;
 		
 		Worker(AbstractImgCache cache) {
+			Log.d(TAG, "Worker " + hashCode() + " created");
 			this.cache = cache;
 		}
 		
@@ -362,35 +365,55 @@ public class RasterTask implements AbstractImgCache.Task {
 			// Use lower thread priority to have less impact on our runtime
 			Process.setThreadPriority(THREAD_PRIORITY);
 			
+			Log.d(TAG, "Worker " + hashCode() + " started");
+			
 			Paint paint = new Paint(); // Create one paint per worker.
 			
 			// And create new environment per worker
-			Environment env = preferences.createEnvironment(cache);
+			Environment env = rasterable.createEnvironment();
 			
 			// We create one tile and reuse it.
 			Tile t = new Tile();
 			
 			try {
-				for(TileIterator ti : tileIterators) {
+				// TODO: There is a kind of race-condition: Sometimes a worker is stuck in wc.await so that formally
+				// the calculation never stops...
+				Iterator<TileIterator> iter = tileIterators.iterator();
+				
+				// iter has definitely at least one element
+				while(true) {
+					TileIterator ti = iter.next();
+					
 					while(ti.next(t) != null) {
 						t.calc(env, cache.canvas(), paint);
 					}
-				
-					// Wait until all threads are done with this tileIterator
-					try {
-						lock.lock();
-						checkPointCount ++;
-						
-						if(checkPointCount == THREAD_COUNT) {
-							// All threads have passed the checkpoint
-							wc.signalAll();
-						} else {
-							wc.await();
+					
+					if(iter.hasNext()) {
+						// Wait until all threads are done with this tileIterator
+						try {
+							lock.lock();
+							int index = checkPointCount ++;
+							
+							if(checkPointCount == THREAD_COUNT) {
+								// This is a good point to update statistical data or similar things in Cache
+								rasterable.updateDataFromEnv(env);
+								
+								// All threads have passed the checkpoint
+								Log.d(TAG, t.stepSize + ": Waking up others");
+								
+								checkPointCount = 0; // Reset checkPointCount
+								wc.signalAll();
+							} else {
+								Log.d(TAG, t.stepSize + ": waiting " + index);
+								wc.await();
+								Log.d(TAG, t.stepSize + ": continuing " + index);
+							}
+						} finally {
+							lock.unlock();
 						}
-						
-						checkPointCount --;
-					} finally {
-						lock.unlock();
+					} else {
+						// if iter is done, finish this loop.
+						break;
 					}
 				}
 			} catch(CancelException e) {
@@ -398,12 +421,17 @@ public class RasterTask implements AbstractImgCache.Task {
 			} catch(InterruptedException e) {
 				Log.d(TAG, "Worker was interrupted");
 			} finally {
-				int index = runningThreadCount.decrementAndGet();
-				Log.d(TAG, "Worker " + "(" + hashCode() + ") is done");
+				lock.lock();
+				checkPointCount++;
+				int index = checkPointCount;
+				lock.unlock();
+
+				Log.d(TAG, "Worker " + index + " is done");
 			
-				if(index == 0) {
+				if(index == THREAD_COUNT) {
+					// Now we are done.
+					running = false;
 					Log.d(TAG, "Runtime of task was " + (System.currentTimeMillis() - startTime) + " ms");
-					Log.d(TAG, "This is the last running worker");
 				}
 			}
 		}
@@ -420,7 +448,8 @@ public class RasterTask implements AbstractImgCache.Task {
 	}
 	
 	public static interface Rasterable {
-		Environment createEnvironment(AbstractImgCache cache);
+		Environment createEnvironment();
+		void updateDataFromEnv(Environment env);
 	}
 	
 	/** This exception is thrown if during calculation cancel is called.

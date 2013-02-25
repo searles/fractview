@@ -33,7 +33,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -54,7 +53,7 @@ import at.fractview.math.colors.Palette;
  */
 public class PaletteInputView {
 	
-	private static final String TAG = "PaletteInputView";
+	// private static final String TAG = "PaletteInputView";
 	
 	private View view;
 	
@@ -83,7 +82,6 @@ public class PaletteInputView {
 	private Palette palette;
 	
 	public PaletteInputView(View view, Palette palette) {
-		Log.d(TAG, "Constructor: " + palette);
 		this.view = view;
 		
 		this.palette = palette;
@@ -347,17 +345,12 @@ public class PaletteInputView {
 	public void add(float[] hsv) {
 		colors.add(selectedIndex, hsv);
 
-		Log.d(TAG, "itemViewSize = " + itemViews.size());
-		
 		// update layout: Add one element
 		if(itemViews.size() == visibleViewCount) {
 			// not enough views
-			Log.d(TAG, "Creating view with index " + visibleViewCount);
 			createItemView();
 		}
 
-		Log.d(TAG, "Adding view with index " + visibleViewCount);
-		
 		layout.addView(itemViews.get(visibleViewCount), visibleViewCount);
 		visibleViewCount++;
 
@@ -384,7 +377,6 @@ public class PaletteInputView {
 			
 			// Remove last element from layout
 			--visibleViewCount;
-			Log.d(TAG, "Removing view with index " + visibleViewCount);
 
 			layout.removeViewAt(visibleViewCount);
 			
