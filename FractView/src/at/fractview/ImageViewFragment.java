@@ -216,20 +216,36 @@ public class ImageViewFragment extends Fragment {
 	}
 	
 	private void applyTouch(Matrix bitmapMatrix, Matrix prefsMatrix) {
-		// Update zoom
-		Matrix m = new Matrix();
-		prefsMatrix.invert(m);
+		// Did we only move?
+		final float[] bm = new float[9];
+		bitmapMatrix.getValues(bm);
 		
-		final float[] matrix = new float[9];
-		m.getValues(matrix);
-		
-		taskFragment.modifyImage(new UnsafeImageEditor() {
-			@Override
-			public void edit(AbstractImgCache cache) {
-				ScaleableCache scaleable = (ScaleableCache) cache;
-				scaleable.newRelativeScale(matrix);
-			}
-		}, true);
+		if(bm[0] == 1f && bm[1] == 0f && bm[3] == 0f && bm[4] == 1f) {
+			Log.d(TAG, "We only moved!");
+			taskFragment.modifyImage(new UnsafeImageEditor() {
+				@Override
+				public void edit(AbstractImgCache cache) {
+					ScaleableCache scaleable = (ScaleableCache) cache;
+					scaleable.move((int) Math.round(bm[2]),  (int) Math.round(bm[5]));
+				}
+			}, true);
+		} else {
+			// Update zoom
+			Log.d(TAG, "We need to scale");
+			Matrix m = new Matrix();
+			prefsMatrix.invert(m);
+			
+			final float[] matrix = new float[9];
+			m.getValues(matrix);
+			
+			taskFragment.modifyImage(new UnsafeImageEditor() {
+				@Override
+				public void edit(AbstractImgCache cache) {
+					ScaleableCache scaleable = (ScaleableCache) cache;
+					scaleable.newRelativeScale(matrix);
+				}
+			}, true);
+		}
 	}
 	
 	private class TouchListener implements OnTouchListener {

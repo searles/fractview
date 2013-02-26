@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import at.fractview.R;
@@ -19,16 +20,16 @@ public class TransferInput {
 
 	private EditText minEditor;
 	private EditText maxEditor;
+	
+	private CheckBox normalizeCheckBox;
 
 	public TransferInput(Activity activity, View v, OrbitTransfer ot) {
 		// Initialize transfer
 		minEditor = (EditText) v.findViewById(R.id.minEditor);
 		
-		minEditor.setText(Float.toString(ot.min()));
-
 		maxEditor = (EditText) v.findViewById(R.id.maxEditor);
 		
-		maxEditor.setText(Float.toString(ot.max()));
+		normalizeCheckBox = (CheckBox) v.findViewById(R.id.normalizeCheckBox);
 
 		transferSpinner = (Spinner) v.findViewById(R.id.transferSpinner);
 		
@@ -39,6 +40,12 @@ public class TransferInput {
 		
 		transferSpinner.setAdapter(transferAdapter);
 
+		normalizeCheckBox.setChecked(ot.normalize());
+		
+		minEditor.setText(Float.toString(ot.min()));
+
+		maxEditor.setText(Float.toString(ot.max()));
+		
 		transferSpinner.setSelection(transferAdapter.getPosition(ot.transfer()));
 	}
 	
@@ -62,6 +69,8 @@ public class TransferInput {
 		
 		CommonTransfer transfer = (CommonTransfer) transferSpinner.getSelectedItem();
 		
-		return new OrbitTransfer(min, max, transfer);
+		boolean normalize = normalizeCheckBox.isChecked();
+		
+		return new OrbitTransfer(normalize, min, max, transfer);
 	}
 }

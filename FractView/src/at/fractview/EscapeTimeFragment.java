@@ -239,7 +239,7 @@ public class EscapeTimeFragment extends Fragment {
 		Function function = new Function(fn, l, ps);
 		
 		return new EscapeTime(affine, maxIter, function,
-				bailout, CommonOrbitToFloat.Length_Smooth, new OrbitTransfer(0f, 1f, CommonTransfer.Log), bailoutPalette, 
-				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(0f, 1f, CommonTransfer.None), lakePalette);
+				bailout, CommonOrbitToFloat.Length_Smooth, new OrbitTransfer(false, 0f, 1f, CommonTransfer.Log), bailoutPalette, 
+				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(true, 0f, 1f, CommonTransfer.None), lakePalette);
 	}
 }

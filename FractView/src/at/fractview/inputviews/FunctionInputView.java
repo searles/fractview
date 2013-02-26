@@ -130,8 +130,6 @@ public class FunctionInputView {
 	 * @return
 	 */
 	public Function acceptAndReturn() {
-		Log.d(TAG, "acceptAndReturn");
-
 		// First part: Accept input
 		if(!fn.acceptInput()) return null;
 		
@@ -161,8 +159,6 @@ public class FunctionInputView {
 	}	
 	
 	private void updateViews() {
-		Log.d(TAG, "updateView()");
-		
 		// add view for funtion
 		// Inflate new view
 		int index = 0;
@@ -197,7 +193,6 @@ public class FunctionInputView {
 		boolean isNewView = index == itemViews.size();
 		
 		if(isNewView) {
-			Log.d(TAG, "Creating new view at index " + index + " = " + expr);
 			// Create new view
 			LayoutInflater inflater = ((Activity) view.getContext()).getLayoutInflater();
 			itemView = inflater.inflate(R.layout.function_parameter_item, layout, false);
@@ -243,8 +238,6 @@ public class FunctionInputView {
 	 * @return true if the number of inits or parameters changed
 	 */
 	private boolean updateInits() {
-		Log.d(TAG, "updateInits()");
-
 		int initCount = fn.expr.get().maxIndex("z");
 
 		boolean initCountChanged = initCount != this.initCount;
@@ -267,8 +260,6 @@ public class FunctionInputView {
 	private boolean updateParameters() { 
 		// Call this after changing init or function
 		// Fetch all parameters from main and init, and update parameters-map
-		Log.d(TAG, "updateParameters()");
-		
 		Set<Var> vars = fn.expr.get().parameters(new TreeSet<Var>());
 		
 		for(int i = 0; i < initCount; i++) {
@@ -288,7 +279,6 @@ public class FunctionInputView {
 				
 				if(!parameters.containsKey(var)) {
 					// It is also not in the map yet.
-					Log.d(TAG, "adding parameter " + var);
 					parameters.put(var, new Parameter(var, new Labelled<Cplx>(new Cplx(), "0")));
 				}				
 			}
@@ -309,16 +299,13 @@ public class FunctionInputView {
 
 		@Override
 		public boolean onEditorAction(TextView view, int actionId, KeyEvent evt) {
-			Log.d(TAG, "onEditorAction " + view.getTag() + " == " + actionId);
 			// Done-button was clicked on an expression, so update it
 			return expr.acceptInput(); // accept input
 		}
 		
 		@Override
 		public void afterTextChanged(Editable s) {
-			Log.d(TAG, "afterTextChanged before " + expr + " => " + s.toString());
 			expr.setInput(s.toString());
-			Log.d(TAG, "afterTextChanged after: " + expr);
 		}
 
 		@Override
@@ -372,7 +359,6 @@ public class FunctionInputView {
 		boolean acceptInput() {
 			// Check whether current input is equal to input in expr
 			if(input.equals(expr.label())) {
-				Log.d(TAG, "Already at last changes");
 				return true;
 			}
 
@@ -380,7 +366,6 @@ public class FunctionInputView {
 			Expr e = parser.get();
 			
 			if(e != null) {
-
 				if(parser.hasErrors()) {
 					// Show warnings
 					showError("Parser warnings", parser.getErrorMessage());
@@ -392,8 +377,6 @@ public class FunctionInputView {
 				
 				return true;
 			} else {
-				Log.w(TAG, "Function was NOT modified.");
-				
 				if(parser.hasErrors()) {
 					showError("Could not set z(n+1)", parser.getErrorMessage());
 				} else {
@@ -483,7 +466,6 @@ public class FunctionInputView {
 
 		boolean acceptInput() {
 			if(input.equals(value.label())) {
-				Log.d(TAG, "Already at last changes");
 				return true;
 			}
 
@@ -492,8 +474,6 @@ public class FunctionInputView {
 			
 			if(e != null && e.isNum()) {
 				value = new Labelled<Cplx>(e.eval(new Cplx(), null), input);
-				
-				Log.d(TAG, id + " parameter was updated: " + e);
 				
 				if(parser.hasErrors()) {
 					// Show warnings
@@ -505,8 +485,6 @@ public class FunctionInputView {
 			}
 
 			showError("Invalid Parameter", "Parameter must be numeric value");
-			
-			Log.w(TAG, "Only numbers can be parameters: " + e);
 			
 			return false;
 		}

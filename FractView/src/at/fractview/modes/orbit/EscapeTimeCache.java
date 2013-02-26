@@ -13,8 +13,7 @@ import at.fractview.modes.orbit.functions.Function;
 
 public class EscapeTimeCache extends AbstractOrbitCache {
 	
-	// private static final String TAG = "ESC";
-	
+	private static final String TAG = "ESC";
 	private Stats[] stats;
 	
 	private int[] typeLength; // Bits 0..23 = nrIterations; rest = type.
@@ -26,7 +25,7 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		typeLength = new int[width * height];
 		values = new float[width * height];
 		
-		stats = new Stats[]{new Stats(), new Stats()};
+		stats = new Stats[2];
 	}
 	
 	public EscapeTime prefs() {
@@ -62,30 +61,39 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		}
 		
 		// Update statistics in env
-		int typeIndex = type == EscapeTime.BAILOUT_TYPE ? 0 : 1;
-		env.nextValue(typeIndex, v);
-		
+		if(type == EscapeTime.BAILOUT_TYPE && stats[0] != null) {
+			env.nextValue(0, v);
+			v = (v - stats[0].minValue) / (stats[0].maxValue - stats[0].minValue);
+		}
+
+		if(type == EscapeTime.LAKE_TYPE && stats[1] != null) {
+			env.nextValue(1, v);
+			v = (v - stats[1].minValue) / (stats[1].maxValue - stats[1].minValue);
+		}
+
 		// Statistics in cache are not updated here but only later when everyone is sleeping or done.
-		
-		// Here, use statistics of cache
-		// TODO: Statistics: Add 'normalize'-flag.
-		//if(prefs().usesStats()) {
-			v = (v - stats[typeIndex].minValue) / (stats[typeIndex].maxValue - stats[typeIndex].minValue);
-		//}
 		
 		return prefs().color(type, v);
 	}
 	
 	@Override
 	public void initStatistics() {
-		for(int i = 0; i < 2; i++) {
-			stats[i].reset();
+		if(prefs().bailoutTransfer().normalize()) {
+			stats[0] = new Stats();
+		} else {
+			stats[0] = null;
+		}
+
+		if(prefs().lakeTransfer().normalize()) {
+			stats[1] = new Stats();
+		} else {
+			stats[1] = null;
 		}
 	}
 
 	@Override
 	public boolean usesStats() {
-		return true;
+		return prefs().bailoutTransfer().normalize() || prefs().lakeTransfer().normalize();
 	}
 
 	@Override
@@ -93,7 +101,7 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		Env e = (Env) env;
 		
 		for(int i = 0; i < 2; i++) {
-			stats[i].update(e.stats[i]);
+			if(stats[i] != null) stats[i].update(e.stats[i]);
 		}
 	}
 
@@ -104,11 +112,6 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 	private class Stats {
 		volatile float minValue = Float.POSITIVE_INFINITY;
 		volatile float maxValue = Float.NEGATIVE_INFINITY;
-		
-		void reset() {
-			this.minValue = Float.POSITIVE_INFINITY;
-			this.maxValue = Float.NEGATIVE_INFINITY;
-		}
 		
 		void nextValue(float v) {
 			if(v < minValue) minValue = v;
@@ -149,12 +152,53 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 			}
 		}
 	}
+	
+	@Override
+	public void clear() {
+		Log.d(TAG, "clear");
+		Arrays.fill(typeLength, 0);
+	}
 
 	@Override
-	protected void moveScale(int dx, int dy) {
-		// TODO
+	public void resize(int width, int height) {
+		this.typeLength = null;
+		this.values = null;
+		
+		resizeBitmap(width, height);
+		
+		typeLength = new int[width * height];
+		values = new float[width * height];
+	}
+
+
+	@Override
+	protected void moveData(int dx, int dy) {
 		Log.d("Cache", "Move " + dx + ", " + dy);
-		clear();
+		
+		int ix = dx >= 0 ? 1 : -1;
+		int iy = dy >= 0 ? 1 : -1;
+		
+		for(int y = (iy > 0 ? 0 : height() - 1); 0 <= y && y < height(); y += iy) {
+			if(0 <= y + dy && y + dy < height()) { // We can reuse stuff of y
+				for(int x = (ix > 0 ? 0 : width() - 1); 0 <= x && x < width(); x += ix) {
+					int index = x + y * width();
+					
+					if(0 <= x + dx && x + dx < width()) {
+						int lastIndex = (x + dx) + (y + dy) * width();
+						typeLength[index] = typeLength[lastIndex];
+						values[index] = values[lastIndex];
+					} else {
+						typeLength[index] = 0;
+					}
+				}
+			} else {
+				int index = y * width();
+				for(int x = 0; x < width(); x++) {
+					typeLength[index] = 0;
+					index ++;
+				}
+			}
+		}
 	}
 
 	public void newFunction(Function function) {
@@ -167,8 +211,19 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 
 	public void newBailout(double bailout) {
 		if(bailout != prefs().bailout()) {
-			// TODO!!!
-			clear();
+			// if new bailout is greater, then clear all bailouts.
+			// if new bailout is smaller, then clear everything.
+			if(bailout > prefs().bailout()) {
+				for(int i = 0; i < width() * height(); i++) {
+					int type = typeLength[i] & EscapeTime.TYPE_MASK;
+					
+					if(type == EscapeTime.BAILOUT_TYPE) {
+						typeLength[i] = 0;
+					}
+				}
+			} else {
+				clear();
+			}
 			
 			setPrefs(new EscapeTime(prefs().affine(), prefs().maxIter(), prefs().function(), 
 					bailout, prefs().bailoutMethod(), prefs().bailoutTransfer(), prefs().bailoutPalette(),
@@ -215,9 +270,19 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 	
 	public void newEpsilon(double epsilon) {
 		if(epsilon != prefs().epsilon()) {
-			// TODO!!!
-			clear();
-			
+			// if new epsilon is smaller, then clear all lake.
+			// if new epsilon is greater, then clear everything.
+			if(epsilon > prefs().epsilon()) {
+				for(int i = 0; i < width() * height(); i++) {
+					int type = typeLength[i] & EscapeTime.TYPE_MASK;
+					
+					if(type == EscapeTime.LAKE_TYPE) {
+						typeLength[i] = 0;
+					}
+				}
+			} else {
+				clear();
+			}			
 			setPrefs(new EscapeTime(prefs().affine(), prefs().maxIter(), prefs().function(), 
 					prefs().bailout(), prefs().bailoutMethod(), prefs().bailoutTransfer(), prefs().bailoutPalette(),
 					epsilon, prefs().lakeMethod(), prefs().lakeTransfer(), prefs().lakePalette()));
@@ -259,21 +324,5 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		setPrefs(new EscapeTime(prefs().affine(), prefs().maxIter(), prefs().function(), 
 				prefs().bailout(), prefs().bailoutMethod(), prefs().bailoutTransfer(), prefs().bailoutPalette(),
 				prefs().epsilon(), prefs().lakeMethod(), prefs().lakeTransfer(), lakePalette));
-	}
-
-	@Override
-	public void clear() {
-		Arrays.fill(typeLength, 0);
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		this.typeLength = null;
-		this.values = null;
-		
-		resizeBitmap(width, height);
-		
-		typeLength = new int[width * height];
-		values = new float[width * height];
 	}
 }

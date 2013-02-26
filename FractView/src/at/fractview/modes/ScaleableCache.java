@@ -25,11 +25,24 @@ public abstract class ScaleableCache extends AbstractImgCache {
 		
 		ScaleablePrefs p = prefs();
 		affine.preConcat(p.affine());
-		
-		// And update preferences
-		clear();
 		setPrefs(p.newAffineInstance(affine));
+
+		// And update preferences
+		clear();	
 	}
 	
-	protected abstract void moveScale(int dx, int dy);
+	public void move(int dx, int dy) {
+		float min = Math.min(width(), height());
+		
+		Affine affine = Affine.create(1, 0, ((float) -dx) / min, 0, 1, ((float) -dy) / min);
+
+		ScaleablePrefs p = prefs();
+		affine.preConcat(p.affine());
+		setPrefs(p.newAffineInstance(affine));
+		
+		// Instead of clearing everything we keep some parts of the image.
+		moveData(-dx, -dy);
+	}
+	
+	protected abstract void moveData(int dx, int dy);
 }

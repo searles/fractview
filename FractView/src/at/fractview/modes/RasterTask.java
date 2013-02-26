@@ -408,9 +408,16 @@ public class RasterTask implements AbstractImgCache.Task {
 								// since we are save form race conditions here :)
 								
 								for(int i = 0; i < THREAD_COUNT; i++) {
-									if(i != index && threads[i].getState() != Thread.State.WAITING) {
-										Log.e(TAG, "Race condition: Thread " + i + " is alive");
-									}
+									/*if(i != index && threads[i].getState() != Thread.State.WAITING) {
+										Log.e(TAG, "Race condition: Thread " + i + " has status " + threads[i].getState());
+										StackTraceElement st[] = threads[i].getStackTrace();
+										
+										for(StackTraceElement s : st) {
+											Log.e(TAG, s.toString());
+										}
+										
+										// Sometimes a worker seems to be running, but it is in await.
+									}*/
 									
 									rasterable.updateStatisticsFromEnv(envs[i]);
 								}
@@ -432,6 +439,7 @@ public class RasterTask implements AbstractImgCache.Task {
 				// Someone told us to stop
 			} catch(InterruptedException e) {
 				// Someone told us to wake up. No problem, we are done anyways...
+				Log.d(TAG, "Thread " + index + " was interrupted");
 			} finally {
 				lock.lock();
 				checkPointCount++;

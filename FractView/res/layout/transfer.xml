@@ -21,6 +21,12 @@
         
     </LinearLayout>
 
+        <CheckBox
+            android:id="@+id/normalizeCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Normalize Range" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
@@ -48,12 +54,6 @@
             android:ems="10"
             android:hint="@string/maximum"
             android:inputType="numberDecimal|numberSigned" />
-
-        <CheckBox
-            android:id="@+id/relativeCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Relative" />
         
     </LinearLayout>
 
