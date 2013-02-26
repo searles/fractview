@@ -56,7 +56,7 @@ public interface Spline {
 		}
 	}
 
-	public static class Cubic0 implements Spline {
+	/*public static class Cubic0 implements Spline {
 		private float[] ys;
 
 		public Cubic0(float[] ys) {
@@ -81,7 +81,7 @@ public interface Spline {
 				return y(x, ys[index], ys[index + 1]);
 			}
 		}
-	}
+	}*/
 
 	public static class Cubic implements Spline {
 		
@@ -89,6 +89,9 @@ public interface Spline {
 		
 		private float[] ys;
 		private float[] ms;
+		
+		@SuppressWarnings("unused")
+		private Cubic() {} // For GSON.
 		
 		public Cubic(float[] ys, boolean cyclic) {
 			this.cyclic = cyclic;

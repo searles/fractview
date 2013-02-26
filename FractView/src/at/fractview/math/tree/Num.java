@@ -25,6 +25,9 @@ public class Num extends Expr {
 	
 	private Cplx c;
 
+	@SuppressWarnings("unused")
+	private Num() {} // For GSon
+
 	public Num(Cplx c) {
 		this.c = c;
 	}

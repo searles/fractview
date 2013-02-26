@@ -28,7 +28,7 @@ public abstract class ParameterizedFn implements AbstractFunction {
 	
 	private Map<String, Integer> parameterMap; // map from label to index in parameters-array	
 	protected Cplx[] parameters;
-
+	
 	protected ParameterizedFn(List<String> labels) {
 		// Executables have been created, now we need to take care of parameters:
 		this.parameterMap = new TreeMap<String, Integer>();
@@ -43,7 +43,7 @@ public abstract class ParameterizedFn implements AbstractFunction {
 			this.parameterMap.put(p, index); // and put it into map.
 		}
 	}
-	
+
 	protected ParameterizedFn(String...labels) {
 		this(Arrays.asList(labels));
 	}

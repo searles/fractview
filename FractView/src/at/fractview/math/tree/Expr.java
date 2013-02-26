@@ -166,7 +166,7 @@ public abstract class Expr implements Comparable<Expr> {
 			return new Var(id);
 		}
 	}
-
+	
 	public abstract boolean isNum();
 	public abstract boolean isNum(double re, double im);
 	

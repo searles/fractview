@@ -36,5 +36,7 @@
     </item>
     <item android:id="@+id/maxiter" android:title="@string/maxiter" android:showAsAction="ifRoom|withText">
     </item>
+    <item android:id="@+id/add_bookmark" android:title="@string/add_bookmark"></item>
+    <item android:id="@+id/from_bookmark" android:title="@string/from_bookmark"></item>
 
 </menu>

@@ -27,6 +27,9 @@ public class App extends Expr {
 	private Op op;
 	private Expr[] args;
 	
+	@SuppressWarnings("unused")
+	private App() {} // For GSon
+	
 	public App(Op op, Expr...args) {
 		if(op.arity() != args.length) {
 			throw new IllegalArgumentException("Arity and number of arguments do not match");
@@ -173,14 +176,10 @@ public class App extends Expr {
 		
 		sb.append(op.toString());
 		
-		if(args.length > 0) {
+		for(int i = 0; i < args.length; i++) {
+			if(i > 0) sb.append("; ");
 			sb.append("(");
-			
-			for(int i = 0; i < args.length; i++) {
-				if(i > 0) sb.append("; ");
-				sb.append(args[i]);
-			}
-			
+			sb.append(args[i]);
 			sb.append(")");
 		}
 		

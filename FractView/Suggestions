@@ -1,13 +1,13 @@
 * Bug fixing:
-** LastArc should be between 0 and 1 [No, now it is easier to edit anyways]
-** Colorizations should have better names 
+** LastArc should be between 0 and 1 [done]
+** Colorizations should have better names [done]
 ** Mention that + creates a random color. 
 * The 3 slider at color palette menu are too close to each other [done]
 * Reset fractal zoom [done]
-* Bug: when palette length displayed as 0.0E0 formula I cannot edit mantissa (division by 0?) [huh?]
+* Bug: when palette length displayed as 0.0E0 formula I cannot edit mantissa (division by 0?) [changed this, so could not reproduce]
 
 ** New functions:
-*** Add a function |zr| + i |zi|, name: abs; rename current abs to rad, and arg to arc. [done, called it 'cabs']
+*** Add a function |zr| + i |zi|, name: cabs [done, called it 'cabs']
 *** Add a function polar z -> abs z + i arg z
 *** Add a function sgn z -> sgn zr + i sgn zi
 * Threads might be still asleep when first one terminates.

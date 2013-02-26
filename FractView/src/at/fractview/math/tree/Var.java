@@ -29,6 +29,9 @@ public class Var extends Expr {
 	
 	// TODO: What about negative indices?
 	
+	@SuppressWarnings("unused")
+	private Var() {} // For GSon
+
 	public Var(String id, int index) {
 		this.id = id;
 		this.index = index;

@@ -1,8 +1,5 @@
 package at.fractview.modes.orbit.colorization;
 
-import java.util.InputMismatchException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 public class OrbitTransfer {
 	private boolean normalize;
@@ -11,6 +8,9 @@ public class OrbitTransfer {
 	private float max;
 	
 	private CommonTransfer transfer;
+	
+	@SuppressWarnings("unused")
+	private OrbitTransfer() {} // For GSon
 	
 	public OrbitTransfer(boolean normalize, float min, float max, CommonTransfer transfer) {
 		this.normalize = normalize;
@@ -42,27 +42,6 @@ public class OrbitTransfer {
 		// First transfer, then normalize
 		float f1 = transfer.transfer(f);
 		return (f1 - min) / (max - min);
-	}
-	
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(normalize).append(' ');
-		sb.append(min).append(' ');
-		sb.append(max).append(' ');
-		sb.append(transfer);
-		
-		return sb.toString();
-	}
-	
-	public static OrbitTransfer fromString(String s) throws NoSuchElementException, InputMismatchException {
-		Scanner sc = new Scanner(s);
-		
-		boolean normalize = sc.nextBoolean();
-		float min = sc.nextFloat();
-		float max = sc.nextFloat();
-		
-		CommonTransfer transfer = CommonTransfer.valueOf(sc.next());
-		
-		return new OrbitTransfer(normalize, min, max, transfer);
+		//return transfer.transfer((f - min) / (max - min));
 	}
 }

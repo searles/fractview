@@ -13,7 +13,7 @@ import at.fractview.modes.orbit.functions.Function;
 
 public class EscapeTimeCache extends AbstractOrbitCache {
 	
-	private static final String TAG = "ESC";
+	// private static final String TAG = "ESC";
 	private Stats[] stats;
 	
 	private int[] typeLength; // Bits 0..23 = nrIterations; rest = type.
@@ -155,7 +155,6 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 	
 	@Override
 	public void clear() {
-		Log.d(TAG, "clear");
 		Arrays.fill(typeLength, 0);
 	}
 

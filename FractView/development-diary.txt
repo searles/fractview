@@ -654,3 +654,16 @@ Scale: Test all buttons
 2013 - 02 - 26 (26th???)
 
 Okay, volatile is important for the statistics. Found some bugs and fixed them. Cache works nice now. 
+I think I will publish this version. No bookmarks, they will take quite some more time...
+
+Final decision: I will include bookmarks, and use JSON. So, this code base is quite fixed.
+
+Feature freeze for next version: Bookmark-files. These contain multiple fractals + small preview. 
+Two additional menus: Add bookmark (opens a dialog that let's you pick a bookmark-file+entry)
+Load from bookmark
+
++ in palette: "from bookmark"
++ in function: "from bookmark"
+
+GSon does not work with abstract classes? http://stackoverflow.com/questions/5800433/polymorphism-with-gson
+

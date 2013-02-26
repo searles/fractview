@@ -20,6 +20,7 @@ import java.util.Iterator;
 
 import at.fractview.math.Cplx;
 
+// TODO: Include julia sets into GUI.
 public class Julia implements AbstractFunction {
 	public static final String JULIA_LABEL = "Julia-Point"; // TODO: Externalize
 	

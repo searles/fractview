@@ -38,7 +38,8 @@ public class EscapeTime extends AbstractOrbitPrefs {
 	private double bailout;
 	private double epsilon;
 	
-	private ExecutableFunction function;
+	private Function function;
+	private ExecutableFunction internalFunction;
 	
 	private CommonOrbitToFloat bailoutMethod;
 	private CommonOrbitToFloat lakeMethod;
@@ -49,19 +50,16 @@ public class EscapeTime extends AbstractOrbitPrefs {
 	private Palette bailoutPalette;
 	private Palette lakePalette;
 	
+	@SuppressWarnings("unused")
+	private EscapeTime() {} // For GSon
+	
 	public EscapeTime(Affine affine, int maxIter, Function function, 
-			double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer, Palette bailoutPalette,
-			double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer, Palette lakePalette) {
-		this(affine, maxIter, function.create(), bailout, bailoutMethod, bailoutTransfer, bailoutPalette,
-				epsilon, lakeMethod, lakeTransfer, lakePalette);
-	}	
-
-	private EscapeTime(Affine affine, int maxIter, ExecutableFunction function, 
 			double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer, Palette bailoutPalette,
 			double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer, Palette lakePalette) {
 		super(affine, maxIter);
 		
 		this.function = function;
+		this.internalFunction = function.create();
 		this.bailout = bailout;
 		this.epsilon = epsilon;
 
@@ -75,16 +73,15 @@ public class EscapeTime extends AbstractOrbitPrefs {
 		this.lakeTransfer = lakeTransfer;
 		
 		this.bailoutPalette = bailoutPalette;
-		this.lakePalette = lakePalette;
-	}
-	
+		this.lakePalette = lakePalette;	}	
+
 	@Override
 	public Orbit createOrbit() {
 		return new Orbit();
 	}
 	
 	public Function function() {
-		return function.spec();
+		return function;
 	}
 	
 	public double bailout() {
@@ -155,8 +152,8 @@ public class EscapeTime extends AbstractOrbitPrefs {
 		protected void generate() {
 			type = LAKE_TYPE;
 			
-			for(length = function.init(orbit, c); length < maxIter(); length++) {
-				function.step(orbit, length - 1, c); // the parameter is the last calculated value
+			for(length = internalFunction.init(orbit, c); length < maxIter(); length++) {
+				internalFunction.step(orbit, length - 1, c); // the parameter is the last calculated value
 
 				Cplx z = orbit[length];
 				

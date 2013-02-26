@@ -16,37 +16,24 @@
  */
 package at.fractview;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Stack;
-import java.util.TreeMap;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import at.fractview.math.Affine;
-import at.fractview.math.Cplx;
-import at.fractview.math.colors.Palette;
-import at.fractview.math.tree.Expr;
-import at.fractview.math.tree.Parser;
-import at.fractview.math.tree.Var;
 import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.Preferences;
 import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.EscapeTimeCache;
-import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
-import at.fractview.modes.orbit.colorization.CommonTransfer;
-import at.fractview.modes.orbit.colorization.OrbitTransfer;
-import at.fractview.modes.orbit.functions.Function;
-import at.fractview.tools.Labelled;
 
 public class EscapeTimeFragment extends Fragment {
 	
 	private static final String TAG = "EscapeTimeFragment";
+	
+	public static final String SETTINGS_NAME = "Settings";
 	
 	private static final int INIT_WIDTH = 800;
 	private static final int INIT_HEIGHT = 480;
@@ -55,6 +42,8 @@ public class EscapeTimeFragment extends Fragment {
 	// Preserved when everything is destroyed
 	// This fragment should also manage dialogs.
 	
+	private BookmarkManager manager;
+	
 	private EscapeTimeCache image; // Preferences-Set
 	private AbstractImgCache.Task task; // Task, created from preferences-set
 	
@@ -62,8 +51,8 @@ public class EscapeTimeFragment extends Fragment {
 	
 	public EscapeTimeFragment() {
 		// initialize preferences
-        this.image = (EscapeTimeCache) EscapeTimeFragment.initFractal().createImgCache(INIT_WIDTH, INIT_HEIGHT);
-        
+		manager = new BookmarkManager();
+		
         // Create history stack
         history = new Stack<Preferences>();
 	}
@@ -75,16 +64,50 @@ public class EscapeTimeFragment extends Fragment {
 		// Retain this instance so it isn't destroyed when MainActivity and
         // MainFragment change configuration.
         setRetainInstance(true);
-        
+
+		// Try to read from shared preferences
+		SharedPreferences settings = getActivity().getSharedPreferences(SETTINGS_NAME, 0);
+
+		String lastJson = settings.getString("last", null);
+		
+		if(lastJson != null) {
+			Log.d(TAG, "Found last Json");
+			EscapeTime prefs = manager.decode(lastJson);
+			
+			if(prefs != null) {
+				
+				this.image = (EscapeTimeCache) prefs.createImgCache(INIT_WIDTH, INIT_HEIGHT);
+			}
+		}
+		
+		if(this.image == null) {
+			Log.d(TAG, "Image was not set yet");
+			this.image = (EscapeTimeCache) BookmarkManager.mandelbrot().createImgCache(INIT_WIDTH, INIT_HEIGHT);
+		}        
+
         startTask(); // the first fractal should be in the history
 	}
-
 	
-	// We don't have a view (yet), so I skip things here.
+	@Override
+	public void onPause() {
+		// Store last fractal in shared preferences
+		String lastJson = manager.encode(image.prefs());
+		
+		Log.d(TAG, "Putting last fractal into shared preferences");
+		
+		SharedPreferences settings = getActivity().getSharedPreferences(SETTINGS_NAME, 1);
+
+		settings.edit().putString("last", lastJson).commit();
+
+		super.onPause();
+	}
 
 	@Override
 	public void onDestroy() {
-		if(task != null && task.isRunning()) task.cancel();
+		if(task != null && task.isRunning()) {
+			task.cancel();
+		}
+
 		super.onDestroy();
 	}
 	
@@ -180,66 +203,5 @@ public class EscapeTimeFragment extends Fragment {
 	
 	public Preferences prefs() {
 		return image.prefs();
-	}
-
-	private static float[][] toHSV(int[] palette) {
-		float[][] hsv = new float[palette.length][3];
-		
-		for(int i = 0; i < palette.length; i++) {
-			Color.colorToHSV(palette[i], hsv[i]);
-		}
-		
-		return hsv;
-	}
-	
-	private static EscapeTime initFractal() {
-		int maxIter = 100;
-		double bailout = 64.;
-		double epsilon = 1e-9;
-
-		Affine affine = Affine.scalation(4, 4);
-		affine.preConcat(Affine.translation(-2, -2));
-		
-
-        Palette bailoutPalette = new Palette(
-				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
-				true);
-		
-		Palette lakePalette = new Palette(
-				toHSV(new int[]{0xff070064, 0xff6b20cb, 0xffffedff, 0xffaaff00, 0xff023130}), 
-				true);
-
-		
-		// z^2 * (z + x) + y*z(n-1)
-		// sqr((z^3 + 3(c - 1)z + (c - 1)(c - 2)) / (3 * z^2 + 3(c - 2)z + (c - 1)(c - 2) + 1))
-		// horner(0, 0, [-1.4, -1.4], 0, c)
-		// Cczcpaczcp (no, not a typo): c(z^3 + 1/z^3), 1
-		
-		// Golden Ratio:
-		// z^3/3 - z^2/2 - z + c
-		
-		// Functions with two different points: x^3-x^2+c; either 2/3 or 0.
-
-		String sf = "sqr z + c";
-		String si0 = "0";
-		
-		Labelled<Expr> fn = new Labelled<Expr>(Parser.parse(sf).get(), sf);
-		Labelled<Expr> i0 = new Labelled<Expr>(Parser.parse(si0).get(), si0);
-		
-		Map<Var, Labelled<Cplx>> ps = new TreeMap<Var, Labelled<Cplx>>();
-		
-		/*ps.put(new Var("alpha"), new Labelled<Cplx>(new Cplx(1, 0), "1"));
-		ps.put(new Var("beta"), new Labelled<Cplx>(new Cplx(3, 0), "3"));
-		ps.put(new Var("gamma"), new Labelled<Cplx>(new Cplx(-1, 0), "-1"));
-		ps.put(new Var("delta"), new Labelled<Cplx>(new Cplx(-3, 0), "-3"));*/
-		
-		List<Labelled<Expr>> l = new ArrayList<Labelled<Expr>>();
-		l.add(i0);
-		
-		Function function = new Function(fn, l, ps);
-		
-		return new EscapeTime(affine, maxIter, function,
-				bailout, CommonOrbitToFloat.Length_Smooth, new OrbitTransfer(false, 0f, 1f, CommonTransfer.Log), bailoutPalette, 
-				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(true, 0f, 1f, CommonTransfer.None), lakePalette);
 	}
 }

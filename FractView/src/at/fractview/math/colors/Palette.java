@@ -16,11 +16,6 @@
  */
 package at.fractview.math.colors;
 
-import java.util.InputMismatchException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
-
 import android.graphics.Color;
 import at.fractview.math.Spline;
 
@@ -30,7 +25,10 @@ public class Palette {
 	private float[][] colors; // Keep colors just for documentation purposes...
 	private boolean cyclic;
 	
-	private Spline[] splines;
+	private Spline.Cubic[] splines;
+	
+	@SuppressWarnings("unused")
+	private Palette() {} // For GSon
 	
 	/**
 	 * @param colors Colors in hsv format
@@ -44,7 +42,7 @@ public class Palette {
 		this.cyclic = cyclic;
 		
 		// Set colors
-		splines = new Spline[3];
+		splines = new Spline.Cubic[3];
 		
 		float[][] Labs = new float[colors.length][3];
 		
@@ -110,31 +108,5 @@ public class Palette {
 		}
 		
 		return sb.toString();
-	}
-	
-	public static Palette fromString(String s) throws InputMismatchException {
-		Scanner sc = new Scanner(s);
-
-		boolean cyclic = sc.nextBoolean();
-		
-		List<Float> values = new LinkedList<Float>();
-		
-		while(sc.hasNextFloat()) {
-			values.add(sc.nextFloat());
-		}
-		
-		if(sc.hasNext()) throw new InputMismatchException("Input is not empty");
-		if(values.size() % 3 != 0 || values.isEmpty()) throw new InputMismatchException("Bad number of floats");
-		
-		float[][] colors = new float[values.size() / 3][3];
-		
-		int i = 0;
-		
-		for(float value : values) {
-			colors[i / 3][i % 3] = value;
-			i++;
-		}
-		
-		return new Palette(colors, cyclic);
 	}
 }

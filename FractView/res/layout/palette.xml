@@ -5,11 +5,11 @@
     android:orientation="vertical" >
 
        <TextView
-       android:id="@+id/hueLabel"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:text="Hue"
-       android:textAppearance="?android:attr/textAppearanceSmall" />
+           android:id="@+id/hueLabel"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@string/hue_label"
+           android:textAppearance="?android:attr/textAppearanceSmall" />
     
     <SeekBar
         android:id="@+id/hueSeekBar"
@@ -18,11 +18,11 @@
         android:max="1000" />
 
        <TextView
-       android:id="@+id/saturationLabel"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:text="Saturation"
-       android:textAppearance="?android:attr/textAppearanceSmall" />
+           android:id="@+id/saturationLabel"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@string/saturation_label"
+           android:textAppearance="?android:attr/textAppearanceSmall" />
     
     <SeekBar
         android:id="@+id/saturationSeekBar"
@@ -31,11 +31,11 @@
         android:max="1000" />
 
        <TextView
-       android:id="@+id/valueLabel"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:text="Value"
-       android:textAppearance="?android:attr/textAppearanceSmall" />
+           android:id="@+id/valueLabel"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@string/value_label"
+           android:textAppearance="?android:attr/textAppearanceSmall" />
     
     <SeekBar
         android:id="@+id/valueSeekBar"
@@ -101,6 +101,5 @@
            android:text="@string/cyclic" />
        
    </LinearLayout>
-
 
 </LinearLayout>

@@ -26,6 +26,8 @@ public abstract class AbstractOrbitPrefs extends ScaleablePrefs {
 	public static final int MAX_LENGTH = 0x01000000; // Maximum orbit length. 
 
 	private int maxIter;
+
+	protected AbstractOrbitPrefs() {} // For GSon
 	
 	public AbstractOrbitPrefs(Affine affine, int maxIter) {
 		super(affine);

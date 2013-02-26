@@ -22,6 +22,8 @@ import at.fractview.math.Cplx;
 public abstract class ScaleablePrefs implements Preferences {
 	
 	private Affine affine;
+	
+	protected ScaleablePrefs() {} // For GSon
 
 	public ScaleablePrefs(Affine affine) {
 		this.affine = affine;

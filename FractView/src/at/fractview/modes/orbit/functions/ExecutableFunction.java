@@ -29,8 +29,6 @@ public class ExecutableFunction extends ParameterizedFn {
 
 	// private static final String TAG = "Function";
 	
-	private Function spec; // specification out of which this was created
-	
 	private Executable function;
 	private Executable[] inits;
 
@@ -59,6 +57,8 @@ public class ExecutableFunction extends ParameterizedFn {
 		return function;
 	}
 	
+	private ExecutableFunction() {} // For GSon
+	
 	/** This constructor takes a specification of an object and compiles it into a group of Executable that are used
 	 * to calculate values faaast.
 	 */
@@ -70,8 +70,6 @@ public class ExecutableFunction extends ParameterizedFn {
 		
 		super(parameterLabels);
 		
-		this.spec = spec;
-
 		// Now create executables
 		Cplx[] constantsArray = constants.toArray(new Cplx[constants.size()]);
 
@@ -83,10 +81,6 @@ public class ExecutableFunction extends ParameterizedFn {
 		for(int i = 0; i < this.inits.length; i++) {
 			this.inits[i] = new Executable(instructionsInits.get(i), constantsArray);
 		}
-	}
-	
-	public Function spec() {
-		return spec;
 	}
 
 	public int init(Cplx[] orbit, Cplx c) {

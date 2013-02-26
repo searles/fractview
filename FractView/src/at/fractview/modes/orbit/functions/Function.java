@@ -41,6 +41,9 @@ public class Function {
 	private ArrayList<Labelled<Expr>> inits;
 	private TreeMap<Var, Labelled<Cplx>> parameters; // labelled.label is NOT the name of the parameter, but the expression-string (eg. sqrt 5).
 	
+	@SuppressWarnings("unused")
+	private Function() {} // For GSon
+	
 	public Function(Labelled<Expr> function, List<Labelled<Expr>> inits, Map<Var, Labelled<Cplx>> parameters) {
 		// Verify whether this is a valid specification
 		if(function.get().maxIndex("z") != inits.size()) {
@@ -97,17 +100,5 @@ public class Function {
 	
 	public Labelled<Cplx> parameter(Var v) {
 		return parameters.get(v);
-	}
-	
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		
-		// TODO
-		return sb.toString();
-	}
-	
-	public static Function fromString(String s) {
-		// TODO
-		return null;
 	}
 }

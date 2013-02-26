@@ -93,6 +93,12 @@ public class MainActivity extends FragmentActivity {
 		case R.id.resize:
 			new ResizeDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
+		case R.id.add_bookmark:
+			// TODO
+			return true;
+		case R.id.from_bookmark:
+			// TODO
+			return true;
 		default: return super.onOptionsItemSelected(item);
 		}
 	}

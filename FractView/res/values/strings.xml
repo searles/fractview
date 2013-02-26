@@ -30,5 +30,11 @@
     <string name="add">+</string>
     <string name="remove">-</string>
     <string name="shift_right">>></string>
+    <string name="normalize_range">Normalize Range</string>
+    <string name="add_bookmark">Add as bookmark</string>
+    <string name="from_bookmark">Open bookmarks</string>
+    <string name="value_label">Value</string>
+    <string name="saturation_label">Saturation</string>
+    <string name="hue_label">Hue</string>
 
 </resources>
