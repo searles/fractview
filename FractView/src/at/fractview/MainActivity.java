@@ -51,7 +51,6 @@ public class MainActivity extends FragmentActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.image_menu, menu);
-		getMenuInflater().inflate(R.menu.escapetime, menu);
 		return true;
 	}
 	
@@ -94,10 +93,16 @@ public class MainActivity extends FragmentActivity {
 			new ResizeDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.add_bookmark:
-			// TODO
+			// new AddBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.from_bookmark:
-			// TODO
+			// new FromBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
+			return true;
+		case R.id.from_predefined:
+			// new FromBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
+			return true;
+		case R.id.share:
+			// new FromBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		default: return super.onOptionsItemSelected(item);
 		}

@@ -36,5 +36,7 @@
     <string name="value_label">Value</string>
     <string name="saturation_label">Saturation</string>
     <string name="hue_label">Hue</string>
+    <string name="select_type">Select Type</string>
+    <string name="from_predefined">From Predefined</string>
 
 </resources>
