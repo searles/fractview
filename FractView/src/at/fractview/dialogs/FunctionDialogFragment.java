@@ -24,7 +24,7 @@ import at.fractview.inputviews.FunctionInputView;
 import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.EscapeTimeCache;
-import at.fractview.modes.orbit.functions.Specification;
+import at.fractview.modes.orbit.functions.Function;
 
 public class FunctionDialogFragment extends InputViewDialogFragment {
 	
@@ -39,19 +39,19 @@ public class FunctionDialogFragment extends InputViewDialogFragment {
 	
 	@Override
 	protected View createView() {
-		this.functionView = FunctionInputView.create(getActivity(), ((EscapeTime) taskFragment.prefs()).function().spec());
+		this.functionView = FunctionInputView.create(getActivity(), ((EscapeTime) taskFragment.prefs()).function());
 		return functionView.view();
 	}
 
 	protected boolean acceptInput() {
-		final Specification spec = functionView.acceptAndReturn();
+		final Function fn = functionView.acceptAndReturn();
 		
-		if(spec != null) {
+		if(fn != null) {
 			taskFragment.modifyImage(new UnsafeImageEditor() {
 				@Override
 				public void edit(AbstractImgCache cache) {
 					EscapeTimeCache ch = (EscapeTimeCache) cache;
-					ch.newFunction(spec.create());
+					ch.newFunction(fn);
 				}
 			}, true);
 			return true;

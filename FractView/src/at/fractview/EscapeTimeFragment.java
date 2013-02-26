@@ -41,7 +41,7 @@ import at.fractview.modes.orbit.EscapeTimeCache;
 import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
 import at.fractview.modes.orbit.colorization.CommonTransfer;
 import at.fractview.modes.orbit.colorization.OrbitTransfer;
-import at.fractview.modes.orbit.functions.Specification;
+import at.fractview.modes.orbit.functions.Function;
 import at.fractview.tools.Labelled;
 
 public class EscapeTimeFragment extends Fragment {
@@ -111,7 +111,7 @@ public class EscapeTimeFragment extends Fragment {
 		modifyImage(new UnsafeImageEditor() {
 			@Override
 			public void edit(AbstractImgCache cache) {
-				cache.setPrefs(history.pop());
+				cache.setNewPreferences(history.pop());
 			}
 		}, false);
 			
@@ -236,11 +236,10 @@ public class EscapeTimeFragment extends Fragment {
 		List<Labelled<Expr>> l = new ArrayList<Labelled<Expr>>();
 		l.add(i0);
 		
-		Specification spec = new Specification(fn, l, ps);
+		Function function = new Function(fn, l, ps);
 		
-		return new EscapeTime(affine, maxIter, 
-				spec.create(),
-				bailout, CommonOrbitToFloat.LengthSmooth, new OrbitTransfer(0, 1, CommonTransfer.Log), bailoutPalette, 
-				epsilon, CommonOrbitToFloat.LastArc, new OrbitTransfer(0, 360, CommonTransfer.None), lakePalette);
+		return new EscapeTime(affine, maxIter, function,
+				bailout, CommonOrbitToFloat.Length_Smooth, new OrbitTransfer(0f, 1f, CommonTransfer.Log), bailoutPalette, 
+				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(0f, 1f, CommonTransfer.None), lakePalette);
 	}
 }

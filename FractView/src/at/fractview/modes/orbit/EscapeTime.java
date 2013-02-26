@@ -23,6 +23,7 @@ import at.fractview.math.colors.Palette;
 import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
 import at.fractview.modes.orbit.colorization.OrbitTransfer;
+import at.fractview.modes.orbit.functions.ExecutableFunction;
 import at.fractview.modes.orbit.functions.Function;
 
 public class EscapeTime extends AbstractOrbitPrefs {
@@ -37,7 +38,7 @@ public class EscapeTime extends AbstractOrbitPrefs {
 	private double bailout;
 	private double epsilon;
 	
-	private Function function;
+	private ExecutableFunction function;
 	
 	private CommonOrbitToFloat bailoutMethod;
 	private CommonOrbitToFloat lakeMethod;
@@ -49,6 +50,13 @@ public class EscapeTime extends AbstractOrbitPrefs {
 	private Palette lakePalette;
 	
 	public EscapeTime(Affine affine, int maxIter, Function function, 
+			double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer, Palette bailoutPalette,
+			double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer, Palette lakePalette) {
+		this(affine, maxIter, function.create(), bailout, bailoutMethod, bailoutTransfer, bailoutPalette,
+				epsilon, lakeMethod, lakeTransfer, lakePalette);
+	}	
+
+	private EscapeTime(Affine affine, int maxIter, ExecutableFunction function, 
 			double bailout, CommonOrbitToFloat bailoutMethod, OrbitTransfer bailoutTransfer, Palette bailoutPalette,
 			double epsilon, CommonOrbitToFloat lakeMethod, OrbitTransfer lakeTransfer, Palette lakePalette) {
 		super(affine, maxIter);
@@ -76,7 +84,7 @@ public class EscapeTime extends AbstractOrbitPrefs {
 	}
 	
 	public Function function() {
-		return function;
+		return function.spec();
 	}
 	
 	public double bailout() {

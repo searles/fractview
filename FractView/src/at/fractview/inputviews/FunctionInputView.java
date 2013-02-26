@@ -42,7 +42,7 @@ import at.fractview.math.tree.ExprCompiler;
 import at.fractview.math.tree.Num;
 import at.fractview.math.tree.Parser;
 import at.fractview.math.tree.Var;
-import at.fractview.modes.orbit.functions.Specification;
+import at.fractview.modes.orbit.functions.Function;
 import at.fractview.tools.Labelled;
 
 /**
@@ -53,7 +53,7 @@ public class FunctionInputView {
 
 	private static final String TAG = "FunctionAdapter";
 	
-	public static FunctionInputView create(Activity activity, Specification spec) {
+	public static FunctionInputView create(Activity activity, Function spec) {
 		LayoutInflater inflater = activity.getLayoutInflater();
 		View v = inflater.inflate(R.layout.function_parameters, null);
 		
@@ -85,7 +85,7 @@ public class FunctionInputView {
 	private List<View> itemViews;
 	private int viewCountInLayout; // We store old itemViews, therefore this might be smaller than itemViews.size()
 	
-	private FunctionInputView(View view, Specification spec) {
+	private FunctionInputView(View view, Function spec) {
 		this.view = view;
 		this.layout = (LinearLayout) view.findViewById(R.id.functionLayout);;
 		
@@ -129,7 +129,7 @@ public class FunctionInputView {
 	 * of the data inside this ArrayAdapter
 	 * @return
 	 */
-	public Specification acceptAndReturn() {
+	public Function acceptAndReturn() {
 		Log.d(TAG, "acceptAndReturn");
 
 		// First part: Accept input
@@ -157,7 +157,7 @@ public class FunctionInputView {
 			ps.put(v, parameters.get(v).value);
 		}
 
-		return new Specification(f, is, ps);
+		return new Function(f, is, ps);
 	}	
 	
 	private void updateViews() {

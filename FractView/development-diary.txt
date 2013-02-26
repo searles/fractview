@@ -650,3 +650,7 @@ Functions:
 nova, newton.
 
 Scale: Test all buttons
+
+2013 - 02 - 26 (26th???)
+
+Okay, volatile is important for the statistics. Found some bugs and fixed them. Cache works nice now. 

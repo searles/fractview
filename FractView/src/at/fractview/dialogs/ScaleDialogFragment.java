@@ -149,7 +149,7 @@ public class ScaleDialogFragment extends InputViewDialogFragment {
 			public void edit(AbstractImgCache cache) {
 				ScaleableCache scaleable = (ScaleableCache) cache;
 				ScaleablePrefs prefs = scaleable.prefs();
-				scaleable.setPrefs(prefs.newAffineInstance(Affine.create(matrix)));
+				scaleable.setNewPreferences(prefs.newAffineInstance(Affine.create(matrix)));
 			}
 		}, true);
 		return true;

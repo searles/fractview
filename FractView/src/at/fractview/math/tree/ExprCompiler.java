@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.util.Log;
 import at.fractview.math.Cplx;
 
 /** This class analyzes an expression that has been successfully parsed.
@@ -148,10 +147,8 @@ public class ExprCompiler {
 		if(v.is("c")) {
 			return new InstructionTree(Executable.ATOM_C, false, 0);
 		} else if(v.is("z")) {
-			Log.e("XXXXXXXXXXXXXXXXX", "It is z");
 			return new InstructionTree(Executable.ATOM_Z, false, 0);
 		} else if(v.isIndexed("z")) {
-			Log.e("XXXXXXXXXXXXXXXXX", "It is z with index");
 			return new InstructionTree(Executable.ATOM_Z_LAST, true, v.index());
 		} else if(v.is("x")) {
 			return new InstructionTree(Executable.ATOM_X, false, 0);

@@ -27,6 +27,7 @@ public class OrbitTransfer {
 	}
 	
 	public float value(float f) {
+		// TODO: Should it be the other way?
 		// First transfer, then normalize
 		float f1 = transfer.transfer(f);
 		return (f1 - min) / (max - min);

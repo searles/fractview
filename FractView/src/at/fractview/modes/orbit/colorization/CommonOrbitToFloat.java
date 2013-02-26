@@ -4,7 +4,7 @@ import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.AbstractOrbitPrefs.AbstractOrbit;
 
 public enum CommonOrbitToFloat implements OrbitToFloat {
-	LengthSmooth {
+	Length_Smooth {
 		@Override
 		public float value(AbstractOrbit orbit) {
 			// Log as transfer
@@ -21,7 +21,7 @@ public enum CommonOrbitToFloat implements OrbitToFloat {
 			return orbit.length();
 		}
 	},
-	SumExp {
+	Sum_Exp_Smooth {
 		double expSmooth(AbstractOrbit orbit, int i) {
 			return Math.exp(-orbit.absSqr(i) - 0.5 / orbit.distSqr(i));
 		}
@@ -37,7 +37,7 @@ public enum CommonOrbitToFloat implements OrbitToFloat {
 			return (float) degree;
 		}
 	},		
-	SumDelta {		
+	Sum_Log_Delta {		
 		@Override
 		public float value(AbstractOrbit orbit) {
 			double sum = 0.;
@@ -49,10 +49,10 @@ public enum CommonOrbitToFloat implements OrbitToFloat {
 			return (float) sum;
 		}
 	},
-	LastArc {
+	Last_Angle {
 		@Override
 		public float value(AbstractOrbit orbit) {
-			return (float) (orbit.get(orbit.length() - 1).arg() * 180. / Math.PI);
+			return (float) (orbit.get(orbit.length() - 1).arg() * 0.5 / Math.PI);
 		}
 	},
 	/*LastRad {

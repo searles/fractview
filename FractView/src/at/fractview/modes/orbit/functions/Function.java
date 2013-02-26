@@ -17,107 +17,97 @@
 package at.fractview.modes.orbit.functions;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import at.fractview.math.Cplx;
-import at.fractview.math.tree.Executable;
+import at.fractview.math.tree.Expr;
 import at.fractview.math.tree.ExprCompiler;
 import at.fractview.math.tree.Var;
+import at.fractview.tools.Labelled;
 
-public class Function extends ParameterizedFn {
-
-	// private static final String TAG = "Function";
+/**
+ * This class represents a specification of functions. 
+ */
+public class Function {
+	// Here we store expressions and parameters along with input string.
+	// We will use these data to reproduce data for the input dialog.
 	
-	private Specification spec; // specification out of which this was created
+	// The labels here are NOT descriptions of the data but the user input.
+	private Labelled<Expr> function;
+	private ArrayList<Labelled<Expr>> inits;
+	private TreeMap<Var, Labelled<Cplx>> parameters; // labelled.label is NOT the name of the parameter, but the expression-string (eg. sqrt 5).
 	
-	private Executable function;
-	private Executable[] inits;
-
-	public static Function create(Specification spec) {
-		// We need to create an order of parameters and constants, therefore we collect all parameters in a list
-		List<String> parameterLabels = new LinkedList<String>();
-		List<Cplx> constants = new LinkedList<Cplx>(); // These will be used in executables.
-		
-		// Now generate all instruction lists, and fill parameters/constants
-		List<Integer> instructionsFn = ExprCompiler.generateInstructionList(spec.function().get(), constants, parameterLabels);
-		
-		// Now the initalizations
-		List<List<Integer>> instructionsInits = new ArrayList<List<Integer>>(spec.initsSize());
-
-		for(int i = 0; i < spec.initsSize(); i++) {
-			instructionsInits.add(ExprCompiler.generateInstructionList(spec.init(i).get(), constants, parameterLabels));
-		}
-
-		Function function = new Function(spec, instructionsFn, instructionsInits, constants, parameterLabels);
-
-		// Set parameters
-		for(String p : parameterLabels) {
-			function.set(p, spec.parameter(new Var(p)).get());
+	public Function(Labelled<Expr> function, List<Labelled<Expr>> inits, Map<Var, Labelled<Cplx>> parameters) {
+		// Verify whether this is a valid specification
+		if(function.get().maxIndex("z") != inits.size()) {
+			throw new IllegalArgumentException("Number of inits is not correct");
 		}
 		
+		for(int i = 0; i < inits.size(); i++) {
+			if(inits.get(i).get().maxIndex("z") - 1 > i) { // - 1 because z(1) may use z(n - 1)
+				throw new IllegalArgumentException("Init " + i + " requires z-value that only is defined later");
+			}
+		}
+		
+		// Fetch all parameters
+		Set<Var> required = function.get().parameters(new TreeSet<Var>());
+
+		for(Labelled<Expr> init : inits) {
+			init.get().parameters(required);
+		}
+		
+		// There are some predefined variables, we remove them here:
+		required.removeAll(ExprCompiler.predefinedVars);
+		
+		if(!required.equals(parameters.keySet())) {
+			throw new IllegalArgumentException("Some variables were not defined: " + required + " vs " + parameters.keySet());
+		}
+		
+		this.function = function;
+		this.inits = new ArrayList<Labelled<Expr>>(inits.size());
+		this.parameters = new TreeMap<Var, Labelled<Cplx>>();
+		
+		this.inits.addAll(inits);
+		this.parameters.putAll(parameters);
+	}
+	
+	public ExecutableFunction create() {
+		return ExecutableFunction.create(this);
+	}
+	
+	public Labelled<Expr> function() {
 		return function;
 	}
 	
-	/** This constructor takes a specification of an object and compiles it into a group of Executable that are used
-	 * to calculate values faaast.
-	 */
-	public Function(Specification spec, 
-			List<Integer> instructionsFn, 
-			List<List<Integer>> instructionsInits, 
-			List<Cplx> constants, 
-			List<String> parameterLabels) {
-		
-		super(parameterLabels);
-		
-		this.spec = spec;
-
-		// Now create executables
-		Cplx[] constantsArray = constants.toArray(new Cplx[constants.size()]);
-
-		// Since the constants are not subject to modification we can store it directly inside the executables
-		this.function = new Executable(instructionsFn, constantsArray);
-		
-		this.inits = new Executable[instructionsInits.size()];
-
-		for(int i = 0; i < this.inits.length; i++) {
-			this.inits[i] = new Executable(instructionsInits.get(i), constantsArray);
-		}
+	public int initsSize() {
+		return inits.size();
 	}
 	
-	public Specification spec() {
-		return spec;
-	}
-
-	public int init(Cplx[] orbit, Cplx c) {
-		for(int i = 0; i < inits.length; i++) {
-			inits[i].execute(c, orbit, i - 1, parameters, orbit[i]);
-		}
-		
-		return inits.length;
+	public Labelled<Expr> init(int index) {
+		return inits.get(index);
 	}
 	
-	@Override
-	public void step(Cplx[] zs, int n, Cplx c) {
-		function.execute(c, zs, n, parameters, zs[n + 1]);
+	public Set<Var> parameters() {
+		return parameters.keySet();
 	}
 	
-	@Override
+	public Labelled<Cplx> parameter(Var v) {
+		return parameters.get(v);
+	}
+	
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		
-		for(int i = 0; i < inits.length; i++) {
-			sb.append("=== Init " + i + " ===\n");
-			sb.append(inits[i]);
-			sb.append("\n");
-		}
-
-		sb.append("\n=== Function ===\n");
-		sb.append(function);
-		sb.append("\n");
-		
-		sb.append("\n");
-		
+		// TODO
 		return sb.toString();
+	}
+	
+	public static Function fromString(String s) {
+		// TODO
+		return null;
 	}
 }

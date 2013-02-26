@@ -26,8 +26,14 @@ public abstract class AbstractImgCache {
 		return this.prefs;
 	}
 	
-	public void setPrefs(Preferences prefs) {
+	protected void setPrefs(Preferences prefs) {
 		this.prefs = prefs;
+	}
+	
+	public void setNewPreferences(Preferences prefs) {
+		// If we call it from outside, we should also call clear.
+		setPrefs(prefs);
+		clear();
 	}
 	
 	public Canvas canvas() {

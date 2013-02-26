@@ -13,7 +13,9 @@ import at.fractview.modes.orbit.functions.Function;
 
 public class EscapeTimeCache extends AbstractOrbitCache {
 	
-	private static final String TAG = "ESC";
+	// private static final String TAG = "ESC";
+	
+	private Stats[] stats;
 	
 	private int[] typeLength; // Bits 0..23 = nrIterations; rest = type.
 	private float[] values;
@@ -23,6 +25,8 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		super(prefs, width, height);
 		typeLength = new int[width * height];
 		values = new float[width * height];
+		
+		stats = new Stats[]{new Stats(), new Stats()};
 	}
 	
 	public EscapeTime prefs() {
@@ -57,31 +61,79 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 			v = values[index];
 		}
 		
-		if(env.minVal < v) {
-			env.minVal = v;
-		}
+		// Update statistics in env
+		int typeIndex = type == EscapeTime.BAILOUT_TYPE ? 0 : 1;
+		env.nextValue(typeIndex, v);
 		
-		if(env.maxVal > v) {
-			env.maxVal = v;
-		}
+		// Statistics in cache are not updated here but only later when everyone is sleeping or done.
+		
+		// Here, use statistics of cache
+		// TODO: Statistics: Add 'normalize'-flag.
+		//if(prefs().usesStats()) {
+			v = (v - stats[typeIndex].minValue) / (stats[typeIndex].maxValue - stats[typeIndex].minValue);
+		//}
 		
 		return prefs().color(type, v);
 	}
 	
 	@Override
-	public void updateDataFromEnv(Environment env) {
-		// TODO
+	public void initStatistics() {
+		for(int i = 0; i < 2; i++) {
+			stats[i].reset();
+		}
+	}
+
+	@Override
+	public boolean usesStats() {
+		return true;
+	}
+
+	@Override
+	public void updateStatisticsFromEnv(Environment env) {
+		Env e = (Env) env;
+		
+		for(int i = 0; i < 2; i++) {
+			stats[i].update(e.stats[i]);
+		}
 	}
 
 	public RasterTask.Environment createEnvironment() {
 		return new Env();
 	}
 
+	private class Stats {
+		volatile float minValue = Float.POSITIVE_INFINITY;
+		volatile float maxValue = Float.NEGATIVE_INFINITY;
+		
+		void reset() {
+			this.minValue = Float.POSITIVE_INFINITY;
+			this.maxValue = Float.NEGATIVE_INFINITY;
+		}
+		
+		void nextValue(float v) {
+			if(v < minValue) minValue = v;
+			if(v > maxValue) maxValue = v;
+		}
+		
+		void update(Stats stats) {
+			if(stats.minValue < this.minValue) {
+				this.minValue = stats.minValue;
+			}
+
+			if(stats.maxValue > this.maxValue) {
+				this.maxValue = stats.maxValue;
+			}
+		}
+	}
+	
 	private class Env implements RasterTask.Environment {
 		Orbit orbit = prefs().createOrbit();
-		float minVal = Float.POSITIVE_INFINITY;
-		float maxVal = Float.NEGATIVE_INFINITY;
+		Stats[] stats = new Stats[]{new Stats(), new Stats()};
 
+		void nextValue(int typeIndex, float v) {
+			stats[typeIndex].nextValue(v);
+		}
+		
 		public int color(int x, int y) {
 			return EscapeTimeCache.this.color(this, x, y);
 		}
@@ -211,7 +263,6 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 
 	@Override
 	public void clear() {
-		Log.d(TAG, "clear()");
 		Arrays.fill(typeLength, 0);
 	}
 
