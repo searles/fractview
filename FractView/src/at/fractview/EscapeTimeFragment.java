@@ -28,12 +28,16 @@ import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.Preferences;
 import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.EscapeTimeCache;
+import at.fractview.modes.orbit.colorization.OrbitTransfer.Stats;
 
 public class EscapeTimeFragment extends Fragment {
 	
 	private static final String TAG = "EscapeTimeFragment";
 	
 	public static final String SETTINGS_NAME = "Settings";
+	
+	public static final String LAST_FRACTAL_KEY = "last.fractal";
+	
 	
 	private static final int INIT_WIDTH = 800;
 	private static final int INIT_HEIGHT = 480;
@@ -49,18 +53,16 @@ public class EscapeTimeFragment extends Fragment {
 	
 	private Stack<Preferences> history;
 	
-	public EscapeTimeFragment() {
-		// initialize preferences
-		manager = new BookmarkManager();
-		
-        // Create history stack
-        history = new Stack<Preferences>();
-	}
-	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		// initialize preferences
+		manager = new BookmarkManager(getActivity());
 		
+        // Create history stack
+        history = new Stack<Preferences>();
+
 		// Retain this instance so it isn't destroyed when MainActivity and
         // MainFragment change configuration.
         setRetainInstance(true);
@@ -68,14 +70,16 @@ public class EscapeTimeFragment extends Fragment {
 		// Try to read from shared preferences
 		SharedPreferences settings = getActivity().getSharedPreferences(SETTINGS_NAME, 0);
 
-		String lastJson = settings.getString("last", null);
+		String lastJson = settings.getString(LAST_FRACTAL_KEY, null);
 		
 		if(lastJson != null) {
 			Log.d(TAG, "Found last Json");
-			EscapeTime prefs = manager.decode(lastJson);
+			
+			// TODO: Check for errors
+			
+			EscapeTime prefs = manager.gson().fromJson(lastJson, EscapeTime.class);
 			
 			if(prefs != null) {
-				
 				this.image = (EscapeTimeCache) prefs.createImgCache(INIT_WIDTH, INIT_HEIGHT);
 			}
 		}
@@ -91,13 +95,13 @@ public class EscapeTimeFragment extends Fragment {
 	@Override
 	public void onPause() {
 		// Store last fractal in shared preferences
-		String lastJson = manager.encode(image.prefs());
+		String json = manager.gson().toJson(image.prefs());
 		
 		Log.d(TAG, "Putting last fractal into shared preferences");
 		
 		SharedPreferences settings = getActivity().getSharedPreferences(SETTINGS_NAME, 1);
 
-		settings.edit().putString("last", lastJson).commit();
+		settings.edit().putString(LAST_FRACTAL_KEY, json).commit();
 
 		super.onPause();
 	}
@@ -203,5 +207,13 @@ public class EscapeTimeFragment extends Fragment {
 	
 	public Preferences prefs() {
 		return image.prefs();
+	}
+
+	public BookmarkManager bookmarkManager() {
+		return manager;
+	}
+
+	public Stats stats(int index) {
+		return image.stats(index);
 	}
 }

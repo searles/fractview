@@ -667,3 +667,24 @@ Load from bookmark
 
 GSon does not work with abstract classes? http://stackoverflow.com/questions/5800433/polymorphism-with-gson
 
+2013 - 02 - 27
+
+Okay, Gson works fine with my preview images now that I wrote a Bitmap adapter. 
+Gosh, Google, are you drunk?? Choice Mode?? Hot can I select an element in a ListView??
+Pfuuuha, not really??? http://stackoverflow.com/questions/8463373/android-cant-get-listview-item-selected 
+This much for selecting one entry in a ListView??? (sorry, for 'checking')????? This is crazy!
+Aha, so my item is checked. So, all I need to do is to set the background the moment it is checked?
+
+Okay, it's easy, just set listSelector. But how to I get the default 'selected background'?
+And of course, I can't set it inside the xml file because API level blabla...
+
+2013 - 02 - 28
+
+Note to self: There are no horizontal listviews. And use HorizontalScrollView when you need sth like this.
+Code of Palette-Editor simplified.
+And added sharing + set wallpaper to file-dialog. Also finally cleaned up the menu.
+
+Okay, everything looks fine. Only thing missing: How do I set the default selection color in 
+Palette and Bookmark????
+
+This really sucks. Amongst other problems, I also got the following issue: http://stackoverflow.com/questions/10095196/whered-padding-go-when-setting-background-drawable

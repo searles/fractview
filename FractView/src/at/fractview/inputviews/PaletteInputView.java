@@ -32,15 +32,17 @@ import android.graphics.Shader.TileMode;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.shapes.RectShape;
-import android.view.LayoutInflater;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import at.fractview.R;
 import at.fractview.math.colors.Colors;
 import at.fractview.math.colors.Palette;
@@ -54,52 +56,61 @@ import at.fractview.math.colors.Palette;
 public class PaletteInputView {
 	
 	// private static final String TAG = "PaletteInputView";
+	private static final int PADDING = 5;
 	
 	private View view;
-	
-	/**
-	 * Layout containing color items
-	 */
-	private LinearLayout layout;
 	
 	private SeekBar hueSeekBar;
 	private SeekBar satSeekBar;
 	private SeekBar valSeekBar;
 	
-	private Button leftButton;
-	private Button addButton;
-	private Button removeButton;
-	private Button rightButton;
+	private ImageButton leftButton;
+	private ImageButton addButton;
+	private ImageButton removeButton;
+	private ImageButton rightButton;
 	
 	private CheckBox cyclicCheckBox;
 	
 	private int selectedIndex;
-	private int visibleViewCount;
-	private ArrayList<View> itemViews;
 	
+	private LinearLayout colorLayout;
 	private ArrayList<float[]> colors;
+	private ArrayList<View> views;
 	
 	private Palette palette;
 	
+	private Random rnd;
+	
+	private Drawable selectedDrawable;
+	private Drawable unselectedDrawable;
+	
 	public PaletteInputView(View view, Palette palette) {
+		this.rnd = new Random();
+		
 		this.view = view;
 		
 		this.palette = palette;
 		
 		this.colors = new ArrayList<float[]>();
-		this.itemViews = new ArrayList<View>();
-		this.visibleViewCount = 0;
+		this.views = new ArrayList<View>();
 
+		StateListDrawable listDrawables = (StateListDrawable) view.getResources().getDrawable(android.R.drawable.list_selector_background);
+		listDrawables.selectDrawable(3);
+		selectedDrawable = listDrawables.getCurrent();
+
+		listDrawables.selectDrawable(0);
+		unselectedDrawable = listDrawables.getCurrent();
+		
 		init();
 	}
 	
 	private void init() {
-		this.layout = (LinearLayout) view.findViewById(R.id.colorArrayLayout);
+		this.colorLayout = (LinearLayout) view.findViewById(R.id.color_layout);
 		
-		this.leftButton = (Button) view.findViewById(R.id.moveLeftButton);
-		this.addButton = (Button) view.findViewById(R.id.addButton);
-		this.removeButton = (Button) view.findViewById(R.id.removeButton);
-		this.rightButton = (Button) view.findViewById(R.id.moveRightButton);
+		this.leftButton = (ImageButton) view.findViewById(R.id.moveLeftButton);
+		this.addButton = (ImageButton) view.findViewById(R.id.addButton);
+		this.removeButton = (ImageButton) view.findViewById(R.id.removeButton);
+		this.rightButton = (ImageButton) view.findViewById(R.id.moveRightButton);
 		
 		this.hueSeekBar = (SeekBar) view.findViewById(R.id.hueSeekBar);
 		this.satSeekBar = (SeekBar) view.findViewById(R.id.saturationSeekBar);
@@ -111,44 +122,76 @@ public class PaletteInputView {
 		leftButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				int next = (selectedIndex + visibleViewCount - 1) % visibleViewCount;
-				exchangeIndices(selectedIndex, next);
-				select(next);
+				int lastSelectedIndex = selectedIndex;
+				
+				selectedIndex = (selectedIndex - 1 + colors.size()) % colors.size();
+				exchangeIndices(lastSelectedIndex, selectedIndex);
+				
+				updateColorItemView(lastSelectedIndex);
+
+				updateColorItemView(selectedIndex);
+				updateSeekBars();
 			}
 		});
 		
 		addButton.setOnClickListener(new OnClickListener() {
-			Random rnd = new Random();
-			
 			@Override
 			public void onClick(View v) {
-				add(new float[]{rnd.nextFloat() * 360.f, rnd.nextFloat(), rnd.nextFloat()});
+				colors.add(selectedIndex, new float[3]);
+				setRandomColor(selectedIndex);
+				
+				addColorItemView(selectedIndex);
+				
+				updateColorItemView(selectedIndex + 1); // because of selection
+
+				updateColorItemView(selectedIndex);
+				updateSeekBars();
 			}
 		});
 		
 		removeButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				remove();
+				if(colors.size() > 1) {
+					colors.remove(selectedIndex);
+					
+					removeColorItemView(selectedIndex);
+					
+					if(selectedIndex >= colors.size()) {
+						selectedIndex --;
+					}
+				} else {
+					assert selectedIndex == 0;
+					setRandomColor(0);				
+				}
+				
+				updateColorItemView(selectedIndex);
+				updateSeekBars();
 			}
 		});
 		
 		rightButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				int next = (selectedIndex + 1) % visibleViewCount;
-				exchangeIndices(selectedIndex, next);
-				select(next);
+				int lastSelectedIndex = selectedIndex;
+				
+				selectedIndex = (selectedIndex + 1) % colors.size();
+				exchangeIndices(lastSelectedIndex, selectedIndex);
+				
+				updateColorItemView(lastSelectedIndex);
+				updateColorItemView(selectedIndex);
+				
+				updateSeekBars();
 			}
 		});
-		
 
 		hueSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				if(fromUser) {
-					float[] hsv = colors.get(selectedIndex);					
+					float[] hsv = colors.get(selectedIndex);
 					hsv[0] = progress * 360.f / 1000;
+
 					updateColorItemView(selectedIndex);
 				}
 			}
@@ -163,15 +206,15 @@ public class PaletteInputView {
 		});
 		
 		// Set shape of progress drawables
-		updateHueProgressDrawables();
-		updateSatProgressDrawables();
+		setHueDrawables();
+		setSatDrawables();
 		// Set in XML file. updateValueProgressDrawables();
 		
 		satSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				if(fromUser) {
-					float[] hsv = colors.get(selectedIndex);					
+					float[] hsv = colors.get(selectedIndex);
 					hsv[1] = progress / 1000.f;
 					
 					updateColorItemView(selectedIndex);
@@ -207,21 +250,136 @@ public class PaletteInputView {
 			}
 		});
 		
-		this.cyclicCheckBox.setChecked(palette.cyclic());
-		
-		// Add colors
-		visibleViewCount = 0;
+		// And set data
 		selectedIndex = 0;
 		
-		for(int i = palette.colors().length - 1; i >= 0; i--) {
-			// Reverse because they are inserted ahead of selected
-			add(palette.colors()[i]);
+		for(int i = 0; i < palette.colors().length; i++) {
+			this.colors.add(palette.colors()[i]); // TODO: Don't fetch colors like this.
+			addColorItemView(i);
+			updateColorItemView(i);
 		}
+
+		this.cyclicCheckBox.setChecked(palette.cyclic());
+		
 		
 		updateSeekBars();
 	}
 	
-	private void updateHueProgressDrawables() {
+	private void setRandomColor(int position) {
+		float hue = rnd.nextFloat() * 360.f;
+		float sat = rnd.nextFloat(); 
+		sat = (2.f - sat) * sat; // Higher saturation
+		
+		float val = rnd.nextFloat();
+		// Prefer brighter colors
+		val = (2.f - val) * val;
+
+		colors.get(position)[0] = hue;
+		colors.get(position)[1] = sat;
+		colors.get(position)[2] = val;
+	}
+
+	private void updatePalette() {
+		float[][] colorArray = colors.toArray(new float[colors.size()][3]);
+		boolean cyclic = cyclicCheckBox.isChecked();
+		this.palette = new Palette(colorArray, cyclic);
+	}
+	
+	public Palette acceptAndReturn() {
+		updatePalette();
+		return palette;
+	}
+	
+	public View view() {
+		return view;
+	}
+	
+	private void updateSeekBars() {
+		float[] hsv = colors.get(selectedIndex);
+		
+		hueSeekBar.setProgress((int) (1000.f * hsv[0] / 360.f));
+		satSeekBar.setProgress((int) (1000.f * hsv[1]));
+		valSeekBar.setProgress((int) (1000.f * hsv[2]));		
+	}
+	
+	private void exchangeIndices(int i0, int i1) {
+		for(int i = 0; i < 3; i++) {
+			float t = colors.get(i0)[i];
+			colors.get(i0)[i] = colors.get(i1)[i];
+			colors.get(i1)[i] = t;
+		}
+	}
+	
+	private void addColorItemView(int position) {
+		// Create view 
+		View v = ((Activity) view.getContext()).getLayoutInflater().inflate(R.layout.color_item, colorLayout, false);
+		
+		v.setOnClickListener(new OnClickListener () {
+			@Override
+			public void onClick(View v) {
+				// We got a new selected index
+				int newSelectedIndex = colors.indexOf(v.getTag());
+				
+				if(newSelectedIndex >= 0) {
+					int lastSelectedIndex = selectedIndex;
+					selectedIndex = newSelectedIndex;
+					
+					updateColorItemView(lastSelectedIndex);
+					updateColorItemView(selectedIndex);
+					
+					updateSeekBars();
+				}
+			}
+		});
+		
+		// and add it
+		colorLayout.addView(v, position);
+		v.setTag(colors.get(position)); // Attach color object to it.
+		
+		views.add(position, v);
+	}
+	
+	private void removeColorItemView(int position) {
+		colorLayout.removeViewAt(position);
+		views.remove(position);
+	}
+	
+	@SuppressWarnings("deprecation") // Deprecated from API 16.
+	private void updateColorItemView(int position) {
+		// Sets color
+		View v = views.get(position);
+		
+		// Mark selected. For this we need to store the padding (because the drawable has no padding)
+	    
+		if(position == selectedIndex) {
+			v.setBackgroundDrawable(selectedDrawable);
+		} else {
+			v.setBackgroundDrawable(unselectedDrawable);
+		}
+		
+		int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, PADDING, view.getResources().getDisplayMetrics());
+		v.setPadding(px, px, px, px);
+		
+		// and set text + color
+		TextView label = (TextView) v.findViewById(R.id.color_label);
+		
+		int color = Color.HSVToColor((float[]) v.getTag());
+		
+		if(Colors.brightness(color) < 125f) {
+			label.setTextColor(0xffffffff);
+		} else {
+			label.setTextColor(0xff000000);
+		}
+		
+		label.setBackgroundColor(color);
+		
+		String colorText = Integer.toHexString(color & 0x00ffffff); // Skip alpha.
+		while(colorText.length() < 6) colorText = "0" + colorText; // Fill up with 0
+		
+		label.setText(colorText);
+	}
+	
+	private void setHueDrawables() {
 		// Set gradients for hue-seekbar
 		ShapeDrawable.ShaderFactory sf = new ShapeDrawable.ShaderFactory() {
 		    @Override
@@ -240,7 +398,7 @@ public class PaletteInputView {
 		this.hueSeekBar.setProgressDrawable((Drawable) p);
 	}
 	
-	private void updateSatProgressDrawables() {
+	private void setSatDrawables() {
 		ShapeDrawable.ShaderFactory setShader = new ShapeDrawable.ShaderFactory() {
 		    @Override
 		    public Shader resize(int width, int height) {
@@ -270,159 +428,4 @@ public class PaletteInputView {
 		this.satSeekBar.setProgressDrawable((Drawable) p);
 	}
 	
-	/*private void updateValueProgressDrawables() { // This one is set in the XML file
-		ShapeDrawable.ShaderFactory valShader = new ShapeDrawable.ShaderFactory() {
-		    @Override
-		    public Shader resize(int width, int height) {
-		    	LinearGradient gradient = new LinearGradient(0.f, 0.f, width, 0.0f,  
-		    			new int[] { 0xff000000, 0xffffffff }, null, TileMode.CLAMP);
-		    	return gradient;
-		    }
-		};
-		
-		PaintDrawable p = new PaintDrawable();
-		p.setShape(new RectShape());
-		p.setShaderFactory(valShader);
-		
-		this.valSeekBar.setProgressDrawable((Drawable) p);
-	}*/
-	
-	private void updatePalette() {
-		float[][] colorArray = colors.toArray(new float[colors.size()][3]);
-		
-		boolean cyclic = cyclicCheckBox.isChecked();
-		
-		this.palette = new Palette(colorArray, cyclic);
-	}
-	
-	public Palette acceptAndReturn() {
-		updatePalette();
-		return palette;
-	}
-	
-	public View view() {
-		return view;
-	}
-	
-	private void updateColorItemView(int index) {
-		Button button = (Button) itemViews.get(index).findViewById(R.id.colorButton);
-
-		// Update color
-		int color = Color.HSVToColor(colors.get(index));
-		
-		button.setBackgroundColor(color);
-		
-		if(selectedIndex == index) {
-			// Get brightness and set text white or black.
-			button.setTextColor(Colors.brightness(color) > 100.f ? 0xff000000 : 0xffffffff);
-			button.setText(Colors.toColorString(color));
-		} else {
-			button.setText("");
-		}
-	}
-	
-	private void updateSeekBars() {
-		float[] hsv = colors.get(selectedIndex);
-		
-		hueSeekBar.setProgress((int) (1000.f * hsv[0] / 360.f));
-		satSeekBar.setProgress((int) (1000.f * hsv[1]));
-		valSeekBar.setProgress((int) (1000.f * hsv[2]));		
-	}
-	
-	/**
-	 * Cancels any selection that was made previously
-	 */
-	public void select(int index) {
-		int oldSelected = selectedIndex;
-		selectedIndex = index;
-
-		updateColorItemView(oldSelected);
-		updateColorItemView(selectedIndex);
-		
-		updateSeekBars();
-	}
-	
-	public void add(float[] hsv) {
-		colors.add(selectedIndex, hsv);
-
-		// update layout: Add one element
-		if(itemViews.size() == visibleViewCount) {
-			// not enough views
-			createItemView();
-		}
-
-		layout.addView(itemViews.get(visibleViewCount), visibleViewCount);
-		visibleViewCount++;
-
-		// update views
-		for(int i = selectedIndex; i < visibleViewCount; i++) {
-			updateColorItemView(i);
-		}
-		
-		updateSeekBars();
-	}
-	
-	public boolean canRemove() {
-		return colors.size() > 1;
-	}
-	
-	public boolean remove() {
-		if(canRemove()) {
-			colors.remove(selectedIndex);
-			
-			if(selectedIndex == colors.size()) {
-				// if it was the last one that was removed, go left.
-				selectedIndex--;
-			}
-			
-			// Remove last element from layout
-			--visibleViewCount;
-
-			layout.removeViewAt(visibleViewCount);
-			
-			// update views
-			for(int i = selectedIndex; i < visibleViewCount; i++) {
-				updateColorItemView(i);
-			}
-			
-			return true;
-		}
-		
-		return false;
-	}
-	
-	private void exchangeIndices(int i0, int i1) {
-		float[] color0 = colors.get(i0);
-		float[] color1 = colors.get(i1);
-		
-		colors.set(i0, color1);
-		colors.set(i1, color0);
-		
-		updateColorItemView(i0);
-		updateColorItemView(i1);
-		
-		updateSeekBars();
-	}
-	
-	private View createItemView() {
-		LayoutInflater inflater = ((Activity) view.getContext()).getLayoutInflater();
-		View v = inflater.inflate(R.layout.color_item, layout, false);
-		
-		final int index = itemViews.size();
-
-		Button button = (Button) v.findViewById(R.id.colorButton);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View buttonView) {
-				if(selectedIndex != index) {
-					select(index);
-				}
-			}
-		});
-		
-		// Add component to list
-		itemViews.add(v);
-		
-		return v;
-	}
 }

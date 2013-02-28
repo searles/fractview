@@ -1,11 +1,23 @@
 package at.fractview;
 
+import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.text.format.Time;
+import android.util.Base64;
+import android.util.Log;
 import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
 import at.fractview.math.colors.Palette;
@@ -22,26 +34,169 @@ import at.fractview.tools.Labelled;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonSyntaxException;
 
 public class BookmarkManager {
 	
+	public static final String BOOKMARKS_NAME = "Bookmarks";
+	
 	private static final int PREVIEW_SIZE = 64;
+	private static final String TAG = "BookmarkManager";
+	
+	public class Bookmark {
+		Time time;
+		EscapeTime prefs;
+		Bitmap preview;
+		
+		private Bookmark() {} // For GSon
+		
+		private Bookmark(EscapeTime prefs, Bitmap preview) {
+			this.prefs = prefs;
+			this.preview = preview;
+			
+			this.time = new Time();
+			this.time.setToNow();
+		}
+
+		public Bitmap preview() {
+			return preview;
+		}
+
+		public EscapeTime prefs() {
+			return prefs;
+		}
+
+		public String timeString() {
+			return time.format("%Y %m %d - %H:%M:%S");
+		}
+	}
+	
+	private static class BitmapAdapter implements JsonSerializer<Bitmap>, JsonDeserializer<Bitmap> {
+
+		@Override
+		public JsonElement serialize(Bitmap src, Type typeOfSrc,
+		        JsonSerializationContext context) {
+			ByteBuffer buffer = ByteBuffer.allocate(src.getWidth() * src.getHeight() * 4);
+			
+			src.copyPixelsToBuffer(buffer);
+			
+			String pixels = Base64.encodeToString(buffer.array(), Base64.DEFAULT);
+			
+			//int[] pixels = new int[src.getWidth() * src.getHeight()];
+			//src.getPixels(pixels, 0, src.getWidth(), 0, 0, src.getWidth(), src.getHeight());
+			
+			JsonObject retValue = new JsonObject();
+		    retValue.addProperty("pixels", pixels);
+		    retValue.addProperty("width", src.getWidth());
+		    retValue.addProperty("height", src.getHeight());
+
+		    return retValue;
+		}
+
+		@Override
+		public Bitmap deserialize(JsonElement json, Type typeOfT,
+		        JsonDeserializationContext context) throws JsonParseException  {
+			
+			String pixels = json.getAsJsonObject().get("pixels").getAsString();
+			
+			byte[] buffer = Base64.decode(pixels, Base64.DEFAULT);
+
+			int width = json.getAsJsonObject().get("width").getAsInt();
+			int height = json.getAsJsonObject().get("height").getAsInt();
+
+			Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+			
+			bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(buffer));
+
+			return bitmap;
+			//Bitmap.createBitmap(pixels, width, height, Config.ARGB_8888);
+		}
+	}
 	
 	private Gson gson;
+	private SharedPreferences bookmarks;
 	
-	public BookmarkManager() {
+	public BookmarkManager(Activity activity) {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(Expr.class, new ExprAdapter());
+		gsonBuilder.registerTypeAdapter(Bitmap.class, new BitmapAdapter());
 		
 		this.gson = gsonBuilder.create();
-	}
-
-	public String encode(EscapeTime prefs) {
-		return gson.toJson(prefs);
+		
+		this.bookmarks = activity.getSharedPreferences(BOOKMARKS_NAME, 0);
 	}
 	
-	public EscapeTime decode(String s) {
-		return gson.fromJson(s, EscapeTime.class);
+	public Bookmark create(EscapeTime prefs, Bitmap bitmap) {
+		// Create preview by scaling down the original
+		Bitmap preview = Bitmap.createBitmap(PREVIEW_SIZE, PREVIEW_SIZE, Config.ARGB_8888);
+		
+		Canvas canvas = new Canvas(preview);
+		Matrix matrix = new Matrix();
+		
+		int min = Math.min(bitmap.getWidth(), bitmap.getHeight());
+		
+		RectF src = new RectF(
+				(bitmap.getWidth() - min) / 2, (bitmap.getHeight() - min) / 2, 
+				(bitmap.getWidth() + min) / 2, (bitmap.getHeight() + min) / 2);
+		
+		RectF dst = new RectF(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+		matrix.setRectToRect(src, dst, Matrix.ScaleToFit.CENTER);
+		
+		canvas.drawBitmap(bitmap, matrix, null);
+		
+		return new Bookmark(prefs, preview);
+	}
+	
+	public Map<String, Bookmark> readBookmarks() {
+		// Open file and read all entries
+		Map<String, ?> map = bookmarks.getAll();
+		
+		TreeMap<String, Bookmark> retVal = new TreeMap<String, Bookmark>();
+		
+		for(Map.Entry<String, ?> entry : map.entrySet()) {
+			String title = entry.getKey();
+			Object value = entry.getValue();
+			
+			if(!(value instanceof String)) {
+				Log.e(TAG, "Entry to " + title + " is not a string: " + entry.getValue());
+			} else {
+				try {
+					Bookmark bookmark = gson.fromJson((String) value, Bookmark.class);
+					retVal.put(title, bookmark);
+				} catch(JsonSyntaxException e) {
+					Log.e(TAG, "Error when trying to decipher entry: " + value);
+				}
+			}
+		}
+		
+		return retVal;
+	}
+	
+	public void removeBookmark(String title) {
+		bookmarks.edit().remove(title).commit(); // TODO: what happens if title does not exist?
+	}
+	
+	public boolean containsBookmark(String title) {
+		return bookmarks.contains(title);
+	}
+	
+	public void addBookmark(String title, EscapeTime prefs, Bitmap image) {
+		// TODO: Make sure that title does not exist yet.
+		Bookmark entry = create(prefs, image);
+		
+		String json = gson.toJson(entry);
+		bookmarks.edit().putString(title, json).commit();
+	}
+
+	public Gson gson() {
+		return gson;
 	}
 	
 	private static float[][] toHSV(int[] palette) {
@@ -61,7 +216,6 @@ public class BookmarkManager {
 
 		Affine affine = Affine.scalation(4, 4);
 		affine.preConcat(Affine.translation(-2, -2));
-		
 
         Palette bailoutPalette = new Palette(
 				toHSV(new int[]{0xFFFFAA00, 0xFF310230, 0xff000764, 0xff206BCB, 0xffEDFFFF}),
@@ -96,11 +250,11 @@ public class BookmarkManager {
 		Function function = new Function(fn, l, ps);
 		
 		return new EscapeTime(affine, maxIter, function,
-				bailout, CommonOrbitToFloat.Length_Smooth, new OrbitTransfer(false, 0f, 1f, CommonTransfer.Log), bailoutPalette, 
-				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(true, 0f, 1f, CommonTransfer.None), lakePalette);
+				bailout, CommonOrbitToFloat.Length_Smooth, new OrbitTransfer(CommonTransfer.Log, new OrbitTransfer.Stats(0, 1)), bailoutPalette, 
+				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(CommonTransfer.None, null), lakePalette);
 	}
 	
-	public static EscapeTime cczcpaczcp() {
+	/*public static EscapeTime cczcpaczcp() {
 		int maxIter = 100;
 		double bailout = 64.;
 		double epsilon = 1e-9;
@@ -323,5 +477,5 @@ public class BookmarkManager {
 		return new EscapeTime(affine, maxIter, function,
 				bailout, CommonOrbitToFloat.Zero, new OrbitTransfer(false, 0f, 1f, CommonTransfer.None), bailoutPalette, 
 				epsilon, CommonOrbitToFloat.Last_Angle, new OrbitTransfer(true, 0f, 1f, CommonTransfer.None), lakePalette);
-	}
+	}*/
 }

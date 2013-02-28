@@ -23,6 +23,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
+import at.fractview.dialogs.AddBookmarkDialogFragment;
+import at.fractview.dialogs.BookmarksDialogFragment;
 import at.fractview.dialogs.FunctionDialogFragment;
 import at.fractview.dialogs.MaxIterDialogFragment;
 import at.fractview.dialogs.OrbitTransferDialogFragment;
@@ -93,16 +95,10 @@ public class MainActivity extends FragmentActivity {
 			new ResizeDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.add_bookmark:
-			// new AddBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
+			new AddBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		case R.id.from_bookmark:
-			// new FromBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
-			return true;
-		case R.id.from_predefined:
-			// new FromBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
-			return true;
-		case R.id.share:
-			// new FromBookmarkDialogFragment().show(getSupportFragmentManager(), "dialog");
+			new BookmarksDialogFragment().show(getSupportFragmentManager(), "dialog");
 			return true;
 		default: return super.onOptionsItemSelected(item);
 		}

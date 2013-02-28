@@ -21,21 +21,15 @@
         
     </LinearLayout>
 
-        <CheckBox
-            android:id="@+id/normalizeCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/normalize_range" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <TextView
-            android:id="@+id/rangeLabel"
+        <CheckBox
+            android:id="@+id/customRangeCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/range_label" />
+            android:text="@string/custom_range" />
 
         <EditText
             android:id="@+id/minEditor"

@@ -2,7 +2,6 @@ package at.fractview.modes.orbit;
 
 import java.util.Arrays;
 
-import android.util.Log;
 import at.fractview.math.colors.Palette;
 import at.fractview.modes.RasterTask;
 import at.fractview.modes.RasterTask.Environment;
@@ -14,7 +13,7 @@ import at.fractview.modes.orbit.functions.Function;
 public class EscapeTimeCache extends AbstractOrbitCache {
 	
 	// private static final String TAG = "ESC";
-	private Stats[] stats;
+	private OrbitTransfer.Stats[] stats;
 	
 	private int[] typeLength; // Bits 0..23 = nrIterations; rest = type.
 	private float[] values;
@@ -25,11 +24,15 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		typeLength = new int[width * height];
 		values = new float[width * height];
 		
-		stats = new Stats[2];
+		stats = new OrbitTransfer.Stats[2];
 	}
 	
 	public EscapeTime prefs() {
 		return (EscapeTime) super.prefs();
+	}
+	
+	public OrbitTransfer.Stats stats(int index) {
+		return stats[index];
 	}
 
 	/** Calculates the color. If available, it is fetched from Cache,
@@ -47,6 +50,7 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		int type;
 		float v;
 		
+		// Save or fetch value
 		if(typeLength[index] == 0) {
 			env.orbit.generate(x, y, width, height);
 			
@@ -59,33 +63,29 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 			type = typeLength[index] & EscapeTime.TYPE_MASK;
 			v = values[index];
 		}
+
+		// TODO: The following thing is ugly...
 		
 		// Update statistics in env
-		if(type == EscapeTime.BAILOUT_TYPE && stats[0] != null) {
-			env.nextValue(0, v);
-			v = (v - stats[0].minValue) / (stats[0].maxValue - stats[0].minValue);
+		if(type == EscapeTime.BAILOUT_TYPE) {
+			float tv = prefs().bailoutTransfer().value(v, env.stats[0], stats[0]);
+			return prefs().bailoutPalette().color(tv);
+		} else /*if(type == EscapeTime.LAKE_TYPE)*/ {
+			float tv = prefs().lakeTransfer().value(v, env.stats[1], stats[1]);
+			return prefs().lakePalette().color(tv);
 		}
-
-		if(type == EscapeTime.LAKE_TYPE && stats[1] != null) {
-			env.nextValue(1, v);
-			v = (v - stats[1].minValue) / (stats[1].maxValue - stats[1].minValue);
-		}
-
-		// Statistics in cache are not updated here but only later when everyone is sleeping or done.
-		
-		return prefs().color(type, v);
 	}
 	
 	@Override
 	public void initStatistics() {
-		if(prefs().bailoutTransfer().normalize()) {
-			stats[0] = new Stats();
+		if(!prefs().bailoutTransfer().customStats()) {
+			stats[0] = new OrbitTransfer.Stats();
 		} else {
 			stats[0] = null;
 		}
 
-		if(prefs().lakeTransfer().normalize()) {
-			stats[1] = new Stats();
+		if(!prefs().lakeTransfer().customStats()) {
+			stats[1] = new OrbitTransfer.Stats();
 		} else {
 			stats[1] = null;
 		}
@@ -93,7 +93,7 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 
 	@Override
 	public boolean usesStats() {
-		return prefs().bailoutTransfer().normalize() || prefs().lakeTransfer().normalize();
+		return !(prefs().bailoutTransfer().customStats() && prefs().lakeTransfer().customStats());
 	}
 
 	@Override
@@ -101,7 +101,9 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		Env e = (Env) env;
 		
 		for(int i = 0; i < 2; i++) {
-			if(stats[i] != null) stats[i].update(e.stats[i]);
+			if(stats[i] != null) {
+				stats[i].update(e.stats[i]);
+			}
 		}
 	}
 
@@ -109,34 +111,11 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 		return new Env();
 	}
 
-	private class Stats {
-		volatile float minValue = Float.POSITIVE_INFINITY;
-		volatile float maxValue = Float.NEGATIVE_INFINITY;
-		
-		void nextValue(float v) {
-			if(v < minValue) minValue = v;
-			if(v > maxValue) maxValue = v;
-		}
-		
-		void update(Stats stats) {
-			if(stats.minValue < this.minValue) {
-				this.minValue = stats.minValue;
-			}
-
-			if(stats.maxValue > this.maxValue) {
-				this.maxValue = stats.maxValue;
-			}
-		}
-	}
 	
 	private class Env implements RasterTask.Environment {
 		Orbit orbit = prefs().createOrbit();
-		Stats[] stats = new Stats[]{new Stats(), new Stats()};
+		OrbitTransfer.Stats[] stats = new OrbitTransfer.Stats[]{new OrbitTransfer.Stats(), new OrbitTransfer.Stats()};
 
-		void nextValue(int typeIndex, float v) {
-			stats[typeIndex].nextValue(v);
-		}
-		
 		public int color(int x, int y) {
 			return EscapeTimeCache.this.color(this, x, y);
 		}
@@ -172,8 +151,6 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 
 	@Override
 	protected void moveData(int dx, int dy) {
-		Log.d("Cache", "Move " + dx + ", " + dy);
-		
 		int ix = dx >= 0 ? 1 : -1;
 		int iy = dy >= 0 ? 1 : -1;
 		
@@ -324,4 +301,5 @@ public class EscapeTimeCache extends AbstractOrbitCache {
 				prefs().bailout(), prefs().bailoutMethod(), prefs().bailoutTransfer(), prefs().bailoutPalette(),
 				prefs().epsilon(), prefs().lakeMethod(), prefs().lakeTransfer(), lakePalette));
 	}
+
 }

@@ -31,12 +31,16 @@
     <string name="remove">-</string>
     <string name="shift_right">>></string>
     <string name="normalize_range">Normalize Range</string>
-    <string name="add_bookmark">Add as bookmark</string>
+    <string name="add_bookmark">Bookmark</string>
     <string name="from_bookmark">Open bookmarks</string>
     <string name="value_label">Value</string>
     <string name="saturation_label">Saturation</string>
     <string name="hue_label">Hue</string>
     <string name="select_type">Select Type</string>
-    <string name="from_predefined">From Predefined</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="create_textfile">Create Textfile with description</string>
+    <string name="custom_range">Custom Range</string>
+    <string name="set_wallpaper">Set Wallpaper</string>
 
 </resources>

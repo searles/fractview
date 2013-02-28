@@ -118,4 +118,9 @@ public class Affine {
 		
 		return dest;
 	}
+
+	public Cplx center() {
+		Cplx center = new Cplx((m[0] + m[1]) / 2. + m[2], (m[3] + m[4]) / 2. + m[5]);
+		return center;
+	}
 }

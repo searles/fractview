@@ -16,6 +16,8 @@
  */
 package at.fractview.modes.orbit;
 
+import java.text.DecimalFormat;
+
 import at.fractview.math.Affine;
 import at.fractview.math.Cplx;
 import at.fractview.math.Spline;
@@ -116,14 +118,14 @@ public class EscapeTime extends AbstractOrbitPrefs {
 		return lakePalette;
 	}
 	
-	public int color(int type, float value) {
+	/*public int color(int type, float value) {
 		if(type == BAILOUT_TYPE) {
-			return bailoutPalette.color(bailoutTransfer.value(value));
+			return bailoutPalette.color(value);
 		} else {
 			// Lake
-			return lakePalette.color(lakeTransfer.value(value));
+			return lakePalette.color(value);
 		}
-	}
+	}*/
 	
 	@Override
 	public AbstractImgCache createImgCache(int width, int height) {
@@ -142,6 +144,13 @@ public class EscapeTime extends AbstractOrbitPrefs {
 		return new EscapeTime(this.affine(), maxIter, this.function, 
 				this.bailout, this.bailoutMethod, this.bailoutTransfer, this.bailoutPalette,
 				this.epsilon, this.lakeMethod, this.lakeTransfer, this.lakePalette);
+	}
+	
+	public String toString() {
+		Cplx center = affine().center();
+		DecimalFormat df = new DecimalFormat("0.00###");
+		
+		return "(" + function.toDescription() + ") at " + df.format(center.re()) + ", " + df.format(center.im());
 	}
 	
 	public class Orbit extends AbstractOrbit {

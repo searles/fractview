@@ -3,15 +3,9 @@
 
     <item
         android:id="@+id/save"
-        android:icon="@android:drawable/ic_menu_save"
-        android:showAsAction="always"
-        android:title="@string/save">
-    </item>
-    <item
-        android:id="@+id/share"
         android:icon="@android:drawable/ic_menu_share"
         android:showAsAction="always"
-        android:title="@string/share">
+        android:title="@string/save">
     </item>
     <item
         android:id="@+id/add_bookmark"
@@ -19,42 +13,58 @@
         android:showAsAction="always"
         android:title="@string/add_bookmark">
     </item>
-    <item android:id="@+id/function" android:showAsAction="ifRoom|withText" android:title="@string/function">
-    </item><item android:id="@+id/maxiter" android:showAsAction="ifRoom|withText" android:title="@string/maxiter">
-    </item><item android:id="@+id/transfer" android:showAsAction="ifRoom|withText" android:title="@string/transfer">
+    <item 
+        android:id="@+id/from_bookmark"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:showAsAction="always" 
+        android:title="@string/from_bookmark">
+    </item>
+    <item
+        android:id="@+id/function"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/function">
+    </item>
+    <item android:id="@+id/scale" android:title="@string/scale">
+    </item><item
+        android:id="@+id/maxiter"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/maxiter">
+    </item>
+    <item
+        android:id="@+id/transfer"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/transfer">
         <menu>
-            <item android:id="@+id/bailout" android:title="@string/bailout">
+            <item
+                android:id="@+id/bailout"
+                android:title="@string/bailout">
             </item>
-            <item android:id="@+id/lake" android:title="@string/lake">
+            <item
+                android:id="@+id/lake"
+                android:title="@string/lake">
             </item>
         </menu>
-    </item><item android:id="@+id/colors" android:showAsAction="ifRoom|withText" android:title="@string/colors">
+    </item>
+    <item
+        android:id="@+id/colors"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/colors">
         <menu>
-            <item android:id="@+id/bailoutcolors" android:title="@string/bailoutcolors">
+            <item
+                android:id="@+id/bailoutcolors"
+                android:title="@string/bailoutcolors">
             </item>
-            <item android:id="@+id/lakecolors" android:title="@string/lakecolors">
+            <item
+                android:id="@+id/lakecolors"
+                android:title="@string/lakecolors">
             </item>
         </menu>
-    </item><item android:id="@+id/scale" android:title="@string/scale">
     </item>
     
     
-    
-    
-    
     <item
-        android:id="@+id/set_type"
-        android:title="@string/select_type">
-        <menu>
-            <item
-                android:id="@+id/from_bookmark"
-                android:title="@string/from_bookmark">
-            </item>
-            <item
-                android:id="@+id/from_predefined"
-                android:title="@string/from_predefined"/>
-        </menu>
-    </item><item android:id="@+id/resize" android:title="@string/resize">
+        android:id="@+id/resize"
+        android:title="@string/resize">
     </item>
 
 </menu>

@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.app.AlertDialog;
+import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -13,12 +14,14 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 import at.fractview.EscapeTimeFragment;
 import at.fractview.ImageViewFragment;
 import at.fractview.R;
 
+// TODO: Create text file with dump.
 public class SaveDialogFragment extends InputViewDialogFragment {
 
 	private static final String TAG = "SaveDialogFragment";
@@ -26,10 +29,12 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 	private EscapeTimeFragment taskFragment;
 	
 	private EditText filenameEditor;
+	private CheckBox shareCheckBox;
+	private CheckBox wallpaperCheckBox;
 	
 	@Override
 	protected String title() {
-		return "Save Image";
+		return "Save/Share Image";
 	}
 	
 	@Override
@@ -41,8 +46,12 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 
 		if(taskFragment == null) {
 			taskFragment = (EscapeTimeFragment) getFragmentManager().findFragmentByTag(ImageViewFragment.TASK_TAG);
+			
 			filenameEditor = (EditText) v.findViewById(R.id.filenameEditor);
-			filenameEditor.setText("Fractal");
+			filenameEditor.setText("FractView " + taskFragment.prefs().toString());
+			
+			shareCheckBox = (CheckBox) v.findViewById(R.id.share_check_box);
+			wallpaperCheckBox = (CheckBox) v.findViewById(R.id.wallpaper_check_box);
 		}
 
 		return v;
@@ -80,6 +89,8 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 				// Successfully written picture
 				fos.close();
 
+				// TODO: If checked, create text file with description
+				
 				// Show toast
 				Toast.makeText(getActivity(), "Image saved as " + imageFile.getName(), Toast.LENGTH_SHORT).show();
 
@@ -88,6 +99,20 @@ public class SaveDialogFragment extends InputViewDialogFragment {
 				Uri contentUri = Uri.fromFile(imageFile);
 				mediaScanIntent.setData(contentUri);
 				getActivity().sendBroadcast(mediaScanIntent);
+				
+				// If share is selected share it
+				if(shareCheckBox.isChecked()) {
+					Intent share = new Intent(Intent.ACTION_SEND);
+					share.setType("image/png");
+					share.putExtra(Intent.EXTRA_STREAM, contentUri);
+					startActivity(Intent.createChooser(share, "Share Image"));
+				}
+				
+				// If wallpaper is selected, set as wallpaper
+				if(wallpaperCheckBox.isChecked()) {
+					WallpaperManager wallpaperManager = WallpaperManager.getInstance(getActivity());
+					wallpaperManager.setBitmap(bm);
+				}
 			} else {
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 				builder.setMessage("Unknown error calling 'compress' on bitmap").setTitle("Error saving file").setNeutralButton("Close", null).create().show();

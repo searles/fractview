@@ -101,4 +101,8 @@ public class Function {
 	public Labelled<Cplx> parameter(Var v) {
 		return parameters.get(v);
 	}
+
+	public String toDescription() {
+		return function.label();
+	}
 }

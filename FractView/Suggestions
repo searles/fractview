@@ -1,33 +1,59 @@
-* Bug fixing:
-** LastArc should be between 0 and 1 [done]
-** Colorizations should have better names [done]
-** Mention that + creates a random color. 
-* The 3 slider at color palette menu are too close to each other [done]
-* Reset fractal zoom [done]
-* Bug: when palette length displayed as 0.0E0 formula I cannot edit mantissa (division by 0?) [changed this, so could not reproduce]
+Palette [done]:
+* Padding + Textview + Single-Choice-Listview. For this we should be able to use ArrayAdapter.
+* Use icons for buttons.
 
-** New functions:
-*** Add a function |zr| + i |zi|, name: cabs [done, called it 'cabs']
-*** Add a function polar z -> abs z + i arg z
-*** Add a function sgn z -> sgn zr + i sgn zi
-* Threads might be still asleep when first one terminates.
+Bookmark:
+* Add possibility to delete a bookmark (long click opens dialog [most extensible solution]).
+* Click on bookmark selects it and closes the dialog [na, problem of clicks]
+* Find a possibility to pull in default bookmarks.
+* Theoretically: Import + Export of bookmarks [Long term].
+* Add time to view
+* A bit space between title and preview image
+
+Save [done]:
+* Add checkboxes to Save/Share image:
+  [ ] Share image
+  [ ] Set as wallpaper
+* Use 'short description' as filename
+* TODO Create text-file containing extended information on the image.
+
+Transfer:
+* Make a nicer line (holo_blue)
+
+First, get transfer for value, then collect statistics.
+So:
+---------------------------------
+Transfer [ v Log ]
+[ ] Custom Range: _______ _______
+
+For this purpose create Range-Object. Image could create one automatically with
+appropriate values if the one provided is null (= unchecked)
+
+Stats is already such a Range-Object.
+
+Menu [done]:
+* Save/Share, Bookmark, Open Bookmarks.
+* Menu -> Function, Iterations, Scale, Transfer, Colors. Resize.
+
+EscapeTime [partly done]:
+* Two new methods in Prefs: getShortDescription() and getLongDescription().
+
+Colorizations:
+* Maybe new colorizations?
+
+Resize [done]:
+* Avoid having width/height of 0
+
+Manual:
+* + adds random color
+* New functions cabs + polar
 
 TODOs:
-* Threads might be still asleep when first one terminates.
-1. Bookmarks must definitely be in SQLite, but with the possibility to export them
-Store last fractal and restore it. 
-Allow restoring only parts of bookmarks like color palette
 2. Predefined fractals + custom colorization methods (requires Sum/Product; min index value can be obtained from minIndex(Var))
 4. 2-dim color palettes
 6. dragging parameters
 7. Split view for julia next to mandel (TODO for this: boolean set(String label, Cplx value) returns false when no such point).
-8. Transfer into palette
 
-** Caching
-*** Allow min/max-values in Bailout/lake.
 ** Colorization from http://www.fractalforums.com/new-theories-and-research/a-new-look-into-escapetime-fractals-using-abs-and-inner-coloring/
-** Bookmarks: How to do it? Create parse-method in every object, like Palette, Function etc...? Most likely, yes. For bitmap use Base64 encoding.
-*** Add 'pick from bookmark'
-** Relative colors: automatcally set palette length after pre-calculation of acual zoomed area {would require that skipFirst is ignored}
 
-* Menu with checkbox: [ ] Pinch-to-zoom
+Palette Item: Set padding and allow selection in list. Use TextView and always show color.

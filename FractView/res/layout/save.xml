@@ -16,9 +16,15 @@
     </EditText>
 
     <CheckBox
-        android:id="@+id/addBookmarkCheckBox"
+        android:id="@+id/share_check_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/add_bookmark" />
+        android:text="@string/share" />
+    
+    <CheckBox
+        android:id="@+id/wallpaper_check_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/set_wallpaper" />
 
 </LinearLayout>

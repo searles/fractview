@@ -4,102 +4,104 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-       <TextView
-           android:id="@+id/hueLabel"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:text="@string/hue_label"
-           android:textAppearance="?android:attr/textAppearanceSmall" />
-    
+    <TextView
+        android:id="@+id/hueLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hue_label"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
     <SeekBar
         android:id="@+id/hueSeekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="1000" />
 
-       <TextView
-           android:id="@+id/saturationLabel"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:text="@string/saturation_label"
-           android:textAppearance="?android:attr/textAppearanceSmall" />
-    
+    <TextView
+        android:id="@+id/saturationLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/saturation_label"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
     <SeekBar
         android:id="@+id/saturationSeekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="1000" />
 
-       <TextView
-           android:id="@+id/valueLabel"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:text="@string/value_label"
-           android:textAppearance="?android:attr/textAppearanceSmall" />
-    
+    <TextView
+        android:id="@+id/valueLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/value_label"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
     <SeekBar
         android:id="@+id/valueSeekBar"
-        android:progressDrawable="@drawable/value_shape"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="1000" />
+        android:max="1000"
+        android:progressDrawable="@drawable/value_shape" />
+
+    <View
+        android:id="@+id/spacing"
+        android:layout_width="match_parent"
+        android:layout_height="5dp" />
 
     <HorizontalScrollView
-        android:id="@+id/horizontalScrollView"
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <LinearLayout
-            android:id="@+id/colorArrayLayout"
+            android:id="@+id/color_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal" >
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="5dp" >
         </LinearLayout>
     </HorizontalScrollView>
 
-   <LinearLayout
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content" >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
 
-       <Button
-           android:id="@+id/moveLeftButton"
-           style="?android:attr/buttonStyleSmall"
-           android:layout_width="0dp"
-           android:layout_height="wrap_content"
-           android:layout_weight="1"
-           android:text="@string/shift_left" />
+        <ImageButton
+            android:id="@+id/moveLeftButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_media_rew" />
 
-       <Button
-           android:id="@+id/addButton"
-           style="?android:attr/buttonStyleSmall"
-           android:layout_width="0dp"
-           android:layout_height="wrap_content"
-           android:layout_weight="1"
-           android:text="@string/add" />
-       
-       <Button
-           android:id="@+id/removeButton"
-           style="?android:attr/buttonStyleSmall"
-           android:layout_width="0dp"
-           android:layout_height="wrap_content"
-           android:layout_weight="1"
-           android:text="@string/remove" />
+        <ImageButton
+            android:id="@+id/addButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_input_add" />
 
-       <Button
-           android:id="@+id/moveRightButton"
-           style="?android:attr/buttonStyleSmall"
-           android:layout_width="0dp"
-           android:layout_height="wrap_content"
-           android:layout_weight="1"
-           android:text="@string/shift_right" />
+        <ImageButton
+            android:id="@+id/removeButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_delete" />
 
-       <CheckBox
-           android:id="@+id/cyclicCheckBox"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:gravity="center_vertical"
-           android:text="@string/cyclic" />
-       
-   </LinearLayout>
+        <ImageButton
+            android:id="@+id/moveRightButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_media_ff" />
+
+        <CheckBox
+            android:id="@+id/cyclicCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:text="@string/cyclic" />
+    </LinearLayout>
 
 </LinearLayout>

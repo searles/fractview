@@ -16,6 +16,7 @@
  */
 package at.fractview.dialogs;
 
+import android.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -80,8 +81,9 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 		try {
 			width = Integer.parseInt(widthEditor.getText().toString());
 
-			if(width > 2048) {
-				Log.d(TAG, "Maximum width is 2048. This is a hard limit of Android");
+			if(width <= 0 || width > 2048) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Range must be between 1 - 2048").setTitle("Bad size").setNeutralButton("Close", null).create().show();
 				return false;
 			}
 		} catch(NumberFormatException e) {
@@ -94,8 +96,9 @@ public class ResizeDialogFragment extends InputViewDialogFragment {
 		try {
 			height = Integer.parseInt(heightEditor.getText().toString());
 			
-			if(height > 2048) {
-				Log.d(TAG, "Maximum width is 2048. This is a hard limit of Android");
+			if(height <= 0 || height > 2048) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Range must be between 1 - 2048").setTitle("Bad size").setNeutralButton("Close", null).create().show();
 				return false;
 			}			
 		} catch(NumberFormatException e) {

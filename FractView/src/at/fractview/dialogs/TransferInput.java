@@ -5,6 +5,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 import at.fractview.R;
@@ -21,15 +23,23 @@ public class TransferInput {
 	private EditText minEditor;
 	private EditText maxEditor;
 	
-	private CheckBox normalizeCheckBox;
+	private CheckBox customRangeCheckBox;
+	
+	// TODO: If checked
 
-	public TransferInput(Activity activity, View v, OrbitTransfer ot) {
+	public TransferInput(Activity activity, View v, OrbitTransfer ot, OrbitTransfer.Stats defaultStats) {
 		// Initialize transfer
 		minEditor = (EditText) v.findViewById(R.id.minEditor);
-		
 		maxEditor = (EditText) v.findViewById(R.id.maxEditor);
 		
-		normalizeCheckBox = (CheckBox) v.findViewById(R.id.normalizeCheckBox);
+		customRangeCheckBox = (CheckBox) v.findViewById(R.id.customRangeCheckBox);
+		customRangeCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton button, boolean checked) {
+				minEditor.setEnabled(checked);
+				maxEditor.setEnabled(checked);
+			}
+		});
 
 		transferSpinner = (Spinner) v.findViewById(R.id.transferSpinner);
 		
@@ -40,37 +50,48 @@ public class TransferInput {
 		
 		transferSpinner.setAdapter(transferAdapter);
 
-		normalizeCheckBox.setChecked(ot.normalize());
-		
-		minEditor.setText(Float.toString(ot.min()));
+		if(ot.customStats()) {
+			customRangeCheckBox.setChecked(true);
 
-		maxEditor.setText(Float.toString(ot.max()));
-		
+			minEditor.setText(Float.toString(ot.stats().minValue()));
+			maxEditor.setText(Float.toString(ot.stats().maxValue()));
+		} else {
+			customRangeCheckBox.setChecked(false);
+			
+			minEditor.setText(Float.toString(defaultStats.minValue()));
+			maxEditor.setText(Float.toString(defaultStats.maxValue()));
+			
+			minEditor.setEnabled(false);
+			maxEditor.setEnabled(false);
+		}
+
 		transferSpinner.setSelection(transferAdapter.getPosition(ot.transfer()));
 	}
 	
 	public OrbitTransfer get() {
-		float min;
-		float max;
-		
-		try {
-			min = Float.parseFloat(minEditor.getText().toString());
-		} catch(NumberFormatException e) {
-			Log.w(TAG, e.toString());
-			return null;
-		}
-
-		try {
-			max = Float.parseFloat(maxEditor.getText().toString());
-		} catch(NumberFormatException e) {
-			Log.w(TAG, e.toString());
-			return null;
-		}
-		
 		CommonTransfer transfer = (CommonTransfer) transferSpinner.getSelectedItem();
 		
-		boolean normalize = normalizeCheckBox.isChecked();
-		
-		return new OrbitTransfer(normalize, min, max, transfer);
+		if(customRangeCheckBox.isChecked()) {
+			float min;
+			float max;
+			
+			try {
+				min = Float.parseFloat(minEditor.getText().toString());
+			} catch(NumberFormatException e) {
+				Log.w(TAG, e.toString());
+				return null;
+			}
+
+			try {
+				max = Float.parseFloat(maxEditor.getText().toString());
+			} catch(NumberFormatException e) {
+				Log.w(TAG, e.toString());
+				return null;
+			}
+			
+			return new OrbitTransfer(transfer, new OrbitTransfer.Stats(min, max));
+		} else {
+			return new OrbitTransfer(transfer, null);
+		}
 	}
 }

@@ -32,6 +32,7 @@ import at.fractview.modes.orbit.EscapeTimeCache;
 import at.fractview.modes.orbit.colorization.CommonOrbitToFloat;
 import at.fractview.modes.orbit.colorization.OrbitTransfer;
 
+// TODO: When normalizing, deactivate min/max and set its content to current min/max.
 public class OrbitTransferDialogFragment extends InputViewDialogFragment {
 
 	private static final String TAG = "OrbitTransferDialogFragment";
@@ -89,11 +90,11 @@ public class OrbitTransferDialogFragment extends InputViewDialogFragment {
 		if(type == Type.Bailout) {
 			valueEditor.setText(Double.toString(prefs.bailout()));
 			methodSpinner.setSelection(methodAdapter.getPosition(prefs.bailoutMethod()));
-			transferInput = new TransferInput(getActivity(), v, prefs.bailoutTransfer());
+			transferInput = new TransferInput(getActivity(), v, prefs.bailoutTransfer(), taskFragment.stats(0));
 		} else {
 			valueEditor.setText(Double.toString(prefs.epsilon()));
 			methodSpinner.setSelection(methodAdapter.getPosition(prefs.lakeMethod()));
-			transferInput = new TransferInput(getActivity(), v, prefs.lakeTransfer());
+			transferInput = new TransferInput(getActivity(), v, prefs.lakeTransfer(), taskFragment.stats(1));
 		}
 		
 		return v;

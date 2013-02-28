@@ -16,6 +16,7 @@
  */
 package at.fractview.dialogs;
 
+import android.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,8 +65,9 @@ public class MaxIterDialogFragment extends InputViewDialogFragment {
 		try {
 			int maxIter = Integer.parseInt(editor.getText().toString());
 			
-			if(maxIter > AbstractOrbitPrefs.MAX_LENGTH) {
-				Log.w(TAG, "Maximum number of iterations set to " + AbstractOrbitPrefs.MAX_LENGTH);
+			if(maxIter == 0 || maxIter > AbstractOrbitPrefs.MAX_LENGTH) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Range must be between 1 - " + AbstractOrbitPrefs.MAX_LENGTH).setTitle("Bad number").setNeutralButton("Close", null).create().show();
 				maxIter = AbstractOrbitPrefs.MAX_LENGTH;
 			}
 
