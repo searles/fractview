@@ -107,9 +107,9 @@ public class FunctionInputView {
 
 		// and usedParameters.
 		this.usedParameters = new TreeSet<Var>();
-		this.usedParameters.addAll(spec.parameters());
 
 		for(Var v : spec.parameters()) {
+			this.usedParameters.add(v);
 			parameters.put(v,  new Parameter(v, spec.parameter(v)));
 		}
 		
@@ -266,7 +266,7 @@ public class FunctionInputView {
 			inits.get(i).expr.get().parameters(vars);
 		}
 
-		vars.removeAll(ExprCompiler.predefinedVars);
+		ExprCompiler.removePredefinedVars(vars);
 
 		// Remove parameters that do not occur in vars
 		boolean parameterCountChanged = usedParameters.retainAll(vars);

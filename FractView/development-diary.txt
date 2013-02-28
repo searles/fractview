@@ -688,3 +688,7 @@ Okay, everything looks fine. Only thing missing: How do I set the default select
 Palette and Bookmark????
 
 This really sucks. Amongst other problems, I also got the following issue: http://stackoverflow.com/questions/10095196/whered-padding-go-when-setting-background-drawable
+
+Okay. Bug: Functions with parameters are not properly stored. Why's that? Trying to resolve this, I completely changed Var (prefix/index).
+But still no solution. Does GSon have problems with the fact that it is a subclass and the superclass contains data?
+Hmpf, replaced the TreeMap by two ArrayLists. Now it works...

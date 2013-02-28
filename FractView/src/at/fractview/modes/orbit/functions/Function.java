@@ -1,5 +1,5 @@
 /*
- * This file is part of FractView.
+: * This file is part of FractView.
  *
  * FractView is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import at.fractview.math.Cplx;
@@ -39,7 +38,11 @@ public class Function {
 	// The labels here are NOT descriptions of the data but the user input.
 	private Labelled<Expr> function;
 	private ArrayList<Labelled<Expr>> inits;
-	private TreeMap<Var, Labelled<Cplx>> parameters; // labelled.label is NOT the name of the parameter, but the expression-string (eg. sqrt 5).
+	
+	// TODO: Gson failed me on the tree set, so I split it up
+	private ArrayList<Var> parameterNames;
+	private ArrayList<Labelled<Cplx>> parameters;
+	//private TreeMap<Var, Labelled<Cplx>> parameters; // labelled.label is NOT the name of the parameter, but the expression-string (eg. sqrt 5).
 	
 	@SuppressWarnings("unused")
 	private Function() {} // For GSon
@@ -63,19 +66,28 @@ public class Function {
 			init.get().parameters(required);
 		}
 		
-		// There are some predefined variables, we remove them here:
-		required.removeAll(ExprCompiler.predefinedVars);
+		ExprCompiler.removePredefinedVars(required);
 		
 		if(!required.equals(parameters.keySet())) {
 			throw new IllegalArgumentException("Some variables were not defined: " + required + " vs " + parameters.keySet());
 		}
 		
 		this.function = function;
+
 		this.inits = new ArrayList<Labelled<Expr>>(inits.size());
-		this.parameters = new TreeMap<Var, Labelled<Cplx>>();
-		
 		this.inits.addAll(inits);
-		this.parameters.putAll(parameters);
+
+		//this.parameters = new TreeMap<Var, Labelled<Cplx>>();
+		
+		this.parameterNames = new ArrayList<Var>();
+		this.parameters = new ArrayList<Labelled<Cplx>>();
+		
+		for(Map.Entry<Var, Labelled<Cplx>> entry : parameters.entrySet()) {
+			this.parameterNames.add(entry.getKey());
+			this.parameters.add(entry.getValue());
+		}
+		
+		//this.parameters.putAll(parameters);
 	}
 	
 	public ExecutableFunction create() {
@@ -94,12 +106,12 @@ public class Function {
 		return inits.get(index);
 	}
 	
-	public Set<Var> parameters() {
-		return parameters.keySet();
+	public List<Var> parameters() {
+		return parameterNames;
 	}
 	
 	public Labelled<Cplx> parameter(Var v) {
-		return parameters.get(v);
+		return parameters.get(parameterNames.indexOf(v));
 	}
 
 	public String toDescription() {

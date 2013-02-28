@@ -47,7 +47,8 @@ public class BookmarkManager {
 	
 	public static final String BOOKMARKS_NAME = "Bookmarks";
 	
-	private static final int PREVIEW_SIZE = 64;
+	
+	private static final int PREVIEW_SIZE = 48;
 	private static final String TAG = "BookmarkManager";
 	
 	public class Bookmark {
@@ -116,7 +117,6 @@ public class BookmarkManager {
 			bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(buffer));
 
 			return bitmap;
-			//Bitmap.createBitmap(pixels, width, height, Config.ARGB_8888);
 		}
 	}
 	
@@ -131,6 +131,10 @@ public class BookmarkManager {
 		this.gson = gsonBuilder.create();
 		
 		this.bookmarks = activity.getSharedPreferences(BOOKMARKS_NAME, 0);
+	}
+	
+	public void updateBookmarks() {
+		
 	}
 	
 	public Bookmark create(EscapeTime prefs, Bitmap bitmap) {
@@ -171,7 +175,9 @@ public class BookmarkManager {
 					Bookmark bookmark = gson.fromJson((String) value, Bookmark.class);
 					retVal.put(title, bookmark);
 				} catch(JsonSyntaxException e) {
-					Log.e(TAG, "Error when trying to decipher entry: " + value);
+					Log.e(TAG, "Error when trying to decipher entry");
+					e.printStackTrace();
+					Log.e(TAG, ((String) value));
 				}
 			}
 		}
@@ -188,7 +194,7 @@ public class BookmarkManager {
 	}
 	
 	public void addBookmark(String title, EscapeTime prefs, Bitmap image) {
-		// TODO: Make sure that title does not exist yet.
+		// If title already exists, it will be overwritten.
 		Bookmark entry = create(prefs, image);
 		
 		String json = gson.toJson(entry);

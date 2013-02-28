@@ -18,8 +18,10 @@ package at.fractview.math.tree;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import at.fractview.math.Cplx;
 
@@ -38,6 +40,22 @@ public class ExprCompiler {
 			new Var[]{new Var("c"), new Var("n"), new Var("x"), new Var("y"), new Var("z")}
 	);
 	
+	/** Removes all variables from the given set that are used internally.
+	 * @param vars
+	 */
+	public static void removePredefinedVars(Set<Var> vars) {
+		// There are some predefined variables, we remove them here:
+		for(Iterator<Var> i = vars.iterator(); i.hasNext(); ) {
+			Var v = i.next();
+			if(ExprCompiler.predefinedVars.contains(v)) {
+				i.remove();
+			} else if(v.prefix().is("z") && v.index() != null) {
+				// Special case z1 etc...
+				i.remove();
+			}
+		}		
+	}
+	
 	/** Compiles this expression.
 	 * Adds parameters and constants to list (if necessary). Indices for parameters and constants in
 	 * the list of instructions that is returned are based on their position in the constant and 
@@ -48,7 +66,7 @@ public class ExprCompiler {
 	 * @param parameters
 	 * @return the last instruction put onto the list
 	 */
-	public static List<Integer> generateInstructionList(Expr expr, List<Cplx> constants, List<String> parameters) {
+	public static List<Integer> generateInstructionList(Expr expr, List<Cplx> constants, List<Var> parameters) {
 		InstructionTree tree = compile(expr, constants, parameters);
 		
 		List<Integer> instructionList = new LinkedList<Integer>();
@@ -57,7 +75,7 @@ public class ExprCompiler {
 		return instructionList;
 	}
 	
-	private static InstructionTree compile(Expr expr, List<Cplx> constants, List<String> parameters) {
+	private static InstructionTree compile(Expr expr, List<Cplx> constants, List<Var> parameters) {
 		if(expr instanceof Var) {
 			return parameter((Var) expr, constants, parameters);
 		}
@@ -73,7 +91,7 @@ public class ExprCompiler {
 		throw new IllegalArgumentException("Unsupported type");
 	}
 
-	private static InstructionTree app(App app, List<Cplx> constants, List<String> parameters) {
+	private static InstructionTree app(App app, List<Cplx> constants, List<Var> parameters) {
 		InstructionTree[] args = new InstructionTree[app.op().arity()];
 		
 		for(int i = 0; i < app.op().arity(); i++) {
@@ -122,7 +140,7 @@ public class ExprCompiler {
 		}
 	}
 
-	private static InstructionTree constant(Num num, List<Cplx> constants, List<String> parameters) {
+	private static InstructionTree constant(Num num, List<Cplx> constants, List<Var> parameters) {
 		if(num.isInt()) {		
 			// If int/short, encode
 			int value = num.intValue();
@@ -143,13 +161,17 @@ public class ExprCompiler {
 		return new InstructionTree(Executable.ATOM_CONST, true, index);
 	}
 
-	private static InstructionTree parameter(Var v, List<Cplx> constants, List<String> parameters) {
+	private static InstructionTree parameter(Var v, List<Cplx> constants, List<Var> parameters) {
 		if(v.is("c")) {
 			return new InstructionTree(Executable.ATOM_C, false, 0);
-		} else if(v.is("z")) {
-			return new InstructionTree(Executable.ATOM_Z, false, 0);
-		} else if(v.isIndexed("z")) {
-			return new InstructionTree(Executable.ATOM_Z_LAST, true, v.index());
+		} else if(v.prefix().is("z")) { // z = z0, z1, z2 etc...
+			Integer index = v.index();
+			
+			if(index == null || index == 0) {
+				return new InstructionTree(Executable.ATOM_Z, false, 0);
+			} else {
+				return new InstructionTree(Executable.ATOM_Z_LAST, true, index);
+			}
 		} else if(v.is("x")) {
 			return new InstructionTree(Executable.ATOM_X, false, 0);
 		} else if(v.is("y")) {
@@ -157,21 +179,12 @@ public class ExprCompiler {
 		} else if(v.is("n")) {
 			return new InstructionTree(Executable.ATOM_N, false, 0);
 		} else {
-			// It is a new parameter
-			int index = 0;
+			// It is a parameter
+			int index = parameters.indexOf(v);
 			
-			// Find index (case insensitive)
-			for(String p : parameters) {
-				if(v.is(p)) {
-					break;
-				}
-				
-				index ++;
-			}
-			
-			if(index == parameters.size()) {
-				parameters.add(v.toString());
-				// index is already the right value
+			if(index == -1) {
+				index = parameters.size();
+				parameters.add(v);
 			}
 			
 			return new InstructionTree(Executable.ATOM_VAR, true, index);
@@ -239,4 +252,6 @@ public class ExprCompiler {
 			return s;
 		}
 	}
+
+
 }

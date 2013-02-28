@@ -20,6 +20,9 @@ public class Labelled<E> {
 	private E e;
 	private String label;
 	
+	@SuppressWarnings("unused")
+	private Labelled() {} // For Gson
+	
 	public Labelled(E e, String label) {
 		this.e = e;
 		this.label = label;

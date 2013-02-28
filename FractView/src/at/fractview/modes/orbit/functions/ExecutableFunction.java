@@ -19,22 +19,29 @@ package at.fractview.modes.orbit.functions;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import at.fractview.math.Cplx;
 import at.fractview.math.tree.Executable;
 import at.fractview.math.tree.ExprCompiler;
 import at.fractview.math.tree.Var;
 
-public class ExecutableFunction extends ParameterizedFn {
+public class ExecutableFunction implements AbstractFunction {
 
 	// private static final String TAG = "Function";
 	
 	private Executable function;
 	private Executable[] inits;
 
+	private Map<String, Integer> parameterMap; // map from label to index in parameters-array	
+	private Cplx[] parameters;
+
+	
 	public static ExecutableFunction create(Function spec) {
 		// We need to create an order of parameters and constants, therefore we collect all parameters in a list
-		List<String> parameterLabels = new LinkedList<String>();
+		List<Var> parameterLabels = new LinkedList<Var>();
 		List<Cplx> constants = new LinkedList<Cplx>(); // These will be used in executables.
 		
 		// Now generate all instruction lists, and fill parameters/constants
@@ -46,17 +53,24 @@ public class ExecutableFunction extends ParameterizedFn {
 		for(int i = 0; i < spec.initsSize(); i++) {
 			instructionsInits.add(ExprCompiler.generateInstructionList(spec.init(i).get(), constants, parameterLabels));
 		}
+		
+		List<String> parameterStrings = new LinkedList<String>();
+		
+		for(Var v : parameterLabels) {
+			parameterStrings.add(v.id());
+		}
 
-		ExecutableFunction function = new ExecutableFunction(spec, instructionsFn, instructionsInits, constants, parameterLabels);
+		ExecutableFunction function = new ExecutableFunction(spec, instructionsFn, instructionsInits, constants, parameterStrings);
 
-		// Set parameters
-		for(String p : parameterLabels) {
-			function.set(p, spec.parameter(new Var(p)).get());
+		// Set values of parameters in the executable function we just created
+		for(Var v : parameterLabels) {
+			function.set(v.id(), spec.parameter(v).get());
 		}
 		
 		return function;
 	}
 	
+	@SuppressWarnings("unused")
 	private ExecutableFunction() {} // For GSon
 	
 	/** This constructor takes a specification of an object and compiles it into a group of Executable that are used
@@ -68,7 +82,18 @@ public class ExecutableFunction extends ParameterizedFn {
 			List<Cplx> constants, 
 			List<String> parameterLabels) {
 		
-		super(parameterLabels);
+		// First parameters
+		this.parameterMap = new TreeMap<String, Integer>();
+		this.parameters = new Cplx[parameterLabels.size()];
+
+		// Iterate through all labels
+		for(ListIterator<String> i = parameterLabels.listIterator(); i.hasNext();) {
+			int index = i.nextIndex();
+			String p = i.next();
+			
+			this.parameters[index] = new Cplx(); // Create an entry in array
+			this.parameterMap.put(p, index); // and put it into map.
+		}
 		
 		// Now create executables
 		Cplx[] constantsArray = constants.toArray(new Cplx[constants.size()]);
@@ -94,6 +119,21 @@ public class ExecutableFunction extends ParameterizedFn {
 	@Override
 	public void step(Cplx[] zs, int n, Cplx c) {
 		function.execute(c, zs, n, parameters, zs[n + 1]);
+	}
+	
+	@Override
+	public Iterable<String> labels() {
+		return parameterMap.keySet();
+	}
+
+	@Override
+	public Cplx get(String label) {
+		return parameters[parameterMap.get(label)];
+	}
+
+	@Override
+	public void set(String label, Cplx c) {
+		parameters[parameterMap.get(label)].set(c);
 	}
 	
 	@Override

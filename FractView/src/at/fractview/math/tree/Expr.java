@@ -154,17 +154,7 @@ public abstract class Expr implements Comparable<Expr> {
 	}
 	
 	static Expr createVar(String id) {
-		// Is it a variable followed by a number?
-		int i;
-		
-		for(i = id.length(); i > 0 && Character.isDigit(id.charAt(i - 1)); i--);
-		
-		if(i < id.length()) {
-			int index = Integer.parseInt(id.substring(i));
-			return new Var(id.substring(0, i), index);
-		} else {
-			return new Var(id);
-		}
+		return new Var(id);
 	}
 	
 	public abstract boolean isNum();

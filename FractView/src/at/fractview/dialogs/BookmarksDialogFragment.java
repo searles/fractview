@@ -6,7 +6,6 @@ import java.util.Map;
 
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +25,7 @@ public class BookmarksDialogFragment extends InputViewDialogFragment {
 
 	// TODO: Allow deleting of bookmarks
 	
-	private static final String TAG = "BookmarksDialogFragment";
+	// private static final String TAG = "BookmarksDialogFragment";
 
 	private EscapeTimeFragment taskFragment;
 
@@ -44,8 +43,6 @@ public class BookmarksDialogFragment extends InputViewDialogFragment {
 
 	@Override
 	protected View createView() {
-		Log.d(TAG, "createView");
-
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		final View v = inflater.inflate(R.layout.bookmarks, null);
 
@@ -118,8 +115,6 @@ public class BookmarksDialogFragment extends InputViewDialogFragment {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 		    
-			Log.d(TAG, "getView " + position + ", " + convertView);
-			
 			if(convertView == null) {
 				convertView = getActivity().getLayoutInflater().inflate(R.layout.bookmark_entry, null);
 				convertView.setClickable(false);
@@ -136,7 +131,7 @@ public class BookmarksDialogFragment extends InputViewDialogFragment {
 			
 			titleLabel.setText(title);
 			
-			previewImageView.setImageBitmap(bookmark.preview()); // TODO: Causes an exception
+			previewImageView.setImageBitmap(bookmark.preview());
 
 			return convertView;
 		}

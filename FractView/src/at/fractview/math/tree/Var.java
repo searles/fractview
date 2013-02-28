@@ -25,28 +25,44 @@ import at.fractview.math.Cplx;
 public class Var extends Expr {
 
 	private String id;
-	private int index;
 	
 	// TODO: What about negative indices?
 	
 	@SuppressWarnings("unused")
 	private Var() {} // For GSon
 
-	public Var(String id, int index) {
-		this.id = id;
-		this.index = index;
-	}
-	
 	public Var(String id) {
-		this(id, 0);
+		this.id = id;
 	}
 	
 	public boolean is(String id) {
-		return index == 0 && isIndexed(id);
+		return this.id.equalsIgnoreCase(id);
 	}
 	
-	public boolean isIndexed(String id) {
-		return this.id.equalsIgnoreCase(id);
+	public String id() {
+		return id;
+	}
+	
+	public Var prefix() {
+		int i;		
+		for(i = id.length(); i > 0 && Character.isDigit(id.charAt(i - 1)); i--);
+		
+		return i < id.length() ? new Var(id.substring(0, i)) : this;
+	}
+
+	public Integer index() {
+		int i;		
+		for(i = id.length(); i > 0 && Character.isDigit(id.charAt(i - 1)); i--);
+		
+		if(i < id.length()) {
+			try {
+				return Integer.parseInt(id.substring(i));
+			} catch(NumberFormatException e) {
+				// Ignore - invalid number.
+			}
+		}
+		
+		return null;
 	}
 
 	@Override
@@ -56,9 +72,11 @@ public class Var extends Expr {
 
 	@Override
 	public Expr derive(String v) {
-		// Exclude zr and zi
 		if(is(v)) {
-			return index != 0 ? null : new Num(1);
+			return new Num(1);
+		} else if(prefix().is(v)) {
+			// Cannot derive things like z[0].
+			return null;
 		} else {
 			return new Num(0);
 		}
@@ -96,21 +114,17 @@ public class Var extends Expr {
 	
 	@Override
 	public int maxIndex(String v) {
-		return isIndexed(v) ? index + 1 : 0;
+		if(prefix().is(v)) {
+			Integer index = index();
+			
+			if(index == null) index = 0;
+			
+			return index + 1;
+		} else {
+			return 0;
+		}
 	}
 
-	public int index() {
-		return index;
-	}
-
-	public String indexedId() {
-		return id + index;
-	}
-
-	public String id() {
-		return id;
-	}
-	
 	@Override
 	public Set<Var> parameters(Set<Var> vars) {
 		vars.add(this);
@@ -124,16 +138,14 @@ public class Var extends Expr {
 	@Override
 	protected int cmp(Expr that) {
 		Var v = (Var) that;
-			
-		if(this.is(v.id)) return this.index - v.index;
-		else return id.compareTo(v.id); // They are not equal, so we dont care about case.
+		return id.compareTo(v.id); // They are not equal, so we dont care about case.
 	}
 	
 	public int hashCode() {
-		return id.toLowerCase(Locale.US).hashCode() + index;
+		return id.toLowerCase(Locale.US).hashCode();
 	}
 	
 	public String toString() {
-		return index == 0 ? id() : indexedId();
+		return id();
 	}
 }

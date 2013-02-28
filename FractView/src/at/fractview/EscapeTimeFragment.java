@@ -30,6 +30,8 @@ import at.fractview.modes.orbit.EscapeTime;
 import at.fractview.modes.orbit.EscapeTimeCache;
 import at.fractview.modes.orbit.colorization.OrbitTransfer.Stats;
 
+import com.google.gson.JsonSyntaxException;
+
 public class EscapeTimeFragment extends Fragment {
 	
 	private static final String TAG = "EscapeTimeFragment";
@@ -75,12 +77,15 @@ public class EscapeTimeFragment extends Fragment {
 		if(lastJson != null) {
 			Log.d(TAG, "Found last Json");
 			
-			// TODO: Check for errors
-			
-			EscapeTime prefs = manager.gson().fromJson(lastJson, EscapeTime.class);
-			
-			if(prefs != null) {
-				this.image = (EscapeTimeCache) prefs.createImgCache(INIT_WIDTH, INIT_HEIGHT);
+			try {
+				EscapeTime prefs = manager.gson().fromJson(lastJson, EscapeTime.class);
+				
+				if(prefs != null) {
+					this.image = (EscapeTimeCache) prefs.createImgCache(INIT_WIDTH, INIT_HEIGHT);
+				}
+			} catch(JsonSyntaxException e) {
+				Log.e(TAG, "Error in last fractal!");
+				e.printStackTrace();
 			}
 		}
 		

@@ -24,7 +24,7 @@ import at.fractview.math.tree.Op;
 import at.fractview.math.tree.Var;
 
 public class CommonFunctions {
-	public static final class Mandelbrot extends ParameterizedFn {
+	/*public static final class Mandelbrot extends ParameterizedFn {
 		public Mandelbrot() {
 			super(new LinkedList<String>());
 		}
@@ -41,11 +41,6 @@ public class CommonFunctions {
 		}
 	}
 
-	/** Bit 1 = negation
-	 * Bit 2 = absolute value
-	 * Bit 4 = Based on sign of other component
-	 *
-	 */
 	public static final class BurningMandelbrot extends ParameterizedFn {
 		
 		// 0, 0 = mandelbrot
@@ -161,5 +156,5 @@ public class CommonFunctions {
 		public void step(Cplx[] zs, int n, Cplx c) {
 			zs[n+1].add(zs[n+1].sqr(zs[n]), c);
 		}
-	}
+	}*/
 }
