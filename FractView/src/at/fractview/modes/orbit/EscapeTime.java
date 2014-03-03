@@ -199,11 +199,13 @@ public class EscapeTime extends AbstractOrbitPrefs {
 		}
 
 		// TODO: move the next method somewhere else...
+		// TODO: Find some better solution for out-of-bounds
 		public float smooth() {
 			// Linear interpolation, smoothened by logarithm if possible
 			double y = bailout();
 			double y0 = length() > 0 ? get(length() - 1).abs() : 0;
-			double y1 = get(length()).abs();
+			// If this is not bailout then this is the work-around.
+			double y1 = length() == maxIter() ? y0 : get(length()).abs();
 			
 			for(int i = 0; i < 2 && y0 > 1 && y > 1 && y1 > 1; i++) {
 				// Double transfer if all values permit it
