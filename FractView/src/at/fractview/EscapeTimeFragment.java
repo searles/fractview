@@ -18,12 +18,14 @@ package at.fractview;
 
 import java.util.Stack;
 
+import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.widget.Toast;
 import at.fractview.modes.AbstractImgCache;
 import at.fractview.modes.Preferences;
 import at.fractview.modes.orbit.EscapeTime;
@@ -81,7 +83,11 @@ public class EscapeTimeFragment extends Fragment {
 				EscapeTime prefs = manager.gson().fromJson(lastJson, EscapeTime.class);
 				
 				if(prefs != null) {
-					this.image = (EscapeTimeCache) prefs.createImgCache(INIT_WIDTH, INIT_HEIGHT);
+					history.push(prefs);
+					
+					// Dialog "restore last session"?
+					Toast.makeText(this.getActivity(), "Touch \"back\" to restore last fractal", Toast.LENGTH_SHORT).show();
+					//this.image = (EscapeTimeCache) prefs.createImgCache(INIT_WIDTH, INIT_HEIGHT);
 				}
 			} catch(JsonSyntaxException e) {
 				Log.e(TAG, "Error in last fractal!");
@@ -92,7 +98,7 @@ public class EscapeTimeFragment extends Fragment {
 		if(this.image == null) {
 			Log.d(TAG, "Image was not set yet");
 			this.image = (EscapeTimeCache) BookmarkManager.mandelbrot().createImgCache(INIT_WIDTH, INIT_HEIGHT);
-		}        
+		}
 
         startTask(); // the first fractal should be in the history
 	}
@@ -220,5 +226,13 @@ public class EscapeTimeFragment extends Fragment {
 
 	public Stats stats(int index) {
 		return image.stats(index);
+	}
+
+	/**
+	 * @return Time passed since the task was started
+	 */
+	public double getElapsedTime() {
+		if(task == null) return 0;
+		return task.getRunTime();
 	}
 }

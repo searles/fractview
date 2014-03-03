@@ -92,8 +92,9 @@ public class ImageViewFragment extends Fragment {
 					// Log.d(this.toString(), "No further updates because task is not running anymore");
 					
 					if(!taskFragment.taskIsCancelled()) {
+						String time = String.format("%.2f", taskFragment.getElapsedTime());
 						// Show toast
-						Toast.makeText(getActivity(), "Calculation finished", Toast.LENGTH_SHORT).show();
+						Toast.makeText(getActivity(), "Calculation finished: " + time + " sec", Toast.LENGTH_SHORT).show();
 					}
 				}
 			}
@@ -319,7 +320,7 @@ public class ImageViewFragment extends Fragment {
 						p[0] = scaleable.normX(p[0], w, h);
 						p[1] = scaleable.normY(p[1], w, h);
 						
-						prefsTouch.moveTo(id, p);					
+						prefsTouch.moveTo(id, p);
 					}
 				}
 

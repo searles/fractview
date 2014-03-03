@@ -9,6 +9,9 @@ public abstract class AbstractImgCache {
 	protected int width;
 	protected int height;
 	
+	protected int centerX;
+	protected int centerY;
+	
 	private Bitmap bitmap;
 	private Canvas canvas;
 	
@@ -18,6 +21,8 @@ public abstract class AbstractImgCache {
 		this.prefs = prefs;
 		this.width = width;
 		this.height = height;
+		this.centerX = width / 2;
+		this.centerY = height / 2;
 		this.bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 		this.canvas = new Canvas(bitmap);
 	}
@@ -93,6 +98,8 @@ public abstract class AbstractImgCache {
 		boolean isCancelled();
 		void cancel();
 		void join() throws InterruptedException; // Wait until task has terminated (for whatever reason)
+
+		double getRunTime();
 		
 		// TODO: Things that are running 
 		//int progress();

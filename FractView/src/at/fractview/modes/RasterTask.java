@@ -16,13 +16,11 @@
  */
 package at.fractview.modes;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import android.graphics.Canvas;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import android.graphics.Paint;
 import android.os.Process;
 import android.util.Log;
@@ -31,86 +29,64 @@ public class RasterTask implements AbstractImgCache.Task {
 	
 	private static final String TAG = "RasterTask"; 
 	
+	public static int INIT_STEP_SIZE = 64; // must be multiple of next value
+	public static int STEP_SIZE_DIVISOR = 4; 
+
 	private static final int THREAD_COUNT = 4;
 	
 	// Thread priority (low priority keeps device responsive.)
 	private static final int THREAD_PRIORITY = Process.THREAD_PRIORITY_BACKGROUND;
 	
-	private static final int TILE_SIZE = 4;
-	
 	private Rasterable rasterable;
 	
-	private LinkedList<TileIterator> tileIterators;
-
 	private volatile boolean cancelled;
 	private volatile boolean running;
 	
 	private long startTime;
 
-	private volatile int checkPointCount = 0;
-	private Lock lock;
-	private Condition wc;
-	
-	private Thread[] threads;
 	private Environment[] envs;
+	
+	private ExecutorService executorService;
+	
+	private CyclicBarrier nextStepSizeBarrier;
+	
+	private Runnable updateStatsRunnable = new Runnable() {
+		@Override
+		public void run() {
+			updateStats();
+		}
+	};
+
 	
 	public RasterTask(Rasterable rasterable) {
 		this.rasterable = rasterable;
 		
-		this.threads = new Thread[THREAD_COUNT];
 		this.envs = new Environment[THREAD_COUNT];
 		
-		this.lock = new ReentrantLock();
-		this.wc = this.lock.newCondition();
+		executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+		nextStepSizeBarrier = new CyclicBarrier(THREAD_COUNT, updateStatsRunnable);
 	}
 
 	public void start(AbstractImgCache cache) {
 		Log.d(TAG, "starting task...");
 		
-		// Tell rasterable that we will now init it. This is a good point to reset statistical data in rasterable
 		rasterable.initStatistics();
 		
 		startTime = System.currentTimeMillis();
 		
-		// initialize iterator to get tiles
-		tileIterators = new LinkedList<TileIterator>();
-				
-		// Width, height
-		int w = cache.width();
-		int h = cache.height();
-
-		// Start pixel: This must not be out of bounds of image!
-		int x0 = w / 2;
-		int y0 = h / 2;
-
-		int stepSize = 1;
-		boolean notMaxTileSize;
-
-		// The start tile is the biggest one
-		// Therefore we start with the smallest tile
-		// (stepSize = 1), and factor up until
-		// we found it.
-		do {
-			// Get first step size
-			notMaxTileSize = stepSize * TILE_SIZE < Math.min(w, h);
-			tileIterators.addFirst(new TileIterator(x0, y0, w, h, stepSize, notMaxTileSize & !rasterable.usesStats()));
-			stepSize *= TILE_SIZE;
-		} while(notMaxTileSize); 
-		// The moment we don't have to skip the first pixel, we need to draw everything.
-
-		// Create threads
 		running = true;
 		
+		// Create threads
 		for(int i = 0; i < THREAD_COUNT; i++) {
-			// Create new worker and run it [recycling old workers is not a 
-			// good idea because they might be still running]
-			
-			threads[i] = new Thread(new Worker(i, cache));
-			
-			// Set priority (low priority keeps device responsive.)
-			threads[i].start();
+			executorService.submit(new Worker(i, cache));
 		}
 	}
+	
+	@Override
+	public double getRunTime() {
+		return ((double) (System.currentTimeMillis() - startTime)) / 1000.;
+	}
+
 	
 	public boolean isCancelled() {
 		return cancelled;
@@ -120,241 +96,26 @@ public class RasterTask implements AbstractImgCache.Task {
 		return running;
 	}
 	
+	private void updateStats() {
+		for(int i = 0; i < THREAD_COUNT; i++) {
+			RasterTask.this.rasterable.updateStatisticsFromEnv(envs[i]);
+		}
+	}
+	
 	public void cancel() {
 		Log.d(TAG, "canceling tasks");
 		this.cancelled = true;
-		for(int i = 0; i < THREAD_COUNT; i++) {
-			threads[i].interrupt(); // maybe we are in a waiting position...
-		}
+		
+		executorService.shutdownNow();
 	}
 
 	@Override
 	public void join() throws InterruptedException {
-		Log.d(TAG, "Joining calculating threads");
-		
-		for(int i = 0; i < THREAD_COUNT; i++) {
-			threads[i].join();
-		}
+		Log.d(TAG, "Awaiting termination...");
+		executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		Log.d(TAG, "ExecutorService terminated...");
 	}
 	
-	private class Tile {
-		
-		int x0;
-		int y0; 
-		int stepSize;
-		boolean skipFirstPix;
-		
-		void calc(Environment env, Canvas canvas, Paint paint) throws CancelException {
-			// TODO: The distribution of labor is not perfect here... canvas is inside cache, paint can be inside Environment.
-			int w = canvas.getWidth();
-			int h = canvas.getHeight();
-			
-			int x1 = Math.min(w, x0 + stepSize * TILE_SIZE);
-			int y1 = Math.min(h, y0 + stepSize * TILE_SIZE);
-			
-			paint.setStrokeWidth(stepSize);
-			
-			for(int y = y0; y < y1; y += stepSize) {
-				for(int x = x0; x < x1; x += stepSize) {
-					if(isCancelled()) {
-						throw new CancelException();
-					}
-
-					if(!skipFirstPix) {
-						// Calculate pixel
-						int color = env.color(x, y);
-
-						// and paint it
-						paint.setColor(color);
-						canvas.drawPoint(x, y, paint);
-					} else {
-						// first pixel was just skipped
-						skipFirstPix = false;
-					}
-				}
-			}
-		}
-	}
-	
-	private class TileIterator {
-		// The following fields represent the tile that is currently iterated
-		final int x0;
-		final int y0;
-		final int w;
-		final int h;
-		
-		final int stepSize;
-		
-		// The following fields help with the maths.
-		// They are used to iterate the tiles
-		int rad; // Current "radius" (square style)
-		int lineIndex;
-		int x;
-		int y;
-		boolean hasNext;
-		boolean skipFirstPix;
-		
-		TileIterator(int x0, int y0, int w, int h, int stepSize, boolean skipFirstPix) {
-			this.x0 = x0 / (stepSize * TILE_SIZE);
-			this.y0 = y0 / (stepSize * TILE_SIZE);
-			this.w = (w + (stepSize * TILE_SIZE) - 1) / (stepSize * TILE_SIZE);
-			this.h = (h + (stepSize * TILE_SIZE) - 1) / (stepSize * TILE_SIZE);
-			
-			this.stepSize = stepSize;
-
-			this.skipFirstPix = skipFirstPix;
-			
-			// And now we start.
-			
-			this.rad = 0;
-			this.hasNext = true;
-		}
-		
-		private boolean nextRad() {
-			rad++;
-			
-			x = x0 - rad;
-			y = y0 - rad;
-			
-			lineIndex = 0;
-			
-			if(x < 0) {
-				if(y < 0) {
-					// Find a start
-					lineIndex++;
-					x = x0 + rad;
-					y = 0;
-					
-					if(x >= w) {
-						lineIndex++;
-						y = y0 + rad;
-						x = w - 1;
-						if(y >= h) {
-							// We are done.
-							return false;
-						} else {
-							return true;
-						}
-					} else {
-						return true;
-					}
-				} else {
-					x = 0;
-					return true;
-				}
-			} else if(y < 0) {
-				lineIndex ++;
-				x = x0 + rad;
-				y = 0;
-				
-				if(x >= w) {
-					lineIndex++;
-					y = y0 + rad;
-					x = w - 1;
-					
-					if(y >= h) {
-						lineIndex ++;
-						
-						x = x0 - rad; // this must be 0 here
-						y = h - 1;
-						
-						return true;
-					} else {
-						return true;
-					}
-				} else {
-					return true;
-				}
-			} else {
-				return true;
-			}
-		}
-		
-		private boolean nextPix() {
-			if(lineIndex == 0) {
-				x++;
-				
-				if(x >= w) {
-					x--;
-					lineIndex += 2;
-					y = y0 + rad;
-					
-					if(y >= h) {
-						y = h - 1;
-						x = x0 - rad;
-						lineIndex = 3;
-						
-						if(x < 0) {
-							return nextRad();
-						}
-					}
-				} else if(x == x0 + rad) {
-					lineIndex++;
-				}
-			} else if(lineIndex == 1) {
-				y++;
-
-				if(y >= h) {
-					lineIndex += 2;
-					y--;
-					x = x0 - rad;
-					
-					if(x < 0) {
-						return nextRad();
-					}
-				} else if(y == y0 + rad) {
-					lineIndex++;
-				}
-			} else if(lineIndex == 2) {
-				x--;
-				
-				if(x < 0) {
-					return nextRad();
-				} else if(x == x0 - rad) {
-					lineIndex++;
-				}
-			} else {
-				y--;
-				
-				if(y < 0 || y == y0 - rad) {
-					return nextRad();
-				}
-			}
-						
-			return true;
-		}
-		
-		synchronized Tile next(Tile t) {
-			int tileX;
-			int tileY;
-			
-			if(this.hasNext) {
-				if(rad == 0) {
-					// When we start, there is no next pixel.
-					tileX = x0;
-					tileY = y0;
-						
-					this.hasNext = nextRad();
-				} else {
-					tileX = x;
-					tileY = y;
-					this.hasNext = nextPix();
-				}
-				
-				// Paint
-				t.x0 = tileX * stepSize * TILE_SIZE;
-				t.y0 = tileY * stepSize * TILE_SIZE;
-				t.stepSize = stepSize;
-				
-				t.skipFirstPix = skipFirstPix;
-				
-				return t;
-			} else {
-				return null;
-			}
-		}
-	}
-
 	/**
 	 * This class contains the working thread(s) that generates the fractal
 	 *
@@ -366,6 +127,8 @@ public class RasterTask implements AbstractImgCache.Task {
 		private AbstractImgCache cache;
 		private Environment env;
 		
+		Paint paint = new Paint(); // Create one paint per worker.
+
 		Worker(int index, AbstractImgCache cache) {
 			this.cache = cache;
 			this.index = index;
@@ -374,90 +137,134 @@ public class RasterTask implements AbstractImgCache.Task {
 			this.env = rasterable.createEnvironment();
 			envs[index] = env; // Set it in parent
 		}
+
+		int pointCount = 0;
+		
+		private void pix(int x, int y) throws CancelException {
+			if(isCancelled()) throw new CancelException();
+			paint.setColor(env.color(x, y));
+			cache.canvas().drawPoint(x, y, paint);
+			pointCount ++;
+		}
+		
+		
+		int paintCirc(int rad, int x0, int y0, int x1, int y1, int stepSize, int offset) throws CancelException {
+			// draw top
+			if(-rad >= y0) {
+				int rb = Math.min(x1, rad); // right bound (x1 is excl)
+
+				int x;
+				
+				for(x = Math.max(x0, -rad) + offset; x < rb; x += THREAD_COUNT) {
+					pix(x * stepSize + cache.centerX, -rad * stepSize + cache.centerY);
+				}
+				
+				offset = x - rb;
+			}
+			
+			// draw right
+			if(rad < x1) {
+				int bb = Math.min(y1, rad); // bottom bound (y1 is excl)
+
+				int y;
+				
+				for(y = Math.max(y0, -rad) + offset; y < bb; y += THREAD_COUNT) {
+					pix(rad * stepSize + cache.centerX, y * stepSize + cache.centerY);
+				}
+				
+				offset = y - bb;
+			}
+			
+			// draw bottom
+			if(rad < y1) {
+				int lb = Math.max(x0 - 1, -rad); // x0 is incl
+				
+				int x;
+				
+				for(x = Math.min(x1 - 1, rad) - offset; x > lb; x -= THREAD_COUNT) {
+					pix(x * stepSize + cache.centerX, rad * stepSize + cache.centerY);
+				}
+				
+				offset = lb - x;
+			}
+			
+			// draw left		
+			if(-rad >= x0) {
+				int tb = Math.max(y0 - 1, -rad); // y0 is incl bound
+				
+				int y;
+				
+				for(y = Math.min(y1 - 1, rad) - offset; y > tb; y -= THREAD_COUNT) {
+					pix(-rad * stepSize + cache.centerX, y * stepSize + cache.centerY);
+				}
+				
+				offset = tb - y;
+			}
+			
+			return offset;
+		}
+		
+		private void paintFull() throws CancelException, InterruptedException, BrokenBarrierException {
+			
+			int offset = index;
+			
+			for(int stepSize = INIT_STEP_SIZE; stepSize > 0; stepSize /= STEP_SIZE_DIVISOR) {
+				Log.d(TAG, "Thread " + index + ", Step = " + stepSize + ": Calculating...");
+
+				paint.setStrokeWidth(stepSize);
+
+				if(index == THREAD_COUNT - 1) {
+					// We need to repaint the whole image for each stepsize
+					pix(cache.centerX, cache.centerY);
+				}
+				
+				int x0 = -cache.centerX; // incl
+				int y0 = -cache.centerY; // incl
+				int x1 = cache.width - cache.centerX + stepSize - 1; // excl
+				int y1 = cache.height - cache.centerY + stepSize - 1; // excl
+				
+				x0 /= stepSize;
+				x1 /= stepSize;
+				y0 /= stepSize;
+				y1 /= stepSize;
+				
+				int maxR = Math.max(Math.max(-x0 + 1, x1), Math.max(-y0 + 1, y1));
+		
+				// We update all pixels because some values might depend on statistical values
+				for(int rad = 1; rad <= maxR; rad ++) {
+					offset = paintCirc(rad, x0, y0, x1, y1, stepSize, offset);
+				}
+				
+				// Lock until all threads have passed here, then update statistics
+				Log.d(TAG, "Thread " + index + ", Step = " + stepSize + ": Waiting at barrier...");
+				nextStepSizeBarrier.await();
+			}
+			
+			Log.d(TAG, "Thread " + index + ", Count = " + pointCount + ", " + "Offset = " + offset);
+		}
 		
 		public void run() {
 			// Use lower thread priority to have less impact on our runtime
 			Process.setThreadPriority(THREAD_PRIORITY);
-			
-			Paint paint = new Paint(); // Create one paint per worker.
-			
-			// We create one tile and reuse it.
-			Tile t = new Tile();
-			
-			try {
-				Iterator<TileIterator> iter = tileIterators.iterator();
-				
-				// iter has definitely at least one element
-				while(true) {
-					TileIterator ti = iter.next();
-					
-					while(ti.next(t) != null) {
-						t.calc(env, cache.canvas(), paint);
-					}
-					
-					if(iter.hasNext()) {
-						// Wait until all threads are done with this tileIterator
-						try {
-							lock.lock();
 
-							checkPointCount ++;
-							
-							if(checkPointCount == THREAD_COUNT) { // Last thread to pass this point.
-								
-								// This is a good point to update statistical data or similar things in Cache
-								// since we are save form race conditions here :)
-								
-								for(int i = 0; i < THREAD_COUNT; i++) {
-									/*if(i != index && threads[i].getState() != Thread.State.WAITING) {
-										Log.e(TAG, "Race condition: Thread " + i + " has status " + threads[i].getState());
-										StackTraceElement st[] = threads[i].getStackTrace();
-										
-										for(StackTraceElement s : st) {
-											Log.e(TAG, s.toString());
-										}
-										
-										// Sometimes a worker seems to be running, but it is in await.
-									}*/
-									
-									rasterable.updateStatisticsFromEnv(envs[i]);
-								}
-								
-								checkPointCount = 0; // Reset checkPointCount
-								wc.signalAll();
-							} else {
-								wc.await();								
-							}
-						} finally {
-							lock.unlock();
-						}
-					} else {
-						// if iter is done, finish this loop.
-						break;
-					}
-				}
+			try {
+				paintFull();
 			} catch(CancelException e) {
 				// Someone told us to stop
+				Log.d(TAG, "Cancelled " + index);
 			} catch(InterruptedException e) {
 				// Someone told us to wake up. No problem, we are done anyways...
 				Log.d(TAG, "Thread " + index + " was interrupted");
+			} catch(BrokenBarrierException e) {
+				Log.d(TAG, "Barrier is broken for Thread " + index);
 			} finally {
-				lock.lock();
-				checkPointCount++;
-				int score = checkPointCount;
-				lock.unlock();
-
-				if(score == THREAD_COUNT) {
-					// Update stats (but don't use - this is a minor "bug" for the sake of runtime)
-					for(int i = 0; i < THREAD_COUNT; i++) {
-						rasterable.updateStatisticsFromEnv(envs[i]);
-					}
-
-					// Now we are done.
-
+				if(index == 0) {
 					running = false;
 					Log.d(TAG, "Runtime of task was " + (System.currentTimeMillis() - startTime) + " ms");
 				}
 			}
+			
+			Log.d(TAG, "Thread " + index + " is done.");
 		}
 	}
 	
@@ -489,5 +296,4 @@ public class RasterTask implements AbstractImgCache.Task {
 	private class CancelException extends Exception {
 		private static final long serialVersionUID = 6296523206940181359L;
 	}
-
 }
